@@ -21,7 +21,8 @@ export function ProductsTab() {
   const [acc, setAcc] = useState(false);
   const official = g === "official";
   const grp = GROUPS.find((x) => x.id === g) || GROUPS[0];
-  const qs = official ? "" : q.trim().toLowerCase();
+  const qlower = q.trim().toLowerCase();
+  const qs = official ? "" : qlower;
   const base = official
     ? []
     : qs
@@ -31,7 +32,7 @@ export function ProductsTab() {
   const items = all.filter((p) => !p.hidden);
   const hiddenItems = all.filter((p) => p.hidden);
   const allRows = official ? officialRows() : [];
-  const rows = official ? allRows.filter((r) => acc || !r.a) : [];
+  const rows = official ? allRows.filter((r) => (acc || !r.a) && (!qlower || (r.n + " " + r.c).toLowerCase().includes(qlower))) : [];
   const cats = official ? [...new Set(rows.map((r) => r.c))] : [];
 
   return (
@@ -85,10 +86,11 @@ export function ProductsTab() {
             <input type="checkbox" checked={acc} onChange={(e) => setAcc(e.target.checked)} />
             <span style={{ textDecoration: "none", color: "var(--fg2)" }}>액세서리·소모품(커버, 필터, 펜 등)도 보기</span>
           </label>
+          {cats.length === 0 && <p className="hint">&quot;{q}&quot;에 맞는 제품이 없어요.</p>}
           {cats.map((c) => {
             const list = rows.filter((r) => r.c === c);
             return (
-              <details key={c} open={cats.length <= 3}>
+              <details key={c} open={!!qlower || cats.length <= 3}>
                 <summary>
                   {c} <span className="sub">{list.length}</span>
                 </summary>
