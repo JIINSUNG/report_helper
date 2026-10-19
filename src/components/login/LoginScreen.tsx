@@ -9,6 +9,7 @@ export function LoginScreen() {
   const { loginStaff, loginAdmin, loginGuest } = useAuth();
   const [mode, setMode] = useState<Mode>(null);
   const [code, setCode] = useState("");
+  const [posId, setPosId] = useState("");
   const [name, setName] = useState("");
   const [id, setId] = useState("");
   const [password, setPassword] = useState("");
@@ -22,7 +23,7 @@ export function LoginScreen() {
 
   const submitStaff = async () => {
     setBusy(true);
-    const result = await loginStaff(code, name);
+    const result = await loginStaff(code, posId, name);
     setBusy(false);
     if (!result.ok) setErr(result.error ?? "로그인에 실패했어요.");
   };
@@ -68,6 +69,19 @@ export function LoginScreen() {
             placeholder="yymmdd"
             value={code}
             onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+          />
+          <label className="lbl" htmlFor="lg-pos">
+            포스ID <small>4자리 숫자</small>
+          </label>
+          <input
+            id="lg-pos"
+            className="inp"
+            inputMode="numeric"
+            maxLength={4}
+            autoComplete="off"
+            placeholder="예: 1004"
+            value={posId}
+            onChange={(e) => setPosId(e.target.value.replace(/\D/g, "").slice(0, 4))}
           />
           <label className="lbl" htmlFor="lg-name">
             이름 <small>선택 · 비워두면 자동으로 정해져요</small>

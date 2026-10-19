@@ -13,6 +13,16 @@ function storeCodes(): Record<string, string> {
   }
 }
 
+function storePosIds(): Record<string, string> {
+  const raw = process.env.STORE_POS_IDS;
+  if (!raw) return {};
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return {};
+  }
+}
+
 export async function POST(req: NextRequest) {
   let uid: string;
   try {
@@ -38,6 +48,16 @@ export async function POST(req: NextRequest) {
     if (!store) {
       recordFailure(key);
       return NextResponse.json({ ok: false, error: "일치하는 매장이 없어요." }, { status: 401 });
+    }
+
+    const posId: string = typeof body.posId === "string" ? body.posId.trim() : "";
+    if (!/^\d{4}$/.test(posId)) {
+      recordFailure(key);
+      return NextResponse.json({ ok: false, error: "포스ID는 4자리 숫자로 입력해주세요." }, { status: 400 });
+    }
+    if (storePosIds()[store] !== posId) {
+      recordFailure(key);
+      return NextResponse.json({ ok: false, error: "포스ID가 맞지 않아요." }, { status: 401 });
     }
 
     recordSuccess(key);

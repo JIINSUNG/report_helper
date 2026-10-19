@@ -30,7 +30,7 @@ interface AuthState {
 }
 
 interface AuthContextValue extends AuthState {
-  loginStaff: (code: string, name: string) => Promise<{ ok: boolean; error?: string }>;
+  loginStaff: (code: string, posId: string, name: string) => Promise<{ ok: boolean; error?: string }>;
   loginAdmin: (id: string, password: string) => Promise<{ ok: boolean; error?: string }>;
   loginGuest: () => Promise<{ ok: boolean; error?: string }>;
   setName: (name: string) => Promise<void>;
@@ -106,9 +106,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const loginStaff = useCallback(
-    async (code: string, name: string) => {
+    async (code: string, posId: string, name: string) => {
       const idToken = await getIdToken();
-      const result = await postLogin("staff", { idToken, code, name });
+      const result = await postLogin("staff", { idToken, code, posId, name });
       if (result.ok) await refreshClaims();
       return result;
     },

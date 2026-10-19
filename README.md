@@ -22,12 +22,14 @@
 3. **Firestore Database** 생성 (프로덕션 모드).
 4. 프로젝트 설정 → 일반 → 내 앱(웹 앱 추가) → `firebaseConfig` 값을 `.env.local`의 `NEXT_PUBLIC_FIREBASE_*`에 넣습니다.
 5. 프로젝트 설정 → 서비스 계정 → **새 비공개 키 생성** → 받은 JSON 전체를 한 줄로 이어붙여 `.env.local`의 `FIREBASE_SERVICE_ACCOUNT`에 넣습니다.
-6. `STORE_CODES`(JSON, 코드→지점명), `ADMIN_ID`, `ADMIN_PASSWORD`를 정합니다. 예:
+6. `STORE_CODES`(JSON, 코드→지점명), `STORE_POS_IDS`(JSON, 지점명→포스ID 4자리), `ADMIN_ID`, `ADMIN_PASSWORD`를 정합니다. 예:
    ```
    STORE_CODES={"250101":"수지점","250202":"구리점"}
+   STORE_POS_IDS={"수지점":"REDACTED","구리점":"0000","운정점":"0000"}
    ADMIN_ID=admin
    ADMIN_PASSWORD=아무도-모르는-비밀번호
    ```
+   직원 로그인은 매장 코드(yymmdd) + 포스ID(4자리) 두 가지를 모두 맞혀야 합니다. 구리점·운정점 포스ID는 아직 실제 값을 몰라서 `0000`으로 임시 설정해뒀으니, 알게 되면 바로 바꿔주세요.
 7. `.env.example`을 참고해 `.env.local`을 채웁니다 (이미 채워져 있다면 생략).
 
 ### 2. Firestore 보안 규칙 배포
@@ -80,7 +82,8 @@ node scripts/gen-ts.mjs
 
 ### 직원 (staff)
 
-- [ ] 매장 코드(yymmdd)로 로그인 → 맞는 지점으로 들어감
+- [ ] 매장 코드(yymmdd) + 포스ID(4자리)로 로그인 → 맞는 지점으로 들어감
+- [ ] 포스ID를 틀리면 "포스ID가 맞지 않아요" 에러, 5번 틀리면 잠김
 - [ ] 이름 비우고 로그인 → "김OO숫자" 형식 자동 이름 부여
 - [ ] 오픈/기록/마감/세일즈/회고/할일 작성 → 새로고침해도 남아있음 (localStorage)
 - [ ] 마감보고 리테일·포스 차액 사유 합계가 안 맞으면 복사 전 경고
