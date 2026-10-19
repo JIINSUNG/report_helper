@@ -21,25 +21,33 @@ export function LoginScreen() {
     setErr("");
   };
 
+  // 성공하면 setBusy(false)를 하지 않는다 — 곧 역할이 반영되면서 이 화면 자체가
+  // AppShell로 바뀌므로, 그 사이 공백도 스피너로 덮이게 둔다.
   const submitStaff = async () => {
     setBusy(true);
     const result = await loginStaff(code, posId, name);
-    setBusy(false);
-    if (!result.ok) setErr(result.error ?? "로그인에 실패했어요.");
+    if (!result.ok) {
+      setBusy(false);
+      setErr(result.error ?? "로그인에 실패했어요.");
+    }
   };
 
   const submitAdmin = async () => {
     setBusy(true);
     const result = await loginAdmin(id, password);
-    setBusy(false);
-    if (!result.ok) setErr(result.error ?? "로그인에 실패했어요.");
+    if (!result.ok) {
+      setBusy(false);
+      setErr(result.error ?? "로그인에 실패했어요.");
+    }
   };
 
   const submitGuest = async () => {
     setBusy(true);
     const result = await loginGuest();
-    setBusy(false);
-    if (!result.ok) setErr(result.error ?? "입장에 실패했어요.");
+    if (!result.ok) {
+      setBusy(false);
+      setErr(result.error ?? "입장에 실패했어요.");
+    }
   };
 
   return (
@@ -94,8 +102,8 @@ export function LoginScreen() {
             onChange={(e) => setName(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && submitStaff()}
           />
-          <button type="button" className="btn pri" disabled={busy} onClick={submitStaff}>
-            입장
+          <button type="button" className="btn pri" disabled={busy} aria-busy={busy} onClick={submitStaff}>
+            {busy ? <span className="spinner" aria-hidden="true" /> : "입장"}
           </button>
         </div>
       )}
@@ -106,8 +114,8 @@ export function LoginScreen() {
       </button>
       {mode === "guest" && (
         <div className="loginform">
-          <button type="button" className="btn pri" disabled={busy} onClick={submitGuest}>
-            게스트로 입장
+          <button type="button" className="btn pri" disabled={busy} aria-busy={busy} onClick={submitGuest}>
+            {busy ? <span className="spinner" aria-hidden="true" /> : "게스트로 입장"}
           </button>
         </div>
       )}
@@ -136,8 +144,8 @@ export function LoginScreen() {
             onChange={(e) => setPassword(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && submitAdmin()}
           />
-          <button type="button" className="btn pri" disabled={busy} onClick={submitAdmin}>
-            로그인
+          <button type="button" className="btn pri" disabled={busy} aria-busy={busy} onClick={submitAdmin}>
+            {busy ? <span className="spinner" aria-hidden="true" /> : "로그인"}
           </button>
         </div>
       )}
