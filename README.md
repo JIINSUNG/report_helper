@@ -25,7 +25,7 @@
 6. `STORE_CODES`(JSON, 코드→지점명), `STORE_POS_IDS`(JSON, 지점명→포스ID 4자리), `ADMIN_ID`, `ADMIN_PASSWORD`를 정합니다. 예:
    ```
    STORE_CODES={"250101":"수지점","250202":"구리점"}
-   STORE_POS_IDS={"수지점":"REDACTED","구리점":"0000","운정점":"0000"}
+   STORE_POS_IDS={"수지점":"0000","구리점":"0000","운정점":"0000"}
    ADMIN_ID=admin
    ADMIN_PASSWORD=아무도-모르는-비밀번호
    ```
