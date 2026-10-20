@@ -12,6 +12,8 @@ export interface TodoItem {
   text: string;
   days: number[] | null;
   parent?: string;
+  /** 직접 고른 탭 바로가기 (예: "products"). 안 고르면 TODO_LINKS 자동 매칭을 써요. */
+  linkTab?: string | null;
 }
 
 export interface TodoExtraItem {

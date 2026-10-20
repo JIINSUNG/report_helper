@@ -16,6 +16,7 @@ import { useDroppable } from "@dnd-kit/core";
 import { useTodo } from "@/lib/use-todo";
 import { SHIFTS, WD, WHENS, secOn, todoBlank, todoSeed, type TodoData, type TodoItem, type TodoSection, type TodoWhen } from "@/data/todo-seed";
 import { TODO_LINKS } from "@/data/retro-hints";
+import { TAB_OPTIONS } from "@/data/tabs";
 
 function uid(prefix: string) {
   return `${prefix}${Math.random().toString(36).slice(2, 9)}`;
@@ -54,6 +55,9 @@ function SortableItemRow({
   onToggleDay,
   onAddKid,
   kidOf,
+  onRename,
+  onSetLink,
+  onRenameKid,
 }: {
   item: TodoItem;
   edit: boolean;
@@ -67,6 +71,9 @@ function SortableItemRow({
   onToggleDay: (d: number) => void;
   onAddKid: (text: string) => void;
   kidOf: TodoItem[];
+  onRename: (text: string) => void;
+  onSetLink: (tab: string | null) => void;
+  onRenameKid: (kidId: string, text: string) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: item.id,
@@ -86,7 +93,7 @@ function SortableItemRow({
           ⠿
         </button>
         <div className="tbody">
-          <span>{item.text}</span>
+          <input className="inp" style={{ fontWeight: 600 }} value={item.text} onChange={(e) => onRename(e.target.value)} aria-label="항목 이름" />
         </div>
         <div className="tact">
           <button type="button" className={"daybtn" + (daysOpen ? " on" : "")} aria-expanded={daysOpen} onClick={onOpenDays}>
@@ -95,6 +102,20 @@ function SortableItemRow({
           <button type="button" className="iconbtn" style={{ color: "var(--warn)" }} aria-label="삭제" onClick={onDelete}>
             ✕
           </button>
+        </div>
+        <div style={{ flexBasis: "100%", display: "flex", gap: 8, alignItems: "center" }}>
+          <span className="hint" style={{ margin: 0, whiteSpace: "nowrap" }}>
+            탭 바로가기
+          </span>
+          <select className="inp mini" value={item.linkTab || ""} onChange={(e) => onSetLink(e.target.value || null)} aria-label={item.text + " 탭 바로가기"}>
+            <option value="">자동 (내용으로 추측)</option>
+            <option value="__none__">없음</option>
+            {TAB_OPTIONS.map(([id, label]) => (
+              <option key={id} value={id}>
+                {label}
+              </option>
+            ))}
+          </select>
         </div>
         {daysOpen && (
           <>
@@ -124,7 +145,7 @@ function SortableItemRow({
         {kidOf.map((k) => (
           <div key={k.id} className="todo edit kid" style={{ width: "100%" }}>
             <div className="tbody">
-              <span>{k.text}</span>
+              <input className="inp" value={k.text} onChange={(e) => onRenameKid(k.id, e.target.value)} aria-label="세부 항목 이름" />
             </div>
           </div>
         ))}
@@ -222,6 +243,12 @@ export function TodoTab({ setTab }: { setTab: (id: string) => void }) {
   };
 
   const delItem = (id: string) => update((prev) => (prev ? { ...prev, items: prev.items.filter((i) => i.id !== id && i.parent !== id) } : prev));
+
+  const renameItem = (id: string, text: string) =>
+    update((prev) => (prev ? { ...prev, items: prev.items.map((i) => (i.id === id ? { ...i, text: text.slice(0, 80) } : i)) } : prev));
+
+  const setLinkTab = (id: string, tab: string | null) =>
+    update((prev) => (prev ? { ...prev, items: prev.items.map((i) => (i.id === id ? { ...i, linkTab: tab } : i)) } : prev));
 
   const addSec = () => {
     const v = newSecName.trim();
@@ -348,6 +375,8 @@ export function TodoTab({ setTab }: { setTab: (id: string) => void }) {
               onDragEnd={onDragEnd}
               sensors={sensors}
               setTab={setTab}
+              onRenameItem={renameItem}
+              onSetLinkTab={setLinkTab}
             />
           ))}
         </SortableContext>
@@ -404,6 +433,8 @@ function TodoSectionCard({
   onDragEnd,
   sensors,
   setTab,
+  onRenameItem,
+  onSetLinkTab,
 }: {
   sc: TodoSection;
   edit: boolean;
@@ -427,6 +458,8 @@ function TodoSectionCard({
   onDragEnd: (e: DragEndEvent) => void;
   sensors: ReturnType<typeof useSensors>;
   setTab: (id: string) => void;
+  onRenameItem: (id: string, text: string) => void;
+  onSetLinkTab: (id: string, tab: string | null) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: sc.id, disabled: !edit });
   const style = { transform: CSS.Transform.toString(transform), transition };
@@ -473,14 +506,23 @@ function TodoSectionCard({
         <SortableContext items={items.map((i) => i.id)} strategy={verticalListSortingStrategy} disabled={!edit}>
           <SectionDrop id={sc.id}>
             {items.map((item) => {
-              const link = TODO_LINKS.find(([re]) => re.test(item.text));
+              let linkTab: [string, string] | null = null;
+              if (item.linkTab === "__none__") {
+                linkTab = null;
+              } else if (item.linkTab) {
+                const t = TAB_OPTIONS.find(([id]) => id === item.linkTab);
+                linkTab = t ? [t[0], `${t[1]} 탭`] : null;
+              } else {
+                const auto = TODO_LINKS.find(([re]) => re.test(item.text));
+                linkTab = auto ? [auto[1], auto[2]] : null;
+              }
               return (
                 <SortableItemRow
                   key={item.id}
                   item={item}
                   edit={edit}
                   done={!!done[item.id]}
-                  linkTab={link ? [link[1], link[2]] : null}
+                  linkTab={linkTab}
                   onOpenTab={setTab}
                   onToggle={() => onToggle(item.id)}
                   onDelete={() => onDeleteItem(item.id)}
@@ -489,6 +531,9 @@ function TodoSectionCard({
                   onToggleDay={(d) => onToggleDay(item, d)}
                   onAddKid={(text) => onAddKid(item.id, text)}
                   kidOf={kidsOf(item.id)}
+                  onRename={(text) => onRenameItem(item.id, text)}
+                  onSetLink={(tab) => onSetLinkTab(item.id, tab)}
+                  onRenameKid={onRenameItem}
                 />
               );
             })}

@@ -21,6 +21,7 @@ import { CommunityTab } from "@/components/tabs/community/CommunityTab";
 import { AdminTab } from "@/components/tabs/admin/AdminTab";
 import { useRequests } from "@/lib/use-requests";
 import { TabGuide } from "@/components/ui/TabGuide";
+import { TAB_OPTIONS } from "@/data/tabs";
 
 const WD = "일월화수목금토";
 
@@ -30,18 +31,7 @@ function dayLabel(date: string) {
   return `${m}월 ${d}일 (${WD[new Date(y, m - 1, d).getDay()]})${hol ? " · " + hol : ""}`;
 }
 
-const TABS: [string, string][] = [
-  ["todo", "할일"],
-  ["open", "오픈"],
-  ["record", "기록"],
-  ["close", "마감"],
-  ["sales", "세일즈"],
-  ["schedule", "일정"],
-  ["community", "공유"],
-  ["retro", "회고"],
-  ["products", "제품"],
-  ["settings", "설정"],
-];
+const TABS: [string, string][] = [["todo", "할일"], ...TAB_OPTIONS];
 
 function AdminNavBadge() {
   const reqs = useRequests();
