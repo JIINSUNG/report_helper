@@ -6,9 +6,12 @@ import { Chips } from "@/components/ui/Fields";
 import { Items } from "@/components/ui/Items";
 import { ItemPicker } from "@/components/ui/ItemPicker";
 import { Sections } from "@/components/ui/Sections";
+import { ContextBar } from "@/components/ui/ContextBar";
+import { Reco } from "@/components/ui/Reco";
 import { InvCheck } from "./InvCheck";
 import { getClose, latestBefore } from "@/lib/local-reports";
 import { diffOf, reasonSum, signed } from "@/lib/report-text";
+import { autoContext, ctxManual, ctxTags, ctxVars, emptyCtx } from "@/lib/context";
 import { recCount } from "@/lib/record-utils";
 import { won, pct, uid, shift } from "@/lib/format";
 import { DIFF_TYPES, NOTE_CHIPS } from "@/data/record-options";
@@ -39,6 +42,12 @@ export function CloseTab({
   const diff = diffOf(r);
   const sum = reasonSum(r.reasons);
   const remain = diff - sum;
+  const auto = autoContext(date, r.dayGMV > 0 ? r : undefined);
+  const ctx = r.ctx || emptyCtx();
+  const setCtx = (v: typeof ctx) => set({ ctx: v });
+  const vars = ctxVars(auto, ctx);
+  const tags = ctxTags(auto, ctx);
+  const manual = ctxManual(auto, ctx);
   const inv = r.inv || null;
   const fromRec = r.items.map((it) => recCount(it.name, data.settings, recs));
   const recMismatch = fromRec.some((n, i) => n !== r.items[i].actual);
@@ -220,10 +229,20 @@ export function CloseTab({
         </button>
       </Card>
 
+      <Card title="오늘 상황">
+        <ContextBar auto={auto} state={ctx} setState={setCtx} />
+      </Card>
+
       <Card title="금일 핵심 내용">
+        <Reco data={data} update={update} k="highlight" tags={tags} manual={manual} vars={vars} onPick={(p) => set({ highlights: [...r.highlights, p] })} />
         <Sections idp="hl" list={r.highlights} onChange={(v) => set({ highlights: v })} />
       </Card>
+      <Card title="금일 스마트폰 인사이트" right={<span className="sub">선택 · 비우면 보고서에 안 나와요</span>}>
+        <p className="hint">예: &quot;20대 커플 / Xiaomi 17시리즈&quot; 처럼 고객군·제품을 제목으로 쓰고, 판매·리드 확보 등 결과를 아래에 적어주세요.</p>
+        <Sections idp="pi" list={r.phoneInsights || []} onChange={(v) => set({ phoneInsights: v })} />
+      </Card>
       <Card title="익일 계획">
+        <Reco data={data} update={update} k="plan" tags={tags} manual={manual} vars={vars} onPick={(p) => set({ plans: [...r.plans, p] })} />
         <Sections idp="pl" list={r.plans} onChange={(v) => set({ plans: v })} />
       </Card>
 

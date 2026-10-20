@@ -62,6 +62,7 @@ export function closeText(r: CloseReport, store: string, def?: string): string {
             .map((x) => `- ${x.text.trim()} ${x.side === "retail" ? "리테일" : "포스기"} +${won(x.amount)}`),
         ];
   const hs = sectionsText(r.highlights);
+  const pis = sectionsText(r.phoneInsights || []);
   const ps = sectionsText(r.plans);
   return [
     `[${y}년 ${m}월 ${d}일]`,
@@ -93,6 +94,9 @@ export function closeText(r: CloseReport, store: string, def?: string): string {
     "[금일 핵심 내용]",
     "",
     ...(hs ? [hs] : []),
+    "[금일 스마트폰 인사이트]",
+    "",
+    ...(pis ? [pis] : []),
     "[익일계획]",
     "",
     ...(ps ? [ps] : []),

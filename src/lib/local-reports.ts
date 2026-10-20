@@ -120,6 +120,7 @@ export function newClose(data: LocalReportData, date: string): CloseReport {
     pos: 0,
     reasons: [],
     highlights: [],
+    phoneInsights: [],
     plans: [],
     note: "",
   };
@@ -129,7 +130,9 @@ export function getOpen(d: LocalReportData, date: string): OpenReport {
   return d.opens[date] || newOpen(d, date);
 }
 export function getClose(d: LocalReportData, date: string): CloseReport {
-  return d.closes[date] || newClose(d, date);
+  const r = d.closes[date] || newClose(d, date);
+  // phoneInsights는 나중에 추가된 필드라, 그 전에 저장된 마감보고에는 없을 수 있다.
+  return { ...r, phoneInsights: r.phoneInsights ?? [] };
 }
 export function getMgr(d: LocalReportData, date: string): SalesManager {
   const existing = d.managers[date];

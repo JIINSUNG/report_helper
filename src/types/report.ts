@@ -48,6 +48,7 @@ export interface CloseReport {
   pos: number;
   reasons: ReasonEntry[];
   highlights: Section[];
+  phoneInsights: Section[];
   plans: Section[];
   note: string;
   ctx?: ContextState;
