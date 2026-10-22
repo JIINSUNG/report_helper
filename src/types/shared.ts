@@ -9,6 +9,17 @@ export interface CatalogOverride {
   at?: string;
 }
 
+/** 가격을 바꿀 때마다 자동으로 쌓이는 변경 기록 (삭제·되돌리기 없음, 조회용). */
+export interface PriceHistoryEntry {
+  id: string;
+  productId: string;
+  productName: string;
+  oldPrice: number | null;
+  newPrice: number;
+  by: string | null;
+  at: string;
+}
+
 export interface Tip {
   id: string;
   pid: string;

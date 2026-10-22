@@ -14,7 +14,7 @@ import {
 } from "firebase/firestore";
 import { getFirebaseDb } from "./firebase-client";
 import { useAuth } from "@/context/auth-context";
-import type { CatalogOverride, Rival, Tip } from "@/types/shared";
+import type { CatalogOverride, PriceHistoryEntry, Rival, Tip } from "@/types/shared";
 import type { CompetitorProduct } from "@/types/product";
 
 /** 제품 가격 오버라이드·경쟁 제품 비교·팁 — 직원끼리 공유 (Firestore). */
@@ -23,6 +23,9 @@ export function useShared() {
   const [overrides, setOverrides] = useState<Record<string, CatalogOverride>>({});
   const [tips, setTips] = useState<Tip[]>([]);
   const [rivals, setRivals] = useState<Rival[]>([]);
+  const [priceHistory, setPriceHistory] = useState<PriceHistoryEntry[]>([]);
+  const canWrite = role === "staff" || role === "admin";
+  const isAdmin = role === "admin";
 
   useEffect(() => {
     const db = getFirebaseDb();
@@ -37,19 +40,39 @@ export function useShared() {
       setTips(snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Tip))
     );
     const u3 = onSnapshot(collection(db, "rivals"), (snap) => setRivals(snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Rival)));
+    // priceHistory는 직원·관리자 전용 — 게스트도 제품 탭을 보므로 여기서 미리 막는다.
+    const u4 = canWrite
+      ? onSnapshot(query(collection(db, "priceHistory"), orderBy("at", "desc")), (snap) => setPriceHistory(snap.docs.map((d) => ({ id: d.id, ...d.data() }) as PriceHistoryEntry)))
+      : undefined;
     return () => {
       u1();
       u2();
       u3();
+      u4?.();
     };
-  }, []);
+  }, [canWrite]);
 
-  const canWrite = role === "staff" || role === "admin";
-  const isAdmin = role === "admin";
+  async function logPriceChange(pid: string, productName: string, oldPrice: number | null, newPrice: number) {
+    if (newPrice === oldPrice) return;
+    await addDoc(collection(getFirebaseDb(), "priceHistory"), {
+      productId: pid,
+      productName,
+      oldPrice,
+      newPrice,
+      by: uid,
+      at: new Date().toISOString(),
+    });
+  }
 
-  async function saveProduct(pid: string, body: { price: number | null; note: string; comps: CompetitorProduct[]; hidden?: boolean }) {
+  async function saveProduct(
+    pid: string,
+    productName: string,
+    oldPrice: number | null,
+    body: { price: number | null; note: string; comps: CompetitorProduct[]; hidden?: boolean }
+  ) {
     const db = getFirebaseDb();
     await setDoc(doc(db, "catalog", pid), { ...body, hidden: body.hidden ?? overrides[pid]?.hidden ?? false, by: uid, at: new Date().toISOString() });
+    if (body.price != null) await logPriceChange(pid, productName, oldPrice, body.price);
   }
 
   async function setHidden(pid: string, hidden: boolean) {
@@ -82,5 +105,5 @@ export function useShared() {
     await deleteDoc(doc(getFirebaseDb(), "rivals", id));
   }
 
-  return { overrides, tips, rivals, canWrite, isAdmin, saveProduct, setHidden, resetProduct, addTip, editTip, deleteTip, addRival, editRival, deleteRival };
+  return { overrides, tips, rivals, priceHistory, canWrite, isAdmin, saveProduct, setHidden, resetProduct, addTip, editTip, deleteTip, addRival, editRival, deleteRival };
 }

@@ -57,6 +57,14 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    // 가격 변경 기록 — 수정할 때마다 자동으로 쌓이는 조회용 로그. 수정은 없고, 삭제는 관리자만.
+    match /priceHistory/{entryId} {
+      allow read: if isStaffOrAdmin();
+      allow create: if isStaffOrAdmin() && request.resource.data.by == request.auth.uid;
+      allow update: if false;
+      allow delete: if isAdmin();
+    }
+
     // 카테고리별 경쟁 제품 비교 — 팁과 동일한 권한 구조.
     match /rivals/{rivalId} {
       allow read: if isSignedIn();

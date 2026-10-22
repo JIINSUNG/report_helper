@@ -12,6 +12,8 @@ import { RivalCard } from "./RivalCard";
 import { PriceChart } from "./PriceChart";
 import { MetricChart } from "./MetricChart";
 import { ScatterChart } from "./ScatterChart";
+import { PriceHistoryCard } from "./PriceHistoryCard";
+import { BulkPriceEditor } from "./BulkPriceEditor";
 
 export function ProductsTab() {
   const shared = useShared();
@@ -19,6 +21,7 @@ export function ProductsTab() {
   const [q, setQ] = useState("");
   const [open, setOpen] = useState<string | null>(null);
   const [acc, setAcc] = useState(false);
+  const [bulkOpen, setBulkOpen] = useState(false);
   const official = g === "official";
   const grp = GROUPS.find((x) => x.id === g) || GROUPS[0];
   const qlower = q.trim().toLowerCase();
@@ -34,6 +37,7 @@ export function ProductsTab() {
   const allRows = official ? officialRows() : [];
   const rows = official ? allRows.filter((r) => (acc || !r.a) && (!qlower || (r.n + " " + r.c).toLowerCase().includes(qlower))) : [];
   const cats = official ? [...new Set(rows.map((r) => r.c))] : [];
+  const groupHistory = shared.priceHistory.filter((h) => all.some((p) => p.id === h.productId));
 
   return (
     <>
@@ -131,11 +135,26 @@ export function ProductsTab() {
       )}
 
       {!official && !qs && (
-        <Card title={grp.label + " 가격 비교"} right={<span className="sub">매장가 vs 경쟁 제품</span>}>
+        <Card
+          title={grp.label + " 가격 비교"}
+          right={
+            shared.canWrite ? (
+              <button type="button" className="link" onClick={() => setBulkOpen(!bulkOpen)}>
+                {bulkOpen ? "일괄 변경 닫기" : "일괄 가격 변경"}
+              </button>
+            ) : (
+              <span className="sub">매장가 vs 경쟁 제품</span>
+            )
+          }
+        >
           <PriceChart items={items} />
           <p className="hint">각 막대 이름 아래에 정확한 금액과 출처가 적혀 있어요. 경쟁 제품 가격은 각 제품 카드의 &quot;가격 수정&quot;에서 바꿀 수 있어요.</p>
         </Card>
       )}
+
+      {!official && !qs && bulkOpen && shared.canWrite && <BulkPriceEditor items={items} shared={shared} onDone={() => setBulkOpen(false)} />}
+
+      {!official && !qs && <PriceHistoryCard history={groupHistory} />}
 
       {!official && !qs && METRICS[grp.id] && (
         <Card title={grp.label + " 성능 비교"} right={<span className="sub">문서 수치 기준</span>}>

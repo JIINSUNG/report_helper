@@ -22,7 +22,7 @@ function PriceEditor({ p, shared, onDone }: { p: EffectiveProduct; shared: Retur
   const save = async () => {
     setBusy(true);
     try {
-      await shared.saveProduct(p.id, {
+      await shared.saveProduct(p.id, p.name, p.p, {
         price: price || null,
         note: note.trim(),
         comps: comps
