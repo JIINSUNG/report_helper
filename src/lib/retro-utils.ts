@@ -10,6 +10,7 @@ export function getRetro(d: LocalReportData, date: string): Retro {
     mood: e?.mood ?? 0,
     day: e?.day ?? "",
     did: e?.did ?? "",
+    issues: e?.issues ?? "",
     keep: e?.keep ?? "",
     problem: e?.problem ?? "",
     try: e?.try ?? "",
@@ -66,6 +67,7 @@ export function retroText(d: LocalReportData, date: string): string {
     "",
     ...sec("오늘 하루", r.day),
     ...sec("오늘 한 일", r.did),
+    ...sec("걸리는 일 · 찜찜했던 일", r.issues),
     ...(anyTried ? sec("지난 Try 실천", tried) : []),
     ...body,
   ]

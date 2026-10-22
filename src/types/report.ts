@@ -13,6 +13,8 @@ export interface OpenReport {
   targetItems: ItemTarget[];
   comment: string;
   ctx?: ContextState;
+  customText?: Record<string, Section[]>;
+  customAmount?: Record<string, CustomAmountValue>;
 }
 
 export interface ReasonEntry {
@@ -52,11 +54,31 @@ export interface CloseReport {
   plans: Section[];
   note: string;
   ctx?: ContextState;
+  customText?: Record<string, Section[]>;
+  customAmount?: Record<string, CustomAmountValue>;
 }
 
 export interface Section {
   t: string;
   b: string[];
+}
+
+/** 보고서에 사용자가 직접 추가하는 커스텀 섹션 — 설정 탭에서 정의. */
+export type CustomSectionType = "sections" | "amount";
+export type CustomAppliesTo = "open" | "close" | "both";
+
+export interface CustomSectionDef {
+  id: string;
+  label: string;
+  appliesTo: CustomAppliesTo;
+  type: CustomSectionType;
+  /** type==="amount"일 때만: 전체 예산(원). 예: 세일즈 활용 금액 150,000원 */
+  totalBudget?: number;
+}
+
+export interface CustomAmountValue {
+  amount: number;
+  note: string;
 }
 
 export interface ContextState {
@@ -130,6 +152,7 @@ export interface Retro {
   mood: number;
   day: string;
   did: string;
+  issues: string;
   keep: string;
   problem: string;
   try: string;
@@ -162,6 +185,7 @@ export interface ReportSettings {
   inventoryNote: string;
   extraHolidays?: string;
   defaults?: ReportDefaults;
+  customSections?: CustomSectionDef[];
 }
 
 export interface LocalReportData {

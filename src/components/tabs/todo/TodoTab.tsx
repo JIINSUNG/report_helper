@@ -185,6 +185,7 @@ export function TodoTab({ setTab }: { setTab: (id: string) => void }) {
   const [edit, setEdit] = useState(false);
   const [shift, setShiftState] = useState("full");
   const [draft, setDraft] = useState<Record<string, string>>({});
+  const [rep, setRep] = useState<Record<string, boolean>>({});
   const [daysOpenFor, setDaysOpenFor] = useState<string | null>(null);
   const [newSecName, setNewSecName] = useState("");
   const [newSecWhen, setNewSecWhen] = useState<TodoWhen>("all");
@@ -225,9 +226,18 @@ export function TodoTab({ setTab }: { setTab: (id: string) => void }) {
   const addItem = (sec: string) => {
     const v = (draft[sec] || "").trim();
     if (!v) return;
-    update((prev) => (prev ? { ...prev, items: [...prev.items, { id: uid("u"), sec, text: v.slice(0, 80), days: null }] } : prev));
+    if (rep[sec] || edit) {
+      update((prev) => (prev ? { ...prev, items: [...prev.items, { id: uid("u"), sec, text: v.slice(0, 80), days: null }] } : prev));
+    } else {
+      update((prev) =>
+        prev ? { ...prev, extra: { ...prev.extra, [date]: [...(prev.extra[date] || []), { id: uid("x"), sec, text: v.slice(0, 80) }] } } : prev
+      );
+    }
     setDraft({ ...draft, [sec]: "" });
   };
+
+  const delExtra = (id: string) =>
+    update((prev) => (prev ? { ...prev, extra: { ...prev.extra, [date]: (prev.extra[date] || []).filter((x) => x.id !== id) } } : prev));
 
   const addKid = (parentId: string, sec: string, text: string) => {
     const v = text.trim();
@@ -377,6 +387,9 @@ export function TodoTab({ setTab }: { setTab: (id: string) => void }) {
               setTab={setTab}
               onRenameItem={renameItem}
               onSetLinkTab={setLinkTab}
+              repeat={!!rep[sc.id]}
+              onToggleRepeat={() => setRep({ ...rep, [sc.id]: !rep[sc.id] })}
+              onDeleteExtra={delExtra}
             />
           ))}
         </SortableContext>
@@ -435,6 +448,9 @@ function TodoSectionCard({
   setTab,
   onRenameItem,
   onSetLinkTab,
+  repeat,
+  onToggleRepeat,
+  onDeleteExtra,
 }: {
   sc: TodoSection;
   edit: boolean;
@@ -460,11 +476,14 @@ function TodoSectionCard({
   setTab: (id: string) => void;
   onRenameItem: (id: string, text: string) => void;
   onSetLinkTab: (id: string, tab: string | null) => void;
+  repeat: boolean;
+  onToggleRepeat: () => void;
+  onDeleteExtra: (id: string) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: sc.id, disabled: !edit });
   const style = { transform: CSS.Transform.toString(transform), transition };
-  const leaf = items.length ? items : [];
-  const c = leaf.filter((i) => done[i.id]).length;
+  const leafIds = [...items.map((i) => i.id), ...(!edit ? extra.map((x) => x.id) : [])];
+  const c = leafIds.filter((id) => done[id]).length;
 
   return (
     <section ref={setNodeRef} style={style} className="card">
@@ -497,7 +516,7 @@ function TodoSectionCard({
         <div className="cardhead">
           <h2>{sc.name}</h2>
           <span className="sub">
-            {c} / {leaf.length}
+            {c} / {leafIds.length}
           </span>
         </div>
       )}
@@ -547,6 +566,9 @@ function TodoSectionCard({
                     <span>{x.text}</span>
                     <small>오늘만</small>
                   </div>
+                  <button type="button" className="iconbtn" aria-label={x.text + " 삭제"} onClick={() => onDeleteExtra(x.id)}>
+                    ✕
+                  </button>
                 </div>
               ))}
           </SectionDrop>
@@ -554,7 +576,18 @@ function TodoSectionCard({
       </DndContext>
 
       <div className="tadd">
-        <input className="inp" placeholder="할 일 추가" value={draft} onChange={(e) => onDraft(e.target.value)} onKeyDown={(e) => e.key === "Enter" && onAdd()} />
+        <input
+          className="inp"
+          placeholder={edit || repeat ? "매일 반복할 일 추가" : "오늘만 할 일 추가"}
+          value={draft}
+          onChange={(e) => onDraft(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && onAdd()}
+        />
+        {!edit && (
+          <button type="button" className="chip" aria-pressed={repeat} onClick={onToggleRepeat}>
+            {repeat ? "반복" : "오늘만"}
+          </button>
+        )}
         <button type="button" className="btn sm" onClick={onAdd}>
           추가
         </button>

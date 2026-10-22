@@ -154,6 +154,15 @@ export function RetroTab({
           )}
           <Area id="rt-did" rows={3} value={r.did} onChange={(v) => set({ did: v })} ph={off ? "운동, 공부, 약속 등 오늘 한 것" : "상담, 판매, 입고, 진열 등"} />
         </div>
+        <RetroField
+          id="rt-issues"
+          label="걸리는 일 · 찜찜했던 일"
+          sub="있을 때만 · 나만 보여요"
+          hints={H.issues}
+          value={r.issues}
+          onChange={(v) => set({ issues: v })}
+          rows={2}
+        />
       </Card>
 
       <Card

@@ -1,5 +1,5 @@
 import { parts, won, comma } from "./format";
-import type { CloseReport, ItemTarget, OpenReport, Section } from "@/types/report";
+import type { CloseReport, CustomSectionDef, ItemTarget, OpenReport, Section } from "@/types/report";
 
 export const itemsLine = (it: ItemTarget[], k: "target" | "actual") =>
   it.map((i) => `${i.name} ${i[k]}대`).join(", ");
@@ -31,7 +31,37 @@ export function invLines(r: CloseReport, def?: string): string[] {
   });
 }
 
-export function openText(r: OpenReport, store: string): string {
+/** 사용자가 설정에서 직접 정의한 커스텀 섹션(텍스트 목록/금액 관리)을 보고서 텍스트에 덧붙인다. */
+function customSectionLines(
+  r: { customText?: Record<string, Section[]>; customAmount?: Record<string, { amount: number; note: string }> },
+  defs: CustomSectionDef[],
+  scope: "open" | "close",
+  remainingFor: (defId: string) => number | null
+): string[] {
+  const out: string[] = [];
+  defs
+    .filter((d) => d.appliesTo === scope || d.appliesTo === "both")
+    .forEach((d) => {
+      if (d.type === "sections") {
+        const txt = sectionsText(r.customText?.[d.id] || []);
+        if (txt) out.push("", `[${d.label}]`, "", txt);
+      } else {
+        const v = r.customAmount?.[d.id];
+        if (v && (v.amount || v.note.trim())) {
+          const remain = remainingFor(d.id);
+          out.push(
+            "",
+            `[${d.label}]`,
+            `- 오늘 사용: ${won(v.amount)}${v.note.trim() ? ` (${v.note.trim()})` : ""}`,
+            ...(remain != null ? [`- 남은 금액: ${won(remain)}`] : [])
+          );
+        }
+      }
+    });
+  return out;
+}
+
+export function openText(r: OpenReport, store: string, customDefs: CustomSectionDef[] = [], remainingFor: (defId: string) => number | null = () => null): string {
   const [y, m, d] = parts(r.date);
   return [
     `[${String(y).slice(2)}년 ${m}월 ${d}일] ${store} 오픈보고`,
@@ -45,10 +75,17 @@ export function openText(r: OpenReport, store: string): string {
     "",
     "- 코멘트",
     r.comment.trim(),
+    ...customSectionLines(r, customDefs, "open", remainingFor),
   ].join("\n");
 }
 
-export function closeText(r: CloseReport, store: string, def?: string): string {
+export function closeText(
+  r: CloseReport,
+  store: string,
+  def?: string,
+  customDefs: CustomSectionDef[] = [],
+  remainingFor: (defId: string) => number | null = () => null
+): string {
   const [y, m, d] = parts(r.date);
   const diff = diffOf(r);
   const dl =
@@ -103,6 +140,7 @@ export function closeText(r: CloseReport, store: string, def?: string): string {
     ...(r.note.trim()
       ? ["[특이사항]", ...r.note.trim().split("\n").map((x) => "- " + x.replace(/^-\s*/, ""))]
       : []),
+    ...customSectionLines(r, customDefs, "close", remainingFor),
     "이상입니다.",
   ].join("\n");
 }

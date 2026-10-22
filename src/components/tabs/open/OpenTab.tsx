@@ -6,8 +6,10 @@ import { Items } from "@/components/ui/Items";
 import { ItemPicker } from "@/components/ui/ItemPicker";
 import { ContextBar } from "@/components/ui/ContextBar";
 import { Reco } from "@/components/ui/Reco";
+import { CustomSectionCard } from "@/components/ui/CustomSectionCard";
 import { getOpen, itemTarget, latestBefore } from "@/lib/local-reports";
 import { autoContext, ctxManual, ctxTags, ctxVars, emptyCtx } from "@/lib/context";
+import { amountRemaining, blankCustomAmount, mapsFor } from "@/lib/custom-sections";
 import { isOffDay } from "@/data/holidays";
 import { SchedPeek } from "@/components/tabs/schedule/SchedPeek";
 import type { LocalReportData } from "@/types/report";
@@ -37,6 +39,7 @@ export function OpenTab({
   const setCtx = (v: typeof ctx) => set({ ctx: v });
   const tags = ctxTags(auto, ctx);
   const offEff = tags.includes("weekend") || tags.includes("holiday");
+  const customDefs = (data.settings.customSections || []).filter((d) => d.appliesTo === "open" || d.appliesTo === "both");
 
   return (
     <>
@@ -93,6 +96,18 @@ export function OpenTab({
         />
         <Area id="o-cm" rows={4} value={r.comment} ph="추천 문장을 고르거나 직접 써주세요" onChange={(v) => set({ comment: v })} />
       </Card>
+
+      {customDefs.map((def) => (
+        <CustomSectionCard
+          key={def.id}
+          def={def}
+          sectionsValue={r.customText?.[def.id] || []}
+          amountValue={r.customAmount?.[def.id] || blankCustomAmount()}
+          remaining={def.type === "amount" && def.totalBudget != null ? amountRemaining(mapsFor(def, data.opens, data.closes), def.id, def.totalBudget, date) : null}
+          onChangeSections={(v) => set({ customText: { ...(r.customText || {}), [def.id]: v } })}
+          onChangeAmount={(v) => set({ customAmount: { ...(r.customAmount || {}), [def.id]: v } })}
+        />
+      ))}
 
       {!isGuest && <SchedPeek storeLabel={storeLabel} date={date} title="오늘 일정" goSchedule={goSchedule} />}
     </>

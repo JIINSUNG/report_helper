@@ -6,6 +6,7 @@ import { useLocalReports } from "@/lib/local-reports";
 import { getClose, getOpen } from "@/lib/local-reports";
 import { closeText, openText } from "@/lib/report-text";
 import { retroText } from "@/lib/retro-utils";
+import { amountRemaining, mapsFor } from "@/lib/custom-sections";
 import { shift, parts, today as todayStr } from "@/lib/format";
 import { holidayName } from "@/data/holidays";
 import { OpenTab } from "@/components/tabs/open/OpenTab";
@@ -60,8 +61,14 @@ export function AppShell() {
   }, [tab]);
 
   const text = useMemo(() => {
-    if (tab === "open") return openText(getOpen(data, date), storeLabel);
-    if (tab === "close") return closeText(getClose(data, date), storeLabel, data.settings.inventoryNote);
+    const customDefs = data.settings.customSections || [];
+    const remainingFor = (defId: string) => {
+      const def = customDefs.find((d) => d.id === defId);
+      if (!def || def.type !== "amount" || def.totalBudget == null) return null;
+      return amountRemaining(mapsFor(def, data.opens, data.closes), defId, def.totalBudget, date);
+    };
+    if (tab === "open") return openText(getOpen(data, date), storeLabel, customDefs, remainingFor);
+    if (tab === "close") return closeText(getClose(data, date), storeLabel, data.settings.inventoryNote, customDefs, remainingFor);
     if (tab === "retro") return retroText(data, date);
     return "";
   }, [tab, data, date, storeLabel]);

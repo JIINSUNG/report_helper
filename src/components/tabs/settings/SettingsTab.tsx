@@ -10,6 +10,7 @@ import { DEFS_BASE, blankReportData } from "@/lib/local-reports";
 import { today } from "@/lib/format";
 import { useAuth } from "@/context/auth-context";
 import { StorePicker } from "./StorePicker";
+import { CustomSectionsManager } from "./CustomSectionsManager";
 import type { LocalReportData, ReportDefaults, ReportItemSetting } from "@/types/report";
 
 function DefaultsCard({
@@ -168,6 +169,8 @@ export function SettingsTab({
         </label>
         <p className="hint">2026~2027년 공휴일은 미리 넣어두었어요. 추가 휴일은 주말 기준 목표로 계산돼요.</p>
       </Card>
+
+      <CustomSectionsManager data={data} update={update} />
 
       <Card title="데이터 · 보안">
         <div className="secbox">

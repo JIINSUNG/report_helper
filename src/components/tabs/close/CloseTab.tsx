@@ -8,10 +8,12 @@ import { ItemPicker } from "@/components/ui/ItemPicker";
 import { Sections } from "@/components/ui/Sections";
 import { ContextBar } from "@/components/ui/ContextBar";
 import { Reco } from "@/components/ui/Reco";
+import { CustomSectionCard } from "@/components/ui/CustomSectionCard";
 import { InvCheck } from "./InvCheck";
 import { getClose, latestBefore } from "@/lib/local-reports";
 import { diffOf, reasonSum, signed } from "@/lib/report-text";
 import { autoContext, ctxManual, ctxTags, ctxVars, emptyCtx } from "@/lib/context";
+import { amountRemaining, blankCustomAmount, mapsFor } from "@/lib/custom-sections";
 import { recCount } from "@/lib/record-utils";
 import { won, pct, uid, shift } from "@/lib/format";
 import { DIFF_TYPES, NOTE_CHIPS } from "@/data/record-options";
@@ -48,6 +50,7 @@ export function CloseTab({
   const vars = ctxVars(auto, ctx);
   const tags = ctxTags(auto, ctx);
   const manual = ctxManual(auto, ctx);
+  const customDefs = (data.settings.customSections || []).filter((d) => d.appliesTo === "close" || d.appliesTo === "both");
   const inv = r.inv || null;
   const fromRec = r.items.map((it) => recCount(it.name, data.settings, recs));
   const recMismatch = fromRec.some((n, i) => n !== r.items[i].actual);
@@ -256,6 +259,18 @@ export function CloseTab({
         </div>
         <Area id="c-note" value={r.note} ph="한 줄에 하나씩" onChange={(v) => set({ note: v })} />
       </Card>
+
+      {customDefs.map((def) => (
+        <CustomSectionCard
+          key={def.id}
+          def={def}
+          sectionsValue={r.customText?.[def.id] || []}
+          amountValue={r.customAmount?.[def.id] || blankCustomAmount()}
+          remaining={def.type === "amount" && def.totalBudget != null ? amountRemaining(mapsFor(def, data.opens, data.closes), def.id, def.totalBudget, date) : null}
+          onChangeSections={(v) => set({ customText: { ...(r.customText || {}), [def.id]: v } })}
+          onChangeAmount={(v) => set({ customAmount: { ...(r.customAmount || {}), [def.id]: v } })}
+        />
+      ))}
 
       {!isGuest && <SchedPeek storeLabel={storeLabel} date={shift(date, 1)} title="내일 일정" goSchedule={goSchedule} />}
     </>
