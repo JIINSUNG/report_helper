@@ -11,7 +11,6 @@ import {
   type DragEndEvent,
 } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
 import { useDroppable } from "@dnd-kit/core";
 import { useTodo } from "@/lib/use-todo";
 import { SHIFTS, WD, WHENS, secOn, todoBlank, todoSeed, type TodoData, type TodoItem, type TodoSection, type TodoWhen } from "@/data/todo-seed";
@@ -80,7 +79,13 @@ function SortableItemRow({
     data: { sec: item.sec },
     disabled: !edit || !!item.parent,
   });
-  const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.4 : 1 };
+  // CSS.Transform.toString은 scaleX/scaleY도 같이 넣는데, 드래그 중 항목이 커졌다 작아졌다
+  // 하는 게 보기 안 좋아서 이동(translate)만 적용한다.
+  const style = {
+    transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,
+    transition,
+    opacity: isDragging ? 0.4 : 1,
+  };
   const [kidText, setKidText] = useState("");
   const [addingKid, setAddingKid] = useState(false);
   const dayTxt = item.days ? item.days.map((d) => WD[d]).join("·") : "";
@@ -183,7 +188,7 @@ function SectionDrop({ id, children }: { id: string; children: React.ReactNode }
 export function TodoTab({ setTab }: { setTab: (id: string) => void }) {
   const [todo, update] = useTodo();
   const [edit, setEdit] = useState(false);
-  const [shift, setShiftState] = useState("full");
+  const [shift, setShiftState] = useState(() => todo?.lastShift ?? "full");
   const [draft, setDraft] = useState<Record<string, string>>({});
   const [rep, setRep] = useState<Record<string, boolean>>({});
   const [daysOpenFor, setDaysOpenFor] = useState<string | null>(null);
@@ -198,12 +203,29 @@ export function TodoTab({ setTab }: { setTab: (id: string) => void }) {
 
   if (!todo) return <TodoStart onPick={(d) => update(() => d)} />;
 
+  const setShift = (v: string) => {
+    setShiftState(v);
+    update((prev) => (prev ? { ...prev, lastShift: v } : prev));
+  };
+
   const setDone = (id: string, v: boolean) => {
     update((prev) => {
       if (!prev) return prev;
       const d = { ...(prev.done[date] || {}) };
       if (v) d[id] = true;
       else delete d[id];
+      return { ...prev, done: { ...prev.done, [date]: d } };
+    });
+  };
+
+  const setAllDone = (ids: string[], v: boolean) => {
+    update((prev) => {
+      if (!prev) return prev;
+      const d = { ...(prev.done[date] || {}) };
+      ids.forEach((id) => {
+        if (v) d[id] = true;
+        else delete d[id];
+      });
       return { ...prev, done: { ...prev.done, [date]: d } };
     });
   };
@@ -234,6 +256,17 @@ export function TodoTab({ setTab }: { setTab: (id: string) => void }) {
       );
     }
     setDraft({ ...draft, [sec]: "" });
+  };
+
+  const addBulk = (sec: string, lines: string[]) => {
+    if (!lines.length) return;
+    if (rep[sec] || edit) {
+      update((prev) => (prev ? { ...prev, items: [...prev.items, ...lines.map((v) => ({ id: uid("u"), sec, text: v.slice(0, 80), days: null }))] } : prev));
+    } else {
+      update((prev) =>
+        prev ? { ...prev, extra: { ...prev.extra, [date]: [...(prev.extra[date] || []), ...lines.map((v) => ({ id: uid("x"), sec, text: v.slice(0, 80) }))] } } : prev
+      );
+    }
   };
 
   const delExtra = (id: string) =>
@@ -329,7 +362,7 @@ export function TodoTab({ setTab }: { setTab: (id: string) => void }) {
           <>
             <div className="seg" role="group" aria-label="근무" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)" }}>
               {SHIFTS.map(([k, l]) => (
-                <button key={k} type="button" aria-pressed={shift === k} onClick={() => setShiftState(k)}>
+                <button key={k} type="button" aria-pressed={shift === k} onClick={() => setShift(k)}>
                   {l}
                 </button>
               ))}
@@ -339,9 +372,16 @@ export function TodoTab({ setTab }: { setTab: (id: string) => void }) {
                 <div className="tprog">
                   <div style={{ width: (allLeaf.length ? (cnt / allLeaf.length) * 100 : 0) + "%" }} />
                 </div>
-                <p className="hint" style={{ margin: 0 }}>
-                  {cnt} / {allLeaf.length} 완료{cnt === allLeaf.length && allLeaf.length ? " · 오늘도 수고했어요!" : ""}
-                </p>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+                  <p className="hint" style={{ margin: 0 }}>
+                    {cnt} / {allLeaf.length} 완료{cnt === allLeaf.length && allLeaf.length ? " · 오늘도 수고했어요!" : ""}
+                  </p>
+                  {allLeaf.length > 0 && (
+                    <button type="button" className="link" onClick={() => setAllDone(allLeaf.map((i) => i.id), cnt !== allLeaf.length)}>
+                      {cnt === allLeaf.length ? "전체 해제" : "전체 완료"}
+                    </button>
+                  )}
+                </div>
               </>
             ) : (
               <p className="hint" style={{ margin: 0 }}>
@@ -390,6 +430,12 @@ export function TodoTab({ setTab }: { setTab: (id: string) => void }) {
               repeat={!!rep[sc.id]}
               onToggleRepeat={() => setRep({ ...rep, [sc.id]: !rep[sc.id] })}
               onDeleteExtra={delExtra}
+              onToggleAll={() => {
+                const ids = [...itemsBySec(sc.id).map((i) => i.id), ...extra.filter((x) => x.sec === sc.id).map((x) => x.id)];
+                const allDone = ids.length > 0 && ids.every((id) => done[id]);
+                setAllDone(ids, !allDone);
+              }}
+              onAddBulk={(lines) => addBulk(sc.id, lines)}
             />
           ))}
         </SortableContext>
@@ -451,6 +497,8 @@ function TodoSectionCard({
   repeat,
   onToggleRepeat,
   onDeleteExtra,
+  onToggleAll,
+  onAddBulk,
 }: {
   sc: TodoSection;
   edit: boolean;
@@ -479,11 +527,15 @@ function TodoSectionCard({
   repeat: boolean;
   onToggleRepeat: () => void;
   onDeleteExtra: (id: string) => void;
+  onToggleAll: () => void;
+  onAddBulk: (lines: string[]) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: sc.id, disabled: !edit });
-  const style = { transform: CSS.Transform.toString(transform), transition };
+  const style = { transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined, transition };
   const leafIds = [...items.map((i) => i.id), ...(!edit ? extra.map((x) => x.id) : [])];
   const c = leafIds.filter((id) => done[id]).length;
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const [bulkText, setBulkText] = useState("");
 
   return (
     <section ref={setNodeRef} style={style} className="card">
@@ -515,8 +567,15 @@ function TodoSectionCard({
       ) : (
         <div className="cardhead">
           <h2>{sc.name}</h2>
-          <span className="sub">
-            {c} / {leafIds.length}
+          <span style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <span className="sub">
+              {c} / {leafIds.length}
+            </span>
+            {leafIds.length > 0 && (
+              <button type="button" className="link" onClick={onToggleAll}>
+                {c === leafIds.length ? "전체 해제" : "전체 완료"}
+              </button>
+            )}
           </span>
         </div>
       )}
@@ -592,6 +651,30 @@ function TodoSectionCard({
           추가
         </button>
       </div>
+      <button type="button" className="link" style={{ alignSelf: "flex-start", fontSize: 12.5 }} onClick={() => setBulkOpen(!bulkOpen)}>
+        {bulkOpen ? "여러 개 추가 닫기" : "+ 여러 개 한 번에 추가"}
+      </button>
+      {bulkOpen && (
+        <div className="tadd" style={{ flexDirection: "column", alignItems: "stretch" }}>
+          <textarea className="inp" rows={3} placeholder="한 줄에 하나씩 적어주세요" value={bulkText} onChange={(e) => setBulkText(e.target.value)} />
+          <button
+            type="button"
+            className="btn sm"
+            onClick={() => {
+              onAddBulk(
+                bulkText
+                  .split("\n")
+                  .map((s) => s.trim())
+                  .filter(Boolean)
+              );
+              setBulkText("");
+              setBulkOpen(false);
+            }}
+          >
+            모두 추가
+          </button>
+        </div>
+      )}
     </section>
   );
 }

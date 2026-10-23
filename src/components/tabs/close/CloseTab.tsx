@@ -9,6 +9,7 @@ import { Sections } from "@/components/ui/Sections";
 import { ContextBar } from "@/components/ui/ContextBar";
 import { Reco } from "@/components/ui/Reco";
 import { CustomSectionCard } from "@/components/ui/CustomSectionCard";
+import { SnippetPicker } from "@/components/ui/SnippetPicker";
 import { InvCheck } from "./InvCheck";
 import { getClose, latestBefore } from "@/lib/local-reports";
 import { diffOf, reasonSum, signed } from "@/lib/report-text";
@@ -258,6 +259,7 @@ export function CloseTab({
           ))}
         </div>
         <Area id="c-note" value={r.note} ph="한 줄에 하나씩" onChange={(v) => set({ note: v })} />
+        <SnippetPicker snippets={data.settings.snippets || []} onInsert={(text) => set({ note: (r.note.trim() ? r.note.trim() + "\n" : "") + text })} />
       </Card>
 
       {customDefs.map((def) => (

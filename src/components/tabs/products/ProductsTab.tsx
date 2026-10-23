@@ -207,7 +207,7 @@ export function ProductsTab() {
 
       {!official && qs && items.length === 0 && <p className="hint">&quot;{q}&quot;에 맞는 매장 가이드 제품이 없어요. &quot;공식몰 전체&quot;에서 찾아보세요.</p>}
       {items.map((p) => (
-        <ProductCard key={p.id} p={p} shared={shared} open={open === p.id} onToggle={() => setOpen(open === p.id ? null : p.id)} />
+        <ProductCard key={p.id} p={p} shared={shared} open={open === p.id} onToggle={() => setOpen(open === p.id ? null : p.id)} metrics={METRICS[p.group] || []} />
       ))}
 
       {!official && !qs && <RivalCard grp={grp} shared={shared} />}

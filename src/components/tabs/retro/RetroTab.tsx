@@ -4,7 +4,8 @@ import { useState } from "react";
 import { Card } from "@/components/ui/Card";
 import { Area } from "@/components/ui/Fields";
 import { getRetro, lines, prevRetro, didSummary, retroText } from "@/lib/retro-utils";
-import { parts } from "@/lib/format";
+import { parts, today } from "@/lib/format";
+import { useTodo } from "@/lib/use-todo";
 import { MOODS, OFF_ACTS, RETRO_HINTS, RETRO_HINTS_OFF } from "@/data/retro-hints";
 import type { LocalReportData, Retro } from "@/types/report";
 
@@ -85,6 +86,16 @@ export function RetroTab({
   const auto = didSummary(data, date);
   const off = r.dayType === "off";
   const H = off ? RETRO_HINTS_OFF : RETRO_HINTS;
+  const [todo] = useTodo();
+  const todoDid = (() => {
+    if (!todo || date !== today()) return "";
+    const doneMap = todo.done[date] || {};
+    const items = [...todo.items.filter((i) => !i.parent), ...(todo.extra[date] || [])];
+    return items
+      .filter((i) => doneMap[i.id])
+      .map((i) => "- " + i.text)
+      .join("\n");
+  })();
   const addAct = (a: string) => set({ did: r.did.trim() ? r.did.trim() + "\n- " + a : "- " + a });
   const [showHist, setShowHist] = useState(false);
   const hist = Object.keys(data.retros || {})
@@ -140,6 +151,11 @@ export function RetroTab({
             {!off && auto && (
               <button type="button" className="link" onClick={() => set({ did: r.did.trim() ? r.did.trim() + "\n" + auto : auto })}>
                 기록·마감에서 불러오기
+              </button>
+            )}
+            {todoDid && (
+              <button type="button" className="link" onClick={() => set({ did: r.did.trim() ? r.did.trim() + "\n" + todoDid : todoDid })}>
+                할일에서 불러오기
               </button>
             )}
           </span>

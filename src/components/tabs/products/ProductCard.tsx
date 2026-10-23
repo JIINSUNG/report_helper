@@ -4,9 +4,10 @@ import { useState } from "react";
 import { ago, won } from "@/lib/format";
 import { useAuth } from "@/context/auth-context";
 import { useRequests } from "@/lib/use-requests";
+import { ProductCompareCard } from "./ProductCompareCard";
 import type { EffectiveProduct } from "@/lib/product-utils";
 import type { useShared } from "@/lib/use-shared";
-import type { CompetitorProduct } from "@/types/product";
+import type { CompetitorProduct, Metric } from "@/types/product";
 
 const PHONE_RE = /01[016789][-\s.]?\d{3,4}[-\s.]?\d{4}/;
 
@@ -175,7 +176,19 @@ function Tips({ p, shared }: { p: EffectiveProduct; shared: ReturnType<typeof us
   );
 }
 
-export function ProductCard({ p, open, onToggle, shared }: { p: EffectiveProduct; open: boolean; onToggle: () => void; shared: ReturnType<typeof useShared> }) {
+export function ProductCard({
+  p,
+  open,
+  onToggle,
+  shared,
+  metrics,
+}: {
+  p: EffectiveProduct;
+  open: boolean;
+  onToggle: () => void;
+  shared: ReturnType<typeof useShared>;
+  metrics?: Metric[];
+}) {
   const { role } = useAuth();
   const reqs = useRequests();
   const [edit, setEdit] = useState(false);
@@ -253,6 +266,7 @@ export function ProductCard({ p, open, onToggle, shared }: { p: EffectiveProduct
               </div>
             ))}
           </div>
+          <ProductCompareCard p={p} metrics={metrics || []} />
           {edit ? (
             <PriceEditor p={p} shared={shared} onDone={() => setEdit(false)} />
           ) : (

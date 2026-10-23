@@ -81,6 +81,13 @@ export interface CustomAmountValue {
   note: string;
 }
 
+/** 보고서 작성 중 자주 쓰는 틀. {품목}처럼 중괄호 안이 값을 넣는 변수. */
+export interface Snippet {
+  id: string;
+  label: string;
+  template: string;
+}
+
 export interface ContextState {
   add: string[];
   off: string[];
@@ -186,6 +193,7 @@ export interface ReportSettings {
   extraHolidays?: string;
   defaults?: ReportDefaults;
   customSections?: CustomSectionDef[];
+  snippets?: Snippet[];
 }
 
 export interface LocalReportData {

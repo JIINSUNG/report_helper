@@ -7,6 +7,7 @@ import { ItemPicker } from "@/components/ui/ItemPicker";
 import { ContextBar } from "@/components/ui/ContextBar";
 import { Reco } from "@/components/ui/Reco";
 import { CustomSectionCard } from "@/components/ui/CustomSectionCard";
+import { SnippetPicker } from "@/components/ui/SnippetPicker";
 import { getOpen, itemTarget, latestBefore } from "@/lib/local-reports";
 import { autoContext, ctxManual, ctxTags, ctxVars, emptyCtx } from "@/lib/context";
 import { amountRemaining, blankCustomAmount, mapsFor } from "@/lib/custom-sections";
@@ -95,6 +96,10 @@ export function OpenTab({
           onPick={(p) => set({ comment: (r.comment.trim() ? r.comment.trim() + " " : "") + p.b.join(" ") })}
         />
         <Area id="o-cm" rows={4} value={r.comment} ph="추천 문장을 고르거나 직접 써주세요" onChange={(v) => set({ comment: v })} />
+        <SnippetPicker
+          snippets={data.settings.snippets || []}
+          onInsert={(text) => set({ comment: (r.comment.trim() ? r.comment.trim() + "\n" : "") + text })}
+        />
       </Card>
 
       {customDefs.map((def) => (

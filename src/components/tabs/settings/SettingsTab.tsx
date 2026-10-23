@@ -11,6 +11,7 @@ import { today } from "@/lib/format";
 import { useAuth } from "@/context/auth-context";
 import { StorePicker } from "./StorePicker";
 import { CustomSectionsManager } from "./CustomSectionsManager";
+import { SnippetsManager } from "./SnippetsManager";
 import type { LocalReportData, ReportDefaults, ReportItemSetting } from "@/types/report";
 
 function DefaultsCard({
@@ -171,6 +172,8 @@ export function SettingsTab({
       </Card>
 
       <CustomSectionsManager data={data} update={update} />
+
+      <SnippetsManager data={data} update={update} />
 
       <Card title="데이터 · 보안">
         <div className="secbox">

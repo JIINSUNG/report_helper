@@ -32,3 +32,15 @@ export function priceOf(row: MetricRow, items: EffectiveProduct[]): { p: number;
   const hit = comps.find((c) => normN(c.n) === rn) || comps.find((c) => normN(c.n).includes(rn)) || comps.find((c) => rt.every((t) => toks(c.n).includes(t)));
   return hit ? { p: hit.p as number, label: hit.n } : null;
 }
+
+/** 제품 이름으로 (성능)METRICS 행 중 이 제품(샤오미 쪽, x:true)에 해당하는 행을 찾는다. priceOf의 역방향. */
+export function metricRowFor(productName: string, rows: MetricRow[]): MetricRow | null {
+  const pn = normN(productName);
+  const mine = rows.filter((r) => r.x);
+  let hit = mine.find((r) => normN(r.n) === pn) || mine.filter((r) => normN(r.n).endsWith(pn)).sort((a, b) => a.n.length - b.n.length)[0];
+  if (!hit) {
+    const pt = toks(productName);
+    hit = mine.filter((r) => pt.every((t) => toks(r.n).includes(t))).sort((a, b) => a.n.length - b.n.length)[0];
+  }
+  return hit || null;
+}
