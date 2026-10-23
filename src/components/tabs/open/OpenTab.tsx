@@ -8,6 +8,7 @@ import { ContextBar } from "@/components/ui/ContextBar";
 import { Reco } from "@/components/ui/Reco";
 import { CustomSectionCard } from "@/components/ui/CustomSectionCard";
 import { SnippetPicker } from "@/components/ui/SnippetPicker";
+import { VariableFiller } from "@/components/ui/VariableFiller";
 import { getOpen, itemTarget, latestBefore } from "@/lib/local-reports";
 import { autoContext, ctxManual, ctxTags, ctxVars, emptyCtx } from "@/lib/context";
 import { amountRemaining, blankCustomAmount, mapsFor } from "@/lib/custom-sections";
@@ -100,6 +101,7 @@ export function OpenTab({
           snippets={data.settings.snippets || []}
           onInsert={(text) => set({ comment: (r.comment.trim() ? r.comment.trim() + "\n" : "") + text })}
         />
+        <VariableFiller text={r.comment} onApply={(text) => set({ comment: text })} />
       </Card>
 
       {customDefs.map((def) => (

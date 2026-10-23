@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/Card";
 import { Txt, Area } from "@/components/ui/Fields";
 import { CopyBlock } from "@/components/ui/CopyBlock";
 import { SnippetPicker } from "@/components/ui/SnippetPicker";
+import { VariableFiller } from "@/components/ui/VariableFiller";
 import { getMgr } from "@/lib/local-reports";
 import { caseText, type CaseFields } from "@/lib/report-text";
 import { formSummary, getSumForm, recHints } from "@/lib/sales-summary";
@@ -277,6 +278,7 @@ export function SalesTab({
       <Card title="익일 판매 계획">
         <Area id="s-plan" rows={5} value={mg.plan} ph="내일 어떤 제품을, 어떤 방식으로 팔아볼지" onChange={(v) => set({ plan: v })} />
         <SnippetPicker snippets={data.settings.snippets || []} onInsert={(text) => set({ plan: (mg.plan.trim() ? mg.plan.trim() + "\n" : "") + text })} />
+        <VariableFiller text={mg.plan} onApply={(text) => set({ plan: text })} />
         <CopyBlock text={mg.plan.trim()} empty="계획을 쓰면 복사할 수 있어요." />
       </Card>
     </>
