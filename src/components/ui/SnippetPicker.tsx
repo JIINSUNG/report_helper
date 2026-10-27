@@ -8,13 +8,17 @@ import type { LocalReportData, Snippet } from "@/types/report";
 
 export function SnippetPicker({
   snippets,
+  location,
   onInsert,
   update,
 }: {
   snippets: Snippet[];
+  /** 이 칸의 위치 id. SNIPPET_LOCATIONS 참고 — 이 위치로 지정된(또는 위치 지정이 없는) 문구만 보여준다. */
+  location: string;
   onInsert: (text: string) => void;
   update: (fn: (d: LocalReportData) => LocalReportData) => void;
 }) {
+  const visible = snippets.filter((s) => !s.locations || s.locations.length === 0 || s.locations.includes(location));
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<"list" | "add" | "edit">("list");
   const [editTarget, setEditTarget] = useState<Snippet | null>(null);
@@ -42,16 +46,16 @@ export function SnippetPicker({
     close();
   };
 
-  const addSnippet = (label: string, template: string) => {
-    const s: Snippet = { id: uid(), label, template };
+  const addSnippet = (label: string, template: string, locations: string[]) => {
+    const s: Snippet = { id: uid(), label, template, locations };
     update((d) => ({ ...d, settings: { ...d.settings, snippets: [...(d.settings.snippets || []), s] } }));
     setMode("list");
   };
 
-  const editSnippet = (id: string, label: string, template: string) => {
+  const editSnippet = (id: string, label: string, template: string, locations: string[]) => {
     update((d) => ({
       ...d,
-      settings: { ...d.settings, snippets: (d.settings.snippets || []).map((s) => (s.id === id ? { ...s, label, template } : s)) },
+      settings: { ...d.settings, snippets: (d.settings.snippets || []).map((s) => (s.id === id ? { ...s, label, template, locations } : s)) },
     }));
     setMode("list");
     setEditTarget(null);
@@ -71,7 +75,7 @@ export function SnippetPicker({
   }
 
   if (mode === "add") {
-    return <SnippetEditor onCancel={() => setMode("list")} onSave={addSnippet} />;
+    return <SnippetEditor initialLocations={[location]} onCancel={() => setMode("list")} onSave={addSnippet} />;
   }
 
   if (mode === "edit" && editTarget) {
@@ -79,11 +83,12 @@ export function SnippetPicker({
       <SnippetEditor
         initialLabel={editTarget.label}
         initialTemplate={editTarget.template}
+        initialLocations={editTarget.locations || []}
         onCancel={() => {
           setMode("list");
           setEditTarget(null);
         }}
-        onSave={(label, template) => editSnippet(editTarget.id, label, template)}
+        onSave={(label, template, locations) => editSnippet(editTarget.id, label, template, locations)}
       />
     );
   }
@@ -118,12 +123,12 @@ export function SnippetPicker({
   return (
     <div className="box">
       <span className="sub">어떤 문구를 쓸까요?</span>
-      {snippets.length === 0 && (
+      {visible.length === 0 && (
         <p className="hint" style={{ margin: 0 }}>
-          아직 저장한 문구가 없어요. 바로 만들어볼까요?
+          {snippets.length === 0 ? "아직 저장한 문구가 없어요. 바로 만들어볼까요?" : "이 칸에 보이도록 정한 문구가 없어요. 새로 만들거나, 다른 문구의 위치를 바꿔보세요."}
         </p>
       )}
-      {snippets.map((s) =>
+      {visible.map((s) =>
         deleteId === s.id ? (
           <div className="alert" key={s.id}>
             &apos;{s.label}&apos; 문구를 지울까요?

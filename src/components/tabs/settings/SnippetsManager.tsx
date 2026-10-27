@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/Card";
 import { SnippetEditor } from "@/components/ui/SnippetEditor";
 import { uid } from "@/lib/format";
 import { extractVars } from "@/lib/snippets";
+import { locationLabel } from "@/data/snippet-locations";
 import type { LocalReportData, Snippet } from "@/types/report";
 
 export function SnippetsManager({
@@ -19,16 +20,16 @@ export function SnippetsManager({
   const [editId, setEditId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
-  const add = (label: string, template: string) => {
-    const s: Snippet = { id: uid(), label, template };
+  const add = (label: string, template: string, locations: string[]) => {
+    const s: Snippet = { id: uid(), label, template, locations };
     update((d) => ({ ...d, settings: { ...d.settings, snippets: [...(d.settings.snippets || []), s] } }));
     setAdding(false);
   };
 
-  const edit = (id: string, label: string, template: string) => {
+  const edit = (id: string, label: string, template: string, locations: string[]) => {
     update((d) => ({
       ...d,
-      settings: { ...d.settings, snippets: (d.settings.snippets || []).map((s) => (s.id === id ? { ...s, label, template } : s)) },
+      settings: { ...d.settings, snippets: (d.settings.snippets || []).map((s) => (s.id === id ? { ...s, label, template, locations } : s)) },
     }));
     setEditId(null);
   };
@@ -50,8 +51,9 @@ export function SnippetsManager({
             key={s.id}
             initialLabel={s.label}
             initialTemplate={s.template}
+            initialLocations={s.locations || []}
             onCancel={() => setEditId(null)}
-            onSave={(label, template) => edit(s.id, label, template)}
+            onSave={(label, template, locations) => edit(s.id, label, template, locations)}
           />
         ) : (
           <div className="box" key={s.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
@@ -60,6 +62,9 @@ export function SnippetsManager({
               <p className="hint" style={{ margin: 0 }}>
                 {s.template}
                 {extractVars(s.template).length > 0 && ` · 변수: ${extractVars(s.template).join(", ")}`}
+              </p>
+              <p className="hint" style={{ margin: 0 }}>
+                위치: {s.locations && s.locations.length > 0 ? s.locations.map(locationLabel).join(", ") : "모든 칸"}
               </p>
             </div>
             {deleteId === s.id ? (

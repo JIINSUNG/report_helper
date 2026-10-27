@@ -2,26 +2,35 @@
 
 import { useRef, useState } from "react";
 import { extractVars } from "@/lib/snippets";
+import { SNIPPET_LOCATIONS } from "@/data/snippet-locations";
 
 /**
  * 문구(틀) 추가·수정 폼. {변수} 를 직접 타이핑하지 않고도, 변수 이름을 입력해
  * 버튼을 누르면 커서 위치(또는 끝)에 {변수}가 자동으로 들어가게 해준다.
+ * 어느 글쓰기 칸에 이 문구를 보여줄지(삽입 위치)도 함께 고를 수 있다.
  */
 export function SnippetEditor({
   initialLabel = "",
   initialTemplate = "",
+  initialLocations = [],
   onSave,
   onCancel,
 }: {
   initialLabel?: string;
   initialTemplate?: string;
-  onSave: (label: string, template: string) => void;
+  initialLocations?: string[];
+  onSave: (label: string, template: string, locations: string[]) => void;
   onCancel: () => void;
 }) {
   const [label, setLabel] = useState(initialLabel);
   const [template, setTemplate] = useState(initialTemplate);
   const [varName, setVarName] = useState("");
+  const [locations, setLocations] = useState<string[]>(initialLocations);
   const taRef = useRef<HTMLTextAreaElement>(null);
+
+  const toggleLocation = (id: string) => {
+    setLocations((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  };
 
   const vars = extractVars(template);
 
@@ -81,6 +90,19 @@ export function SnippetEditor({
       <p className="hint" style={{ margin: 0 }}>
         변수를 넣으면 이 문구를 쓸 때마다 그 자리에 들어갈 값을 따로 입력할 수 있어요.
       </p>
+      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
+        <span className="hint" style={{ margin: 0, whiteSpace: "nowrap" }}>
+          어디에 보일까요
+        </span>
+        {SNIPPET_LOCATIONS.map(([id, locLabel]) => (
+          <button key={id} type="button" className="chip" aria-pressed={locations.includes(id)} onClick={() => toggleLocation(id)}>
+            {locLabel}
+          </button>
+        ))}
+      </div>
+      <p className="hint" style={{ margin: 0 }}>
+        {locations.length === 0 ? "아무것도 안 고르면 모든 칸에서 보여요." : "고른 칸에서만 이 문구가 보여요."}
+      </p>
       <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
         <button type="button" className="btn sm" onClick={onCancel}>
           취소
@@ -89,7 +111,7 @@ export function SnippetEditor({
           type="button"
           className="btn pri sm"
           disabled={!label.trim() || !template.trim()}
-          onClick={() => onSave(label.trim().slice(0, 40), template.trim().slice(0, 500))}
+          onClick={() => onSave(label.trim().slice(0, 40), template.trim().slice(0, 500), locations)}
         >
           저장
         </button>

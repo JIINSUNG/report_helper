@@ -23,6 +23,8 @@ export interface ReasonEntry {
   type: string;
   text: string;
   side: "retail" | "pos";
+  /** side 쪽이 amount만큼 더 많으면 1, 더 적으면 -1. 기존 데이터는 없으면 1(더 많음)로 본다. */
+  sign?: 1 | -1;
   amount: number;
 }
 
@@ -86,6 +88,8 @@ export interface Snippet {
   id: string;
   label: string;
   template: string;
+  /** 어느 칸에서 보일지. 비어있거나 없으면 모든 칸에서 보임. id는 SNIPPET_LOCATIONS 참고. */
+  locations?: string[];
 }
 
 export interface ContextState {

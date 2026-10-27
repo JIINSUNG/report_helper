@@ -277,7 +277,12 @@ export function SalesTab({
 
       <Card title="익일 판매 계획">
         <Area id="s-plan" rows={5} value={mg.plan} ph="내일 어떤 제품을, 어떤 방식으로 팔아볼지" onChange={(v) => set({ plan: v })} />
-        <SnippetPicker snippets={data.settings.snippets || []} onInsert={(text) => set({ plan: (mg.plan.trim() ? mg.plan.trim() + "\n" : "") + text })} update={update} />
+        <SnippetPicker
+          snippets={data.settings.snippets || []}
+          location="sales-plan"
+          onInsert={(text) => set({ plan: (mg.plan.trim() ? mg.plan.trim() + "\n" : "") + text })}
+          update={update}
+        />
         <VariableFiller text={mg.plan} onApply={(text) => set({ plan: text })} />
         <CopyBlock text={mg.plan.trim()} empty="계획을 쓰면 복사할 수 있어요." />
       </Card>

@@ -22,6 +22,13 @@ import { DIFF_TYPES, NOTE_CHIPS } from "@/data/record-options";
 import { SchedPeek } from "@/components/tabs/schedule/SchedPeek";
 import type { LocalReportData, ReasonEntry } from "@/types/report";
 
+const SIDE_SIGNS: { side: "retail" | "pos"; sign: 1 | -1; label: string }[] = [
+  { side: "retail", sign: 1, label: "리테일 +" },
+  { side: "retail", sign: -1, label: "리테일 -" },
+  { side: "pos", sign: 1, label: "포스기 +" },
+  { side: "pos", sign: -1, label: "포스기 -" },
+];
+
 export function CloseTab({
   data,
   update,
@@ -196,15 +203,20 @@ export function CloseTab({
                 value={x.type || "custom"}
                 onChange={(v) => {
                   const nt = DIFF_TYPES.find((y) => y.id === v) || DIFF_TYPES[3];
-                  setReason(i, { type: nt.id, side: nt.side });
+                  setReason(i, { type: nt.id, side: nt.side, sign: 1 });
                 }}
               />
               <Txt id={`c-rs${i}`} label="품목 · 내용" value={x.text} onChange={(v) => setReason(i, { text: v })} ph="예: H300 헤어드라이기 24개 대량주문건" />
               <div style={{ display: "flex", gap: 8, alignItems: "flex-end", flexWrap: "wrap" }}>
-                <div className="seg">
-                  {(["retail", "pos"] as const).map((s) => (
-                    <button key={s} type="button" aria-pressed={x.side === s} onClick={() => setReason(i, { side: s })}>
-                      {s === "retail" ? "리테일 +" : "포스기 +"}
+                <div className="seg" style={{ gridTemplateColumns: "repeat(2,1fr)" }}>
+                  {SIDE_SIGNS.map((o) => (
+                    <button
+                      key={o.label}
+                      type="button"
+                      aria-pressed={x.side === o.side && (x.sign ?? 1) === o.sign}
+                      onClick={() => setReason(i, { side: o.side, sign: o.sign })}
+                    >
+                      {o.label}
                     </button>
                   ))}
                 </div>
@@ -260,7 +272,12 @@ export function CloseTab({
           ))}
         </div>
         <Area id="c-note" value={r.note} ph="한 줄에 하나씩" onChange={(v) => set({ note: v })} />
-        <SnippetPicker snippets={data.settings.snippets || []} onInsert={(text) => set({ note: (r.note.trim() ? r.note.trim() + "\n" : "") + text })} update={update} />
+        <SnippetPicker
+          snippets={data.settings.snippets || []}
+          location="close-note"
+          onInsert={(text) => set({ note: (r.note.trim() ? r.note.trim() + "\n" : "") + text })}
+          update={update}
+        />
         <VariableFiller text={r.note} onApply={(text) => set({ note: text })} />
       </Card>
 

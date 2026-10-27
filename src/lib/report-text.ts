@@ -12,7 +12,7 @@ export const sectionsText = (ss: Section[]) =>
 
 export const diffOf = (r: CloseReport) => r.pos - r.retail;
 export const reasonSum = (rs: CloseReport["reasons"]) =>
-  rs.reduce((s, x) => s + (x.side === "pos" ? x.amount : -x.amount), 0);
+  rs.reduce((s, x) => s + (x.side === "pos" ? 1 : -1) * (x.sign ?? 1) * x.amount, 0);
 export const signed = (n: number) => (n > 0 ? "+" : n < 0 ? "-" : "") + won(Math.abs(n));
 
 const INV_LABEL: Record<string, string> = { phone: "휴대폰", tablet: "태블릿" };
@@ -96,7 +96,7 @@ export function closeText(
           "- 사유는 아래와 같습니다.",
           ...r.reasons
             .filter((x) => x.text.trim())
-            .map((x) => `- ${x.text.trim()} ${x.side === "retail" ? "리테일" : "포스기"} +${won(x.amount)}`),
+            .map((x) => `- ${x.text.trim()} ${x.side === "retail" ? "리테일" : "포스기"} ${(x.sign ?? 1) < 0 ? "-" : "+"}${won(x.amount)}`),
         ];
   const hs = sectionsText(r.highlights);
   const pis = sectionsText(r.phoneInsights || []);

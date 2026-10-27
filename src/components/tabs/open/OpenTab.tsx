@@ -99,6 +99,7 @@ export function OpenTab({
         <Area id="o-cm" rows={4} value={r.comment} ph="추천 문장을 고르거나 직접 써주세요" onChange={(v) => set({ comment: v })} />
         <SnippetPicker
           snippets={data.settings.snippets || []}
+          location="open-comment"
           onInsert={(text) => set({ comment: (r.comment.trim() ? r.comment.trim() + "\n" : "") + text })}
           update={update}
         />
