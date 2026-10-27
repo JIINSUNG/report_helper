@@ -233,6 +233,7 @@ export function TodoTab({ setTab }: { setTab: (id: string) => void }) {
   const [newSecName, setNewSecName] = useState("");
   const [newSecWhen, setNewSecWhen] = useState<TodoWhen>("all");
   const [secDeleteId, setSecDeleteId] = useState<string | null>(null);
+  const editSnapshot = useRef<TodoData | null>(null);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }), useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }));
 
   const date = useMemo(() => new Date().toISOString().slice(0, 10), []);
@@ -240,6 +241,23 @@ export function TodoTab({ setTab }: { setTab: (id: string) => void }) {
   const extra = todo?.extra[date] || [];
 
   if (!todo) return <TodoStart onPick={(d) => update(() => d)} />;
+
+  const enterEdit = () => {
+    editSnapshot.current = todo;
+    setEdit(true);
+  };
+
+  const saveExit = () => {
+    editSnapshot.current = null;
+    setEdit(false);
+  };
+
+  const cancelExit = () => {
+    const snap = editSnapshot.current;
+    if (snap) update(() => snap);
+    editSnapshot.current = null;
+    setEdit(false);
+  };
 
   const setShift = (v: string) => {
     setShiftState(v);
@@ -392,7 +410,7 @@ export function TodoTab({ setTab }: { setTab: (id: string) => void }) {
       <section className="card" style={{ gap: 10 }}>
         <div className="cardhead">
           <h2>오늘 할 일</h2>
-          <button type="button" className={"btn sm" + (edit ? " pri" : "")} onClick={() => setEdit(!edit)}>
+          <button type="button" className={"btn sm" + (edit ? " pri" : "")} onClick={() => (edit ? saveExit() : enterEdit())}>
             {edit ? "편집 완료" : "목록 편집"}
           </button>
         </div>
@@ -471,7 +489,7 @@ export function TodoTab({ setTab }: { setTab: (id: string) => void }) {
               repeat={!!rep[sc.id]}
               onToggleRepeat={() => setRep({ ...rep, [sc.id]: !rep[sc.id] })}
               onDeleteExtra={delExtra}
-              onRequestEdit={() => setEdit(true)}
+              onRequestEdit={enterEdit}
               onToggleAll={() => {
                 const ids = [...itemsBySec(sc.id).map((i) => i.id), ...extra.filter((x) => x.sec === sc.id).map((x) => x.id)];
                 const allDone = ids.length > 0 && ids.every((id) => done[id]);
@@ -507,6 +525,19 @@ export function TodoTab({ setTab }: { setTab: (id: string) => void }) {
       <p className="hint" style={{ textAlign: "center" }}>
         체크리스트는 이 기기에만 저장되는 나만의 목록이에요.
       </p>
+
+      {edit && (
+        <div className="bar">
+          <div className="wrap">
+            <button type="button" className="btn" onClick={cancelExit}>
+              취소
+            </button>
+            <button type="button" className="btn pri" onClick={saveExit}>
+              편집 완료
+            </button>
+          </div>
+        </div>
+      )}
     </>
   );
 }
