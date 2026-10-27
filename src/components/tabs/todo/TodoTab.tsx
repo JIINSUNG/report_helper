@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import {
   DndContext,
   PointerSensor,
@@ -19,6 +19,41 @@ import { TAB_OPTIONS } from "@/data/tabs";
 
 function uid(prefix: string) {
   return `${prefix}${Math.random().toString(36).slice(2, 9)}`;
+}
+
+const LONG_PRESS_MS = 500;
+
+function useLongPress(onLongPress: () => void) {
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const firedRef = useRef(false);
+
+  const clear = () => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+  };
+
+  return {
+    onPointerDown: () => {
+      firedRef.current = false;
+      clear();
+      timerRef.current = setTimeout(() => {
+        firedRef.current = true;
+        onLongPress();
+      }, LONG_PRESS_MS);
+    },
+    onPointerUp: clear,
+    onPointerLeave: clear,
+    onPointerCancel: clear,
+    onClickCapture: (e: React.MouseEvent) => {
+      if (firedRef.current) {
+        firedRef.current = false;
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    },
+  };
 }
 
 function TodoStart({ onPick }: { onPick: (d: TodoData) => void }) {
@@ -57,6 +92,7 @@ function SortableItemRow({
   onRename,
   onSetLink,
   onRenameKid,
+  onRequestEdit,
 }: {
   item: TodoItem;
   edit: boolean;
@@ -73,6 +109,7 @@ function SortableItemRow({
   onRename: (text: string) => void;
   onSetLink: (tab: string | null) => void;
   onRenameKid: (kidId: string, text: string) => void;
+  onRequestEdit: () => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: item.id,
@@ -90,6 +127,7 @@ function SortableItemRow({
   const [addingKid, setAddingKid] = useState(false);
   const dayTxt = item.days ? item.days.map((d) => WD[d]).join("·") : "";
   const isKid = !!item.parent;
+  const longPress = useLongPress(onRequestEdit);
 
   if (edit && !isKid) {
     return (
@@ -159,7 +197,7 @@ function SortableItemRow({
   }
 
   return (
-    <div className={"todo" + (isKid ? " kid" : "") + (done ? " done" : "")}>
+    <div className={"todo" + (isKid ? " kid" : "") + (done ? " done" : "")} {...longPress}>
       <button type="button" className="chk" aria-pressed={done} aria-label={item.text} onClick={onToggle}>
         {done ? "✓" : ""}
       </button>
@@ -388,6 +426,9 @@ export function TodoTab({ setTab }: { setTab: (id: string) => void }) {
                 휴무일이에요.
               </p>
             )}
+            <p className="hint" style={{ margin: 0 }}>
+              항목을 꾹 누르면 편집 모드로 바로 이동해요.
+            </p>
           </>
         )}
         {edit && (
@@ -430,6 +471,7 @@ export function TodoTab({ setTab }: { setTab: (id: string) => void }) {
               repeat={!!rep[sc.id]}
               onToggleRepeat={() => setRep({ ...rep, [sc.id]: !rep[sc.id] })}
               onDeleteExtra={delExtra}
+              onRequestEdit={() => setEdit(true)}
               onToggleAll={() => {
                 const ids = [...itemsBySec(sc.id).map((i) => i.id), ...extra.filter((x) => x.sec === sc.id).map((x) => x.id)];
                 const allDone = ids.length > 0 && ids.every((id) => done[id]);
@@ -497,6 +539,7 @@ function TodoSectionCard({
   repeat,
   onToggleRepeat,
   onDeleteExtra,
+  onRequestEdit,
   onToggleAll,
   onAddBulk,
 }: {
@@ -527,6 +570,7 @@ function TodoSectionCard({
   repeat: boolean;
   onToggleRepeat: () => void;
   onDeleteExtra: (id: string) => void;
+  onRequestEdit: () => void;
   onToggleAll: () => void;
   onAddBulk: (lines: string[]) => void;
 }) {
@@ -612,6 +656,7 @@ function TodoSectionCard({
                   onRename={(text) => onRenameItem(item.id, text)}
                   onSetLink={(tab) => onSetLinkTab(item.id, tab)}
                   onRenameKid={onRenameItem}
+                  onRequestEdit={onRequestEdit}
                 />
               );
             })}

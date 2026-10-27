@@ -33,6 +33,16 @@ function dayLabel(date: string) {
 }
 
 const TABS: [string, string][] = [["todo", "할일"], ...TAB_OPTIONS];
+const TAB_KEY = "report-helper-tab:v1";
+
+function readLastTab(): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    return window.localStorage.getItem(TAB_KEY);
+  } catch {
+    return null;
+  }
+}
 
 function AdminNavBadge() {
   const reqs = useRequests();
@@ -47,7 +57,7 @@ export function AppShell() {
   const { data, update } = useLocalReports(initialStoreLabel);
   const storeLabel = role === "admin" ? data.settings.storeName : initialStoreLabel;
   const [date, setDate] = useState(todayStr());
-  const [tab, setTab] = useState<string>("record");
+  const [savedTab, setTabRaw] = useState<string>(() => readLastTab() ?? "record");
   const [sheetOpen, setSheetOpen] = useState(false);
   const [toast, setToast] = useState("");
 
@@ -55,6 +65,17 @@ export function AppShell() {
   const isAdmin = role === "admin";
   const tabs = TABS.filter(([id]) => !(isGuest && (id === "community" || id === "schedule")));
   if (isAdmin) tabs.push(["admin", "관리"]);
+
+  const tab = tabs.some(([id]) => id === savedTab) ? savedTab : "record";
+
+  const setTab = (id: string) => {
+    setTabRaw(id);
+    try {
+      window.localStorage.setItem(TAB_KEY, id);
+    } catch {
+      /* ignore */
+    }
+  };
 
   useEffect(() => {
     window.scrollTo(0, 0);
