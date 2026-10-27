@@ -260,7 +260,7 @@ export function CloseTab({
           ))}
         </div>
         <Area id="c-note" value={r.note} ph="한 줄에 하나씩" onChange={(v) => set({ note: v })} />
-        <SnippetPicker snippets={data.settings.snippets || []} onInsert={(text) => set({ note: (r.note.trim() ? r.note.trim() + "\n" : "") + text })} />
+        <SnippetPicker snippets={data.settings.snippets || []} onInsert={(text) => set({ note: (r.note.trim() ? r.note.trim() + "\n" : "") + text })} update={update} />
         <VariableFiller text={r.note} onApply={(text) => set({ note: text })} />
       </Card>
 

@@ -100,6 +100,7 @@ export function OpenTab({
         <SnippetPicker
           snippets={data.settings.snippets || []}
           onInsert={(text) => set({ comment: (r.comment.trim() ? r.comment.trim() + "\n" : "") + text })}
+          update={update}
         />
         <VariableFiller text={r.comment} onApply={(text) => set({ comment: text })} />
       </Card>
