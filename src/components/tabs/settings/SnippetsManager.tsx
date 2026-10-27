@@ -20,16 +20,16 @@ export function SnippetsManager({
   const [editId, setEditId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
-  const add = (label: string, template: string, locations: string[]) => {
-    const s: Snippet = { id: uid(), label, template, locations };
+  const add = (label: string, template: string, locations: string[], position: "top" | "bottom") => {
+    const s: Snippet = { id: uid(), label, template, locations, position };
     update((d) => ({ ...d, settings: { ...d.settings, snippets: [...(d.settings.snippets || []), s] } }));
     setAdding(false);
   };
 
-  const edit = (id: string, label: string, template: string, locations: string[]) => {
+  const edit = (id: string, label: string, template: string, locations: string[], position: "top" | "bottom") => {
     update((d) => ({
       ...d,
-      settings: { ...d.settings, snippets: (d.settings.snippets || []).map((s) => (s.id === id ? { ...s, label, template, locations } : s)) },
+      settings: { ...d.settings, snippets: (d.settings.snippets || []).map((s) => (s.id === id ? { ...s, label, template, locations, position } : s)) },
     }));
     setEditId(null);
   };
@@ -52,8 +52,9 @@ export function SnippetsManager({
             initialLabel={s.label}
             initialTemplate={s.template}
             initialLocations={s.locations || []}
+            initialPosition={s.position ?? "bottom"}
             onCancel={() => setEditId(null)}
-            onSave={(label, template, locations) => edit(s.id, label, template, locations)}
+            onSave={(label, template, locations, position) => edit(s.id, label, template, locations, position)}
           />
         ) : (
           <div className="box" key={s.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
@@ -64,7 +65,7 @@ export function SnippetsManager({
                 {extractVars(s.template).length > 0 && ` · 변수: ${extractVars(s.template).join(", ")}`}
               </p>
               <p className="hint" style={{ margin: 0 }}>
-                위치: {s.locations && s.locations.length > 0 ? s.locations.map(locationLabel).join(", ") : "모든 칸"}
+                위치: {s.locations && s.locations.length > 0 ? s.locations.map(locationLabel).join(", ") : "모든 칸"} · 넣는 자리: {s.position === "top" ? "맨 위" : "맨 아래"}
               </p>
             </div>
             {deleteId === s.id ? (

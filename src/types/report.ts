@@ -90,6 +90,8 @@ export interface Snippet {
   template: string;
   /** 어느 칸에서 보일지. 비어있거나 없으면 모든 칸에서 보임. id는 SNIPPET_LOCATIONS 참고. */
   locations?: string[];
+  /** 넣을 때 맨 위(top)에 둘지 맨 아래(bottom)에 둘지. 없으면 맨 아래. */
+  position?: "top" | "bottom";
 }
 
 export interface ContextState {

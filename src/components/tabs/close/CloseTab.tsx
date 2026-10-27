@@ -14,6 +14,7 @@ import { VariableFiller } from "@/components/ui/VariableFiller";
 import { InvCheck } from "./InvCheck";
 import { getClose, latestBefore } from "@/lib/local-reports";
 import { diffOf, reasonSum, signed } from "@/lib/report-text";
+import { insertAtPosition, insertSectionFromSnippet } from "@/lib/snippets";
 import { autoContext, ctxManual, ctxTags, ctxVars, emptyCtx } from "@/lib/context";
 import { amountRemaining, blankCustomAmount, mapsFor } from "@/lib/custom-sections";
 import { recCount } from "@/lib/record-utils";
@@ -253,14 +254,32 @@ export function CloseTab({
       <Card title="금일 핵심 내용">
         <Reco data={data} update={update} k="highlight" tags={tags} manual={manual} vars={vars} onPick={(p) => set({ highlights: [...r.highlights, p] })} />
         <Sections idp="hl" list={r.highlights} onChange={(v) => set({ highlights: v })} />
+        <SnippetPicker
+          snippets={data.settings.snippets || []}
+          location="close-highlight"
+          onInsert={({ text, label, position }) => set({ highlights: insertSectionFromSnippet(r.highlights, label, text, position) })}
+          update={update}
+        />
       </Card>
       <Card title="금일 스마트폰 인사이트" right={<span className="sub">선택 · 비우면 보고서에 안 나와요</span>}>
         <p className="hint">예: &quot;20대 커플 / Xiaomi 17시리즈&quot; 처럼 고객군·제품을 제목으로 쓰고, 판매·리드 확보 등 결과를 아래에 적어주세요.</p>
         <Sections idp="pi" list={r.phoneInsights || []} onChange={(v) => set({ phoneInsights: v })} />
+        <SnippetPicker
+          snippets={data.settings.snippets || []}
+          location="close-insight"
+          onInsert={({ text, label, position }) => set({ phoneInsights: insertSectionFromSnippet(r.phoneInsights || [], label, text, position) })}
+          update={update}
+        />
       </Card>
       <Card title="익일 계획">
         <Reco data={data} update={update} k="plan" tags={tags} manual={manual} vars={vars} onPick={(p) => set({ plans: [...r.plans, p] })} />
         <Sections idp="pl" list={r.plans} onChange={(v) => set({ plans: v })} />
+        <SnippetPicker
+          snippets={data.settings.snippets || []}
+          location="close-plan"
+          onInsert={({ text, label, position }) => set({ plans: insertSectionFromSnippet(r.plans, label, text, position) })}
+          update={update}
+        />
       </Card>
 
       <Card title="특이사항" right={<span className="sub">선택 · 비우면 보고서에 안 나와요</span>}>
@@ -275,7 +294,7 @@ export function CloseTab({
         <SnippetPicker
           snippets={data.settings.snippets || []}
           location="close-note"
-          onInsert={(text) => set({ note: (r.note.trim() ? r.note.trim() + "\n" : "") + text })}
+          onInsert={({ text, position }) => set({ note: insertAtPosition(r.note, text, position) })}
           update={update}
         />
         <VariableFiller text={r.note} onApply={(text) => set({ note: text })} />

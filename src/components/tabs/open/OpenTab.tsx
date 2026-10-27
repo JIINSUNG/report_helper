@@ -10,6 +10,7 @@ import { CustomSectionCard } from "@/components/ui/CustomSectionCard";
 import { SnippetPicker } from "@/components/ui/SnippetPicker";
 import { VariableFiller } from "@/components/ui/VariableFiller";
 import { getOpen, itemTarget, latestBefore } from "@/lib/local-reports";
+import { insertAtPosition } from "@/lib/snippets";
 import { autoContext, ctxManual, ctxTags, ctxVars, emptyCtx } from "@/lib/context";
 import { amountRemaining, blankCustomAmount, mapsFor } from "@/lib/custom-sections";
 import { isOffDay } from "@/data/holidays";
@@ -100,7 +101,7 @@ export function OpenTab({
         <SnippetPicker
           snippets={data.settings.snippets || []}
           location="open-comment"
-          onInsert={(text) => set({ comment: (r.comment.trim() ? r.comment.trim() + "\n" : "") + text })}
+          onInsert={({ text, position }) => set({ comment: insertAtPosition(r.comment, text, position) })}
           update={update}
         />
         <VariableFiller text={r.comment} onApply={(text) => set({ comment: text })} />

@@ -7,6 +7,12 @@ import { uid } from "@/lib/format";
 import { locationLabel } from "@/data/snippet-locations";
 import type { LocalReportData, Snippet } from "@/types/report";
 
+export interface SnippetInsert {
+  text: string;
+  label: string;
+  position: "top" | "bottom";
+}
+
 export function SnippetPicker({
   snippets,
   location,
@@ -16,7 +22,7 @@ export function SnippetPicker({
   snippets: Snippet[];
   /** 이 칸의 위치 id. SNIPPET_LOCATIONS 참고 — 이 위치로 지정된(또는 위치 지정이 없는) 문구만 보여준다. */
   location: string;
-  onInsert: (text: string) => void;
+  onInsert: (p: SnippetInsert) => void;
   update: (fn: (d: LocalReportData) => LocalReportData) => void;
 }) {
   const visible = snippets.filter((s) => !s.locations || s.locations.length === 0 || s.locations.includes(location));
@@ -47,20 +53,20 @@ export function SnippetPicker({
 
   const insert = () => {
     if (!picked) return;
-    onInsert(fillSnippet(picked.template, vars));
+    onInsert({ text: fillSnippet(picked.template, vars), label: picked.label, position: picked.position ?? "bottom" });
     close();
   };
 
-  const addSnippet = (label: string, template: string, locations: string[]) => {
-    const s: Snippet = { id: uid(), label, template, locations };
+  const addSnippet = (label: string, template: string, locations: string[], position: "top" | "bottom") => {
+    const s: Snippet = { id: uid(), label, template, locations, position };
     update((d) => ({ ...d, settings: { ...d.settings, snippets: [...(d.settings.snippets || []), s] } }));
     setMode("list");
   };
 
-  const editSnippet = (id: string, label: string, template: string, locations: string[]) => {
+  const editSnippet = (id: string, label: string, template: string, locations: string[], position: "top" | "bottom") => {
     update((d) => ({
       ...d,
-      settings: { ...d.settings, snippets: (d.settings.snippets || []).map((s) => (s.id === id ? { ...s, label, template, locations } : s)) },
+      settings: { ...d.settings, snippets: (d.settings.snippets || []).map((s) => (s.id === id ? { ...s, label, template, locations, position } : s)) },
     }));
     setMode("list");
     setEditTarget(null);
@@ -89,11 +95,12 @@ export function SnippetPicker({
         initialLabel={editTarget.label}
         initialTemplate={editTarget.template}
         initialLocations={editTarget.locations || []}
+        initialPosition={editTarget.position ?? "bottom"}
         onCancel={() => {
           setMode("list");
           setEditTarget(null);
         }}
-        onSave={(label, template, locations) => editSnippet(editTarget.id, label, template, locations)}
+        onSave={(label, template, locations, position) => editSnippet(editTarget.id, label, template, locations, position)}
       />
     );
   }
@@ -152,7 +159,7 @@ export function SnippetPicker({
               {s.label}
               {showAll && (
                 <small style={{ display: "block", fontWeight: 400 }}>
-                  위치: {s.locations && s.locations.length > 0 ? s.locations.map(locationLabel).join(", ") : "모든 칸"}
+                  위치: {s.locations && s.locations.length > 0 ? s.locations.map(locationLabel).join(", ") : "모든 칸"} · {s.position === "top" ? "맨 위" : "맨 아래"}
                 </small>
               )}
             </button>

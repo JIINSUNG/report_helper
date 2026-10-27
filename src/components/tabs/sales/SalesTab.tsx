@@ -6,6 +6,7 @@ import { CopyBlock } from "@/components/ui/CopyBlock";
 import { SnippetPicker } from "@/components/ui/SnippetPicker";
 import { VariableFiller } from "@/components/ui/VariableFiller";
 import { getMgr } from "@/lib/local-reports";
+import { insertAtPosition } from "@/lib/snippets";
 import { caseText, type CaseFields } from "@/lib/report-text";
 import { formSummary, getSumForm, recHints } from "@/lib/sales-summary";
 import { salesSummary, autoS, autoT, autoA, autoR } from "@/lib/record-utils";
@@ -280,7 +281,7 @@ export function SalesTab({
         <SnippetPicker
           snippets={data.settings.snippets || []}
           location="sales-plan"
-          onInsert={(text) => set({ plan: (mg.plan.trim() ? mg.plan.trim() + "\n" : "") + text })}
+          onInsert={({ text, position }) => set({ plan: insertAtPosition(mg.plan, text, position) })}
           update={update}
         />
         <VariableFiller text={mg.plan} onApply={(text) => set({ plan: text })} />

@@ -13,19 +13,22 @@ export function SnippetEditor({
   initialLabel = "",
   initialTemplate = "",
   initialLocations = [],
+  initialPosition = "bottom",
   onSave,
   onCancel,
 }: {
   initialLabel?: string;
   initialTemplate?: string;
   initialLocations?: string[];
-  onSave: (label: string, template: string, locations: string[]) => void;
+  initialPosition?: "top" | "bottom";
+  onSave: (label: string, template: string, locations: string[], position: "top" | "bottom") => void;
   onCancel: () => void;
 }) {
   const [label, setLabel] = useState(initialLabel);
   const [template, setTemplate] = useState(initialTemplate);
   const [varName, setVarName] = useState("");
   const [locations, setLocations] = useState<string[]>(initialLocations);
+  const [position, setPosition] = useState<"top" | "bottom">(initialPosition);
   const taRef = useRef<HTMLTextAreaElement>(null);
 
   const toggleLocation = (id: string) => {
@@ -103,6 +106,19 @@ export function SnippetEditor({
       <p className="hint" style={{ margin: 0 }}>
         {locations.length === 0 ? "아무것도 안 고르면 모든 칸에서 보여요." : "고른 칸에서만 이 문구가 보여요."}
       </p>
+      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
+        <span className="hint" style={{ margin: 0, whiteSpace: "nowrap" }}>
+          넣는 자리
+        </span>
+        <div className="seg" style={{ gridTemplateColumns: "repeat(2,1fr)", minWidth: 180 }}>
+          <button type="button" aria-pressed={position === "top"} onClick={() => setPosition("top")}>
+            맨 위(첫 줄)
+          </button>
+          <button type="button" aria-pressed={position === "bottom"} onClick={() => setPosition("bottom")}>
+            맨 아래(마지막 줄)
+          </button>
+        </div>
+      </div>
       <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
         <button type="button" className="btn sm" onClick={onCancel}>
           취소
@@ -111,7 +127,7 @@ export function SnippetEditor({
           type="button"
           className="btn pri sm"
           disabled={!label.trim() || !template.trim()}
-          onClick={() => onSave(label.trim().slice(0, 40), template.trim().slice(0, 500), locations)}
+          onClick={() => onSave(label.trim().slice(0, 40), template.trim().slice(0, 500), locations, position)}
         >
           저장
         </button>
