@@ -35,7 +35,7 @@ function useLongPress(onLongPress: () => void) {
   };
 
   return {
-    onPointerDown: () => {
+    start: () => {
       firedRef.current = false;
       clear();
       timerRef.current = setTimeout(() => {
@@ -43,15 +43,76 @@ function useLongPress(onLongPress: () => void) {
         onLongPress();
       }, LONG_PRESS_MS);
     },
-    onPointerUp: clear,
-    onPointerLeave: clear,
-    onPointerCancel: clear,
-    onClickCapture: (e: React.MouseEvent) => {
-      if (firedRef.current) {
-        firedRef.current = false;
-        e.preventDefault();
-        e.stopPropagation();
-      }
+    cancel: clear,
+    consumeFired: () => {
+      if (!firedRef.current) return false;
+      firedRef.current = false;
+      return true;
+    },
+  };
+}
+
+const SWIPE_OPEN = 72;
+const SWIPE_START_THRESHOLD = 8;
+
+/** 항목을 왼쪽으로 슬라이드하면 오른쪽에 삭제 버튼이 드러난다. 길게 누르면(편집 모드 진입) 과 같은 포인터 제스처라서 한 곳에서 같이 다룬다. */
+function useSwipeRow(onLongPress: () => void) {
+  const [swipeX, setSwipeX] = useState(0);
+  const longPress = useLongPress(onLongPress);
+  const startX = useRef(0);
+  const startOffset = useRef(0);
+  const swiping = useRef(false);
+  const hadSwipe = useRef(false);
+
+  const onPointerDown = (e: React.PointerEvent) => {
+    startX.current = e.clientX;
+    startOffset.current = swipeX;
+    swiping.current = false;
+    longPress.start();
+  };
+
+  const onPointerMove = (e: React.PointerEvent) => {
+    const dx = e.clientX - startX.current;
+    if (!swiping.current && Math.abs(dx) > SWIPE_START_THRESHOLD) {
+      swiping.current = true;
+      hadSwipe.current = true;
+      longPress.cancel();
+    }
+    if (swiping.current) setSwipeX(Math.min(0, Math.max(-SWIPE_OPEN, startOffset.current + dx)));
+  };
+
+  const endSwipe = () => {
+    longPress.cancel();
+    if (swiping.current) setSwipeX((x) => (x < -SWIPE_OPEN / 2 ? -SWIPE_OPEN : 0));
+    swiping.current = false;
+  };
+
+  const onClickCapture = (e: React.MouseEvent) => {
+    if (swipeX !== 0) {
+      e.preventDefault();
+      e.stopPropagation();
+      setSwipeX(0);
+      hadSwipe.current = false;
+      return;
+    }
+    if (hadSwipe.current || longPress.consumeFired()) {
+      hadSwipe.current = false;
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  };
+
+  const close = () => setSwipeX(0);
+
+  return {
+    swipeX,
+    close,
+    handlers: {
+      onPointerDown,
+      onPointerMove,
+      onPointerUp: endSwipe,
+      onPointerCancel: endSwipe,
+      onClickCapture,
     },
   };
 }
@@ -127,7 +188,7 @@ function SortableItemRow({
   const [addingKid, setAddingKid] = useState(false);
   const dayTxt = item.days ? item.days.map((d) => WD[d]).join("·") : "";
   const isKid = !!item.parent;
-  const longPress = useLongPress(onRequestEdit);
+  const swipe = useSwipeRow(onRequestEdit);
 
   if (edit && !isKid) {
     return (
@@ -197,19 +258,36 @@ function SortableItemRow({
   }
 
   return (
-    <div className={"todo" + (isKid ? " kid" : "") + (done ? " done" : "")} {...longPress}>
-      <button type="button" className="chk" aria-pressed={done} aria-label={item.text} onClick={onToggle}>
-        {done ? "✓" : ""}
+    <div className="todo-swipe">
+      <button
+        type="button"
+        className="todo-swipe-del"
+        aria-label={item.text + " 삭제"}
+        onClick={() => {
+          swipe.close();
+          onDelete();
+        }}
+      >
+        삭제
       </button>
-      <div className="tbody" style={{ cursor: "pointer" }} onClick={onToggle}>
-        <span>{item.text}</span>
-        {dayTxt && <small>{dayTxt} 반복</small>}
-      </div>
-      {linkTab && !done && (
-        <button type="button" className="link" style={{ whiteSpace: "nowrap", fontSize: 12.5 }} onClick={() => onOpenTab(linkTab[0])}>
-          {linkTab[1]} ›
+      <div
+        className={"todo" + (isKid ? " kid" : "") + (done ? " done" : "")}
+        style={{ transform: `translateX(${swipe.swipeX}px)`, transition: swipe.swipeX === 0 || swipe.swipeX === -SWIPE_OPEN ? "transform .15s" : "none" }}
+        {...swipe.handlers}
+      >
+        <button type="button" className="chk" aria-pressed={done} aria-label={item.text} onClick={onToggle}>
+          {done ? "✓" : ""}
         </button>
-      )}
+        <div className="tbody" style={{ cursor: "pointer" }} onClick={onToggle}>
+          <span>{item.text}</span>
+          {dayTxt && <small>{dayTxt} 반복</small>}
+        </div>
+        {linkTab && !done && (
+          <button type="button" className="link" style={{ whiteSpace: "nowrap", fontSize: 12.5 }} onClick={() => onOpenTab(linkTab[0])}>
+            {linkTab[1]} ›
+          </button>
+        )}
+      </div>
     </div>
   );
 }

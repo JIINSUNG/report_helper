@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "@/context/auth-context";
 import { useLocalReports } from "@/lib/local-reports";
 import { getClose, getOpen } from "@/lib/local-reports";
@@ -81,6 +81,11 @@ export function AppShell() {
     window.scrollTo(0, 0);
   }, [tab]);
 
+  const activeNavBtnRef = useRef<HTMLButtonElement | null>(null);
+  useEffect(() => {
+    activeNavBtnRef.current?.scrollIntoView({ block: "nearest", inline: "center" });
+  }, [tab]);
+
   const text = useMemo(() => {
     const customDefs = data.settings.customSections || [];
     const remainingFor = (defId: string) => {
@@ -143,9 +148,16 @@ export function AppShell() {
               </div>
             )}
           </div>
-          <nav style={{ gridTemplateColumns: `repeat(${tabs.length},minmax(0,1fr))` }}>
+          <nav>
             {tabs.map(([id, label]) => (
-              <button key={id} type="button" aria-current={tab === id} onClick={() => setTab(id)} style={{ position: "relative" }}>
+              <button
+                key={id}
+                type="button"
+                aria-current={tab === id}
+                onClick={() => setTab(id)}
+                style={{ position: "relative" }}
+                ref={tab === id ? activeNavBtnRef : undefined}
+              >
                 {label}
                 {id === "admin" && isAdmin && <AdminNavBadge />}
               </button>
