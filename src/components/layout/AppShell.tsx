@@ -17,6 +17,7 @@ import { RetroTab } from "@/components/tabs/retro/RetroTab";
 import { TodoTab } from "@/components/tabs/todo/TodoTab";
 import { SettingsTab } from "@/components/tabs/settings/SettingsTab";
 import { ProductsTab } from "@/components/tabs/products/ProductsTab";
+import { ServiceTab } from "@/components/tabs/service/ServiceTab";
 import { ScheduleTab } from "@/components/tabs/schedule/ScheduleTab";
 import { CommunityTab } from "@/components/tabs/community/CommunityTab";
 import { AdminTab } from "@/components/tabs/admin/AdminTab";
@@ -133,7 +134,7 @@ export function AppShell() {
               {isGuest ? "" : storeLabel + " "}
               <span>보고 도우미</span>
             </h1>
-            {tab !== "settings" && tab !== "products" && tab !== "community" && tab !== "schedule" && tab !== "admin" && (
+            {tab !== "settings" && tab !== "products" && tab !== "community" && tab !== "schedule" && tab !== "admin" && tab !== "service" && (
               <div className="datebox">
                 <button type="button" className="iconbtn" aria-label="이전 날" onClick={() => setDate(shift(date, -1))}>
                   ‹
@@ -185,6 +186,7 @@ export function AppShell() {
         {tab === "retro" && <RetroTab data={data} update={update} date={date} setDate={setDate} />}
         {tab === "settings" && <SettingsTab data={data} update={update} />}
         {tab === "products" && <ProductsTab />}
+        {tab === "service" && <ServiceTab />}
         {tab === "schedule" && !isGuest && <ScheduleTab storeLabel={storeLabel} />}
         {tab === "community" && !isGuest && <CommunityTab storeLabel={storeLabel} />}
         {tab === "admin" && isAdmin && <AdminTab />}
