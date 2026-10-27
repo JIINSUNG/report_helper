@@ -4,6 +4,7 @@ import { useState } from "react";
 import { SnippetEditor } from "@/components/ui/SnippetEditor";
 import { extractVars, fillSnippet } from "@/lib/snippets";
 import { uid } from "@/lib/format";
+import { locationLabel } from "@/data/snippet-locations";
 import type { LocalReportData, Snippet } from "@/types/report";
 
 export function SnippetPicker({
@@ -21,14 +22,18 @@ export function SnippetPicker({
   const visible = snippets.filter((s) => !s.locations || s.locations.length === 0 || s.locations.includes(location));
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<"list" | "add" | "edit">("list");
+  const [showAll, setShowAll] = useState(false);
   const [editTarget, setEditTarget] = useState<Snippet | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [picked, setPicked] = useState<Snippet | null>(null);
   const [vars, setVars] = useState<Record<string, string>>({});
 
+  const shown = showAll ? snippets : visible;
+
   const close = () => {
     setOpen(false);
     setMode("list");
+    setShowAll(false);
     setPicked(null);
     setVars({});
     setEditTarget(null);
@@ -123,12 +128,12 @@ export function SnippetPicker({
   return (
     <div className="box">
       <span className="sub">어떤 문구를 쓸까요?</span>
-      {visible.length === 0 && (
+      {shown.length === 0 && (
         <p className="hint" style={{ margin: 0 }}>
-          {snippets.length === 0 ? "아직 저장한 문구가 없어요. 바로 만들어볼까요?" : "이 칸에 보이도록 정한 문구가 없어요. 새로 만들거나, 다른 문구의 위치를 바꿔보세요."}
+          {snippets.length === 0 ? "아직 저장한 문구가 없어요. 바로 만들어볼까요?" : "이 칸에 보이도록 정한 문구가 없어요. 새로 만들거나, 아래 '다른 칸 문구도 보기'에서 위치를 바꿔보세요."}
         </p>
       )}
-      {visible.map((s) =>
+      {shown.map((s) =>
         deleteId === s.id ? (
           <div className="alert" key={s.id}>
             &apos;{s.label}&apos; 문구를 지울까요?
@@ -145,6 +150,11 @@ export function SnippetPicker({
           <div key={s.id} style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <button type="button" className="chip" style={{ flex: 1, textAlign: "left" }} onClick={() => pick(s)}>
               {s.label}
+              {showAll && (
+                <small style={{ display: "block", fontWeight: 400 }}>
+                  위치: {s.locations && s.locations.length > 0 ? s.locations.map(locationLabel).join(", ") : "모든 칸"}
+                </small>
+              )}
             </button>
             <span style={{ display: "flex", gap: 8, flexShrink: 0 }}>
               <button
@@ -164,10 +174,15 @@ export function SnippetPicker({
           </div>
         )
       )}
-      <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+      <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
         <button type="button" className="link" onClick={() => setMode("add")}>
           + 새 문구 만들기
         </button>
+        {snippets.length !== visible.length && (
+          <button type="button" className="link" onClick={() => setShowAll(!showAll)}>
+            {showAll ? "이 칸에 맞는 문구만 보기" : "다른 칸 문구도 보기 (위치 바꾸기)"}
+          </button>
+        )}
         <button type="button" className="link" style={{ marginLeft: "auto" }} onClick={close}>
           닫기
         </button>
