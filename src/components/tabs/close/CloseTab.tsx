@@ -151,6 +151,12 @@ export function CloseTab({
         ) : (
           <>
             <Txt id="c-inv" label="재고 확인" value={r.inventoryNote} onChange={(v) => set({ inventoryNote: v })} />
+            <SnippetPicker
+              snippets={data.settings.snippets || []}
+              location="close-inventory"
+              onInsert={({ text, position }) => set({ inventoryNote: insertAtPosition(r.inventoryNote, text, position) })}
+              update={update}
+            />
             <button
               type="button"
               className="link"

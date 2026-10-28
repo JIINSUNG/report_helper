@@ -206,6 +206,12 @@ export function SalesTab({
             <span>직접 고쳐도 돼요</span>
           </span>
           <Area id="s-sum" rows={8} value={mg.summary ?? autoSum} ph="위에서 고르면 문장이 만들어져요" onChange={(v) => set({ summary: v })} />
+          <SnippetPicker
+            snippets={data.settings.snippets || []}
+            location="sales-summary"
+            onInsert={({ text, position }) => set({ summary: insertAtPosition(mg.summary ?? autoSum, text, position) })}
+            update={update}
+          />
         </div>
         <div style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
           {mg.summary != null && mg.summary !== autoSum && (
@@ -220,6 +226,12 @@ export function SalesTab({
           )}
         </div>
         <Txt id="s-note" label="특이사항 (선택)" value={mg.note} ph="없으면 비워두세요" onChange={(v) => set({ note: v })} />
+        <SnippetPicker
+          snippets={data.settings.snippets || []}
+          location="sales-note"
+          onInsert={({ text, position }) => set({ note: insertAtPosition(mg.note, text, position) })}
+          update={update}
+        />
         <CopyBlock text={[(mg.summary ?? autoSum).trim(), mg.note.trim() && `- 특이사항: ${mg.note.trim()}`].filter(Boolean).join("\n")} empty="기록을 남기거나 직접 써주세요." />
       </Card>
 

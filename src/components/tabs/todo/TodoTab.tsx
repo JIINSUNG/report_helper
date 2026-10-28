@@ -52,7 +52,7 @@ function useLongPress(onLongPress: () => void) {
   };
 }
 
-const SWIPE_OPEN = 72;
+const SWIPE_OPEN = 140;
 const SWIPE_START_THRESHOLD = 8;
 
 /** 항목을 왼쪽으로 슬라이드하면 오른쪽에 삭제 버튼이 드러난다. 길게 누르면(편집 모드 진입) 과 같은 포인터 제스처라서 한 곳에서 같이 다룬다. */
@@ -186,9 +186,17 @@ function SortableItemRow({
   };
   const [kidText, setKidText] = useState("");
   const [addingKid, setAddingKid] = useState(false);
+  const [renaming, setRenaming] = useState(false);
+  const [renameText, setRenameText] = useState(item.text);
   const dayTxt = item.days ? item.days.map((d) => WD[d]).join("·") : "";
   const isKid = !!item.parent;
   const swipe = useSwipeRow(onRequestEdit);
+
+  const confirmRename = () => {
+    const v = renameText.trim();
+    if (v) onRename(v);
+    setRenaming(false);
+  };
 
   if (edit && !isKid) {
     return (
@@ -259,35 +267,67 @@ function SortableItemRow({
 
   return (
     <div className="todo-swipe">
-      <button
-        type="button"
-        className="todo-swipe-del"
-        aria-label={item.text + " 삭제"}
-        onClick={() => {
-          swipe.close();
-          onDelete();
-        }}
-      >
-        삭제
-      </button>
-      <div
-        className={"todo" + (isKid ? " kid" : "") + (done ? " done" : "")}
-        style={{ transform: `translateX(${swipe.swipeX}px)`, transition: swipe.swipeX === 0 || swipe.swipeX === -SWIPE_OPEN ? "transform .15s" : "none" }}
-        {...swipe.handlers}
-      >
-        <button type="button" className="chk" aria-pressed={done} aria-label={item.text} onClick={onToggle}>
-          {done ? "✓" : ""}
+      <div className="todo-swipe-actions">
+        <button
+          type="button"
+          className="todo-swipe-edit"
+          aria-label={item.text + " 이름 수정"}
+          onClick={() => {
+            swipe.close();
+            setRenameText(item.text);
+            setRenaming(true);
+          }}
+        >
+          수정
         </button>
-        <div className="tbody" style={{ cursor: "pointer" }} onClick={onToggle}>
-          <span>{item.text}</span>
-          {dayTxt && <small>{dayTxt} 반복</small>}
-        </div>
-        {linkTab && !done && (
-          <button type="button" className="link" style={{ whiteSpace: "nowrap", fontSize: 12.5 }} onClick={() => onOpenTab(linkTab[0])}>
-            {linkTab[1]} ›
-          </button>
-        )}
+        <button
+          type="button"
+          className="todo-swipe-del"
+          aria-label={item.text + " 삭제"}
+          onClick={() => {
+            swipe.close();
+            onDelete();
+          }}
+        >
+          삭제
+        </button>
       </div>
+      {renaming ? (
+        <div className="todo" style={{ background: "var(--card,var(--bg))" }}>
+          <input
+            className="inp"
+            style={{ fontWeight: 600 }}
+            value={renameText}
+            autoFocus
+            onChange={(e) => setRenameText(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") confirmRename();
+              if (e.key === "Escape") setRenaming(false);
+            }}
+            onBlur={confirmRename}
+            aria-label="항목 이름"
+          />
+        </div>
+      ) : (
+        <div
+          className={"todo" + (isKid ? " kid" : "") + (done ? " done" : "")}
+          style={{ transform: `translateX(${swipe.swipeX}px)`, transition: swipe.swipeX === 0 || swipe.swipeX === -SWIPE_OPEN ? "transform .15s" : "none" }}
+          {...swipe.handlers}
+        >
+          <button type="button" className="chk" aria-pressed={done} aria-label={item.text} onClick={onToggle}>
+            {done ? "✓" : ""}
+          </button>
+          <div className="tbody" style={{ cursor: "pointer" }} onClick={onToggle}>
+            <span>{item.text}</span>
+            {dayTxt && <small>{dayTxt} 반복</small>}
+          </div>
+          {linkTab && !done && (
+            <button type="button" className="link" style={{ whiteSpace: "nowrap", fontSize: 12.5 }} onClick={() => onOpenTab(linkTab[0])}>
+              {linkTab[1]} ›
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }

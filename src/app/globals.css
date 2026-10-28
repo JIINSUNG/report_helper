@@ -69,7 +69,10 @@ textarea.inp{resize:vertical;line-height:1.6}
 .rolechip.r-admin{background:var(--accent);color:var(--accent-fg);box-shadow:none}
 .todos{display:flex;flex-direction:column}
 .todo-swipe{position:relative;overflow:hidden}
-.todo-swipe-del{position:absolute;top:0;right:0;bottom:0;width:72px;background:var(--warn);color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.todo-swipe-actions{position:absolute;top:0;right:0;bottom:0;display:flex}
+.todo-swipe-edit,.todo-swipe-del{width:70px;color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.todo-swipe-edit{background:var(--accent)}
+.todo-swipe-del{background:var(--warn)}
 .todo-swipe .todo{background:var(--card,var(--bg));touch-action:pan-y}
 .todo{display:flex;gap:10px;align-items:center;padding:9px 2px;border-top:1px solid var(--line)}
 .todos .todo:first-child{border-top:0}
