@@ -9,13 +9,31 @@ export const METRICS: Record<string, Metric[]> = {
       "label": "멀티코어",
       "unit": "점",
       "desc": "Geekbench 6 멀티코어 · 높을수록 게임, 멀티태스킹, 영상 편집처럼 무거운 작업에 유리",
-      "note": "91mobiles 측정값, 같은 칩은 같은 점수. *노트14 프로는 기본형 디멘시티 7300 점수. 갤럭시 S25·S26+·Z 폴드6~8·Z 플립5~8은 GSMArena 자체 실측 리뷰 기준(2026.10 조사, Z 폴드5는 GSMArena가 Geekbench 6을 측정하지 않아 제외)",
+      "note": "91mobiles 측정값, 같은 칩은 같은 점수. *노트14 프로는 기본형 디멘시티 7300 점수. 갤럭시 S25·S26+·Z 폴드6~8·Z 플립5~8·아이폰 17 프로·17 프로맥스·18 프로맥스는 GSMArena 자체 실측 리뷰 기준(2026.10 조사, Z 폴드5는 GSMArena가 Geekbench 6을 측정하지 않아 제외)",
       "rows": [
+        {
+          "n": "아이폰 18 프로맥스",
+          "v": 12794,
+          "x": false,
+          "sub": "A20 Pro"
+        },
         {
           "n": "아이폰 18 프로",
           "v": 12645,
           "x": false,
           "sub": "A20 Pro"
+        },
+        {
+          "n": "아이폰 17 프로맥스",
+          "v": 10118,
+          "x": false,
+          "sub": "A19 Pro"
+        },
+        {
+          "n": "아이폰 17 프로",
+          "v": 9923,
+          "x": false,
+          "sub": "A19 Pro"
         },
         {
           "n": "샤오미 17 울트라",
@@ -210,13 +228,31 @@ export const METRICS: Record<string, Metric[]> = {
       "label": "싱글코어",
       "unit": "점",
       "desc": "Geekbench 6 싱글코어 · 높을수록 앱 실행, 웹 로딩처럼 한 가지 작업의 반응이 빠름",
-      "note": "91mobiles 측정값, 같은 칩은 같은 점수. 갤럭시 S25·S26+·Z 폴드6~8·Z 플립5~8은 GSMArena 자체 실측 리뷰 기준(2026.10 조사, Z 폴드5는 GSMArena가 Geekbench 6을 측정하지 않아 제외)",
+      "note": "91mobiles 측정값, 같은 칩은 같은 점수. 갤럭시 S25·S26+·Z 폴드6~8·Z 플립5~8·아이폰 17 프로·17 프로맥스·18 프로맥스는 GSMArena 자체 실측 리뷰 기준(2026.10 조사, Z 폴드5는 GSMArena가 Geekbench 6을 측정하지 않아 제외)",
       "rows": [
+        {
+          "n": "아이폰 18 프로맥스",
+          "v": 4735,
+          "x": false,
+          "sub": "A20 Pro"
+        },
         {
           "n": "아이폰 18 프로",
           "v": 4704,
           "x": false,
           "sub": "A20 Pro"
+        },
+        {
+          "n": "아이폰 17 프로맥스",
+          "v": 3891,
+          "x": false,
+          "sub": "A19 Pro"
+        },
+        {
+          "n": "아이폰 17 프로",
+          "v": 3846,
+          "x": false,
+          "sub": "A19 Pro"
         },
         {
           "n": "샤오미 17 울트라",
@@ -657,7 +693,19 @@ export const METRICS: Record<string, Metric[]> = {
           "sub": ""
         },
         {
+          "n": "아이폰 18 프로맥스",
+          "v": 50,
+          "x": false,
+          "sub": "실측 피크 약 52W(공식 W 비공개)"
+        },
+        {
           "n": "아이폰 17",
+          "v": 40,
+          "x": false,
+          "sub": ""
+        },
+        {
+          "n": "아이폰 17 프로·17 프로맥스",
           "v": 40,
           "x": false,
           "sub": ""
@@ -756,6 +804,12 @@ export const METRICS: Record<string, Metric[]> = {
           "sub": "MagSafe·Qi2"
         },
         {
+          "n": "아이폰 17 프로·17 프로맥스·18 프로맥스",
+          "v": 25,
+          "x": false,
+          "sub": "MagSafe·Qi2"
+        },
+        {
           "n": "갤럭시 S26+",
           "v": 20,
           "x": false,
@@ -848,7 +902,7 @@ export const METRICS: Record<string, Metric[]> = {
       "label": "칩 성능",
       "unit": "점",
       "desc": "Geekbench 6 멀티코어 · 높을수록 게임, 멀티태스킹에 유리",
-      "note": "제품 비교 문서 기준, 같은 칩은 같은 점수. 아이패드 프로 M4·갤럭시 탭 S11 울트라는 GSMArena 자체 실측 리뷰 기준(2026.10 조사)",
+      "note": "제품 비교 문서 기준, 같은 칩은 같은 점수. 아이패드 프로 M4·아이패드 11세대·갤럭시 탭 S11 울트라는 GSMArena 자체 실측 리뷰 기준(2026.10 조사로 아이패드 11세대 수치를 5,285 → 6,157로 정정)",
       "rows": [
         {
           "n": "레노버 리전탭 Y700 5세대",
@@ -894,7 +948,7 @@ export const METRICS: Record<string, Metric[]> = {
         },
         {
           "n": "아이패드 11세대",
-          "v": 5285,
+          "v": 6157,
           "x": false,
           "sub": "A16"
         },
@@ -941,7 +995,7 @@ export const METRICS: Record<string, Metric[]> = {
       "label": "화면 주사율",
       "unit": "Hz",
       "desc": "높을수록 스크롤과 게임 화면이 부드러움",
-      "note": "공식 사양 기준. 갤럭시 탭 S8~S11 울트라, 아이패드 에어·프로는 2026.10 조사",
+      "note": "공식 사양 기준. 갤럭시 탭 S8~S11 울트라, 아이패드 에어·프로, 갤럭시 탭 A8·A9·A9+는 2026.10 조사",
       "rows": [
         {
           "n": "샤오미 패드 미니",
@@ -1010,6 +1064,12 @@ export const METRICS: Record<string, Metric[]> = {
           "sub": ""
         },
         {
+          "n": "갤럭시 탭 A9+",
+          "v": 90,
+          "x": false,
+          "sub": "스냅드래곤 695 5G"
+        },
+        {
           "n": "아이패드 11세대",
           "v": 60,
           "x": false,
@@ -1026,6 +1086,18 @@ export const METRICS: Record<string, Metric[]> = {
           "v": 60,
           "x": false,
           "sub": ""
+        },
+        {
+          "n": "갤럭시 탭 A9",
+          "v": 60,
+          "x": false,
+          "sub": "헬리오 G99"
+        },
+        {
+          "n": "갤럭시 탭 A8",
+          "v": 60,
+          "x": false,
+          "sub": "유니SOC 타이거 T618"
         }
       ]
     },
@@ -1034,7 +1106,7 @@ export const METRICS: Record<string, Metric[]> = {
       "label": "배터리",
       "unit": "mAh",
       "desc": "배터리 용량 · 클수록 오래 감",
-      "note": "공식 사양 기준. 갤럭시 탭 S8~S11 울트라는 2026.10 조사. 아이패드는 Apple이 mAh를 공개하지 않아 제외",
+      "note": "공식 사양 기준. 갤럭시 탭 S8~S11 울트라, 갤럭시 탭 A8·A9+는 2026.10 조사. 아이패드는 Apple이 mAh를 공개하지 않아 제외",
       "rows": [
         {
           "n": "레드미 패드 2 프로",
@@ -1099,6 +1171,18 @@ export const METRICS: Record<string, Metric[]> = {
         {
           "n": "갤럭시 탭 S8·S9 FE",
           "v": 8000,
+          "x": false,
+          "sub": ""
+        },
+        {
+          "n": "갤럭시 탭 A9+·A8",
+          "v": 7040,
+          "x": false,
+          "sub": ""
+        },
+        {
+          "n": "갤럭시 탭 A9",
+          "v": 5100,
           "x": false,
           "sub": ""
         }
