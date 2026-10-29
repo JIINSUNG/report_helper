@@ -15,6 +15,8 @@ export interface OpenReport {
   ctx?: ContextState;
   customText?: Record<string, Section[]>;
   customAmount?: Record<string, CustomAmountValue>;
+  /** frequency가 "optional"인 커스텀 항목 중, 오늘 "+ 추가"로 펼쳐둔 것의 id 목록. */
+  customRevealed?: string[];
 }
 
 export interface ReasonEntry {
@@ -58,16 +60,22 @@ export interface CloseReport {
   ctx?: ContextState;
   customText?: Record<string, Section[]>;
   customAmount?: Record<string, CustomAmountValue>;
+  /** frequency가 "optional"인 커스텀 항목 중, 오늘 "+ 추가"로 펼쳐둔 것의 id 목록. */
+  customRevealed?: string[];
 }
 
 export interface Section {
   t: string;
   b: string[];
+  /** false면 번호 없이(제목만) 넣는다. 없으면(undefined) 번호 매김 — 기존 데이터와 호환. */
+  numbered?: boolean;
 }
 
 /** 보고서에 사용자가 직접 추가하는 커스텀 섹션 — 설정 탭에서 정의. */
 export type CustomSectionType = "sections" | "amount";
 export type CustomAppliesTo = "open" | "close" | "both";
+/** "daily"(기본값)면 매일 보고서에 자동으로 나타나고, "optional"이면 "+ 추가"를 눌러야 그날만 나타난다. */
+export type CustomFrequency = "daily" | "optional";
 
 export interface CustomSectionDef {
   id: string;
@@ -76,6 +84,8 @@ export interface CustomSectionDef {
   type: CustomSectionType;
   /** type==="amount"일 때만: 전체 예산(원). 예: 세일즈 활용 금액 150,000원 */
   totalBudget?: number;
+  /** 없으면(undefined) "daily"로 본다 — 기존 데이터와 호환. */
+  frequency?: CustomFrequency;
 }
 
 export interface CustomAmountValue {

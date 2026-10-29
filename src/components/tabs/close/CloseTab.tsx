@@ -16,7 +16,7 @@ import { getClose, latestBefore } from "@/lib/local-reports";
 import { diffOf, reasonSum, signed } from "@/lib/report-text";
 import { insertAtPosition, insertSectionFromSnippet } from "@/lib/snippets";
 import { autoContext, ctxManual, ctxTags, ctxVars, emptyCtx } from "@/lib/context";
-import { amountRemaining, blankCustomAmount, mapsFor } from "@/lib/custom-sections";
+import { amountRemaining, blankCustomAmount, isRevealed, mapsFor } from "@/lib/custom-sections";
 import { recCount } from "@/lib/record-utils";
 import { won, pct, uid, shift } from "@/lib/format";
 import { DIFF_TYPES, NOTE_CHIPS } from "@/data/record-options";
@@ -306,17 +306,28 @@ export function CloseTab({
         <VariableFiller text={r.note} onApply={(text) => set({ note: text })} />
       </Card>
 
-      {customDefs.map((def) => (
-        <CustomSectionCard
-          key={def.id}
-          def={def}
-          sectionsValue={r.customText?.[def.id] || []}
-          amountValue={r.customAmount?.[def.id] || blankCustomAmount()}
-          remaining={def.type === "amount" && def.totalBudget != null ? amountRemaining(mapsFor(def, data.opens, data.closes), def.id, def.totalBudget, date) : null}
-          onChangeSections={(v) => set({ customText: { ...(r.customText || {}), [def.id]: v } })}
-          onChangeAmount={(v) => set({ customAmount: { ...(r.customAmount || {}), [def.id]: v } })}
-        />
-      ))}
+      {customDefs.map((def) =>
+        isRevealed(def, r.customRevealed || []) ? (
+          <CustomSectionCard
+            key={def.id}
+            def={def}
+            sectionsValue={r.customText?.[def.id] || []}
+            amountValue={r.customAmount?.[def.id] || blankCustomAmount()}
+            remaining={def.type === "amount" && def.totalBudget != null ? amountRemaining(mapsFor(def, data.opens, data.closes), def.id, def.totalBudget, date) : null}
+            onChangeSections={(v) => set({ customText: { ...(r.customText || {}), [def.id]: v } })}
+            onChangeAmount={(v) => set({ customAmount: { ...(r.customAmount || {}), [def.id]: v } })}
+          />
+        ) : (
+          <button
+            key={def.id}
+            type="button"
+            className="btn dash"
+            onClick={() => set({ customRevealed: [...(r.customRevealed || []), def.id] })}
+          >
+            + {def.label} 추가
+          </button>
+        )
+      )}
 
       {!isGuest && <SchedPeek storeLabel={storeLabel} date={shift(date, 1)} title="내일 일정" goSchedule={goSchedule} />}
     </>

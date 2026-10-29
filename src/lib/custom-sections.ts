@@ -1,7 +1,12 @@
 import type { CloseReport, CustomAmountValue, CustomSectionDef, OpenReport } from "@/types/report";
 
 export function blankCustomDef(): Omit<CustomSectionDef, "id"> {
-  return { label: "", appliesTo: "close", type: "sections" };
+  return { label: "", appliesTo: "close", type: "sections", frequency: "daily" };
+}
+
+/** frequency가 "optional"인 항목은 오늘 customRevealed에 들어 있을 때만 카드로 보여준다. */
+export function isRevealed(def: CustomSectionDef, revealed: string[]): boolean {
+  return def.frequency !== "optional" || revealed.includes(def.id);
 }
 
 export function blankCustomAmount(): CustomAmountValue {

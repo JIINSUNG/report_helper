@@ -3,10 +3,11 @@
 import { useState } from "react";
 import { Card } from "@/components/ui/Card";
 import { uid, won } from "@/lib/format";
-import type { CustomAppliesTo, CustomSectionDef, CustomSectionType, LocalReportData } from "@/types/report";
+import type { CustomAppliesTo, CustomFrequency, CustomSectionDef, CustomSectionType, LocalReportData } from "@/types/report";
 
 const APPLIES_LABEL: Record<CustomAppliesTo, string> = { open: "오픈보고", close: "마감보고", both: "오픈+마감" };
 const TYPE_LABEL: Record<CustomSectionType, string> = { sections: "텍스트 목록", amount: "금액 관리" };
+const FREQ_LABEL: Record<CustomFrequency, string> = { daily: "매일 반영", optional: "필요할 때만 추가" };
 
 export function CustomSectionsManager({
   data,
@@ -19,6 +20,7 @@ export function CustomSectionsManager({
   const [label, setLabel] = useState("");
   const [type, setType] = useState<CustomSectionType>("sections");
   const [appliesTo, setAppliesTo] = useState<CustomAppliesTo>("close");
+  const [frequency, setFrequency] = useState<CustomFrequency>("daily");
   const [budget, setBudget] = useState(0);
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
@@ -30,6 +32,7 @@ export function CustomSectionsManager({
       label: v.slice(0, 40),
       appliesTo: type === "amount" && appliesTo === "both" ? "close" : appliesTo,
       type,
+      frequency,
       ...(type === "amount" ? { totalBudget: budget || 0 } : {}),
     };
     update((d) => ({ ...d, settings: { ...d.settings, customSections: [...(d.settings.customSections || []), def] } }));
@@ -53,7 +56,7 @@ export function CustomSectionsManager({
           <div>
             <b style={{ fontSize: 14 }}>{d.label}</b>
             <p className="hint" style={{ margin: 0 }}>
-              {APPLIES_LABEL[d.appliesTo]} · {TYPE_LABEL[d.type]}
+              {APPLIES_LABEL[d.appliesTo]} · {TYPE_LABEL[d.type]} · {FREQ_LABEL[d.frequency || "daily"]}
               {d.type === "amount" && d.totalBudget != null ? ` · 총 ${won(d.totalBudget)}` : ""}
             </p>
           </div>
@@ -107,6 +110,24 @@ export function CustomSectionsManager({
             )}
           </div>
         </div>
+        <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
+          <span className="hint" style={{ margin: 0 }}>
+            언제 넣을까요
+          </span>
+          <div className="chips">
+            <button type="button" className="chip" aria-pressed={frequency === "daily"} onClick={() => setFrequency("daily")}>
+              매일 반영
+            </button>
+            <button type="button" className="chip" aria-pressed={frequency === "optional"} onClick={() => setFrequency("optional")}>
+              필요할 때만 추가
+            </button>
+          </div>
+        </div>
+        {frequency === "optional" && (
+          <p className="hint" style={{ margin: 0 }}>
+            보고서에 항목이 바로 나오지 않고, &apos;+ {label.trim() || "항목"} 추가&apos; 버튼을 눌러야 그날 보고서에만 나타나요.
+          </p>
+        )}
         {type === "amount" && (
           <label className="field" htmlFor="cx-budget">
             <span>

@@ -4,11 +4,16 @@ import type { CloseReport, CustomSectionDef, ItemTarget, OpenReport, Section } f
 export const itemsLine = (it: ItemTarget[], k: "target" | "actual") =>
   it.map((i) => `${i.name} ${i[k]}대`).join(", ");
 
-export const sectionsText = (ss: Section[]) =>
-  ss
+export const sectionsText = (ss: Section[]) => {
+  let n = 0;
+  return ss
     .filter((s) => s.t.trim() || s.b.some((x) => x.trim()))
-    .map((s, i) => `${i + 1}. ${s.t.trim()}\n\n${s.b.filter((x) => x.trim()).map((x) => "- " + x.trim()).join("\n")}`)
+    .map((s) => {
+      const head = s.numbered === false ? s.t.trim() : `${++n}. ${s.t.trim()}`;
+      return `${head}\n\n${s.b.filter((x) => x.trim()).map((x) => "- " + x.trim()).join("\n")}`;
+    })
     .join("\n");
+};
 
 export const diffOf = (r: CloseReport) => r.pos - r.retail;
 export const reasonSum = (rs: CloseReport["reasons"]) =>
