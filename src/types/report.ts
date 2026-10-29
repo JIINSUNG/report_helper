@@ -102,6 +102,8 @@ export interface Snippet {
   locations?: string[];
   /** 넣을 때 맨 위(top)에 둘지 맨 아래(bottom)에 둘지. 없으면 맨 아래. */
   position?: "top" | "bottom";
+  /** true면 "문구 불러오기" 목록 맨 위에 항상 고정해서 보여준다(매일 쓰는 문구를 찾기 쉽게). 자동 삽입은 아님. */
+  pinned?: boolean;
 }
 
 export interface ContextState {

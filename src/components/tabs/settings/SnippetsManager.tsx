@@ -20,16 +20,16 @@ export function SnippetsManager({
   const [editId, setEditId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
-  const add = (label: string, template: string, locations: string[], position: "top" | "bottom") => {
-    const s: Snippet = { id: uid(), label, template, locations, position };
+  const add = (label: string, template: string, locations: string[], position: "top" | "bottom", pinned: boolean) => {
+    const s: Snippet = { id: uid(), label, template, locations, position, pinned };
     update((d) => ({ ...d, settings: { ...d.settings, snippets: [...(d.settings.snippets || []), s] } }));
     setAdding(false);
   };
 
-  const edit = (id: string, label: string, template: string, locations: string[], position: "top" | "bottom") => {
+  const edit = (id: string, label: string, template: string, locations: string[], position: "top" | "bottom", pinned: boolean) => {
     update((d) => ({
       ...d,
-      settings: { ...d.settings, snippets: (d.settings.snippets || []).map((s) => (s.id === id ? { ...s, label, template, locations, position } : s)) },
+      settings: { ...d.settings, snippets: (d.settings.snippets || []).map((s) => (s.id === id ? { ...s, label, template, locations, position, pinned } : s)) },
     }));
     setEditId(null);
   };
@@ -53,19 +53,24 @@ export function SnippetsManager({
             initialTemplate={s.template}
             initialLocations={s.locations || []}
             initialPosition={s.position ?? "bottom"}
+            initialPinned={s.pinned ?? false}
             onCancel={() => setEditId(null)}
-            onSave={(label, template, locations, position) => edit(s.id, label, template, locations, position)}
+            onSave={(label, template, locations, position, pinned) => edit(s.id, label, template, locations, position, pinned)}
           />
         ) : (
           <div className="box" key={s.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
             <div>
-              <b style={{ fontSize: 14 }}>{s.label}</b>
+              <b style={{ fontSize: 14 }}>
+                {s.pinned ? "📌 " : ""}
+                {s.label}
+              </b>
               <p className="hint" style={{ margin: 0 }}>
                 {s.template}
                 {extractVars(s.template).length > 0 && ` · 변수: ${extractVars(s.template).join(", ")}`}
               </p>
               <p className="hint" style={{ margin: 0 }}>
                 위치: {s.locations && s.locations.length > 0 ? s.locations.map(locationLabel).join(", ") : "모든 칸"} · 넣는 자리: {s.position === "top" ? "맨 위" : "맨 아래"}
+                {s.pinned ? " · 매일 반영(목록 상단 고정)" : ""}
               </p>
             </div>
             {deleteId === s.id ? (

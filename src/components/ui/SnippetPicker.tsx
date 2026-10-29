@@ -25,7 +25,8 @@ export function SnippetPicker({
   onInsert: (p: SnippetInsert) => void;
   update: (fn: (d: LocalReportData) => LocalReportData) => void;
 }) {
-  const visible = snippets.filter((s) => !s.locations || s.locations.length === 0 || s.locations.includes(location));
+  const byPinned = (a: Snippet, b: Snippet) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0);
+  const visible = snippets.filter((s) => !s.locations || s.locations.length === 0 || s.locations.includes(location)).sort(byPinned);
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<"list" | "add" | "edit">("list");
   const [showAll, setShowAll] = useState(false);
@@ -34,7 +35,7 @@ export function SnippetPicker({
   const [picked, setPicked] = useState<Snippet | null>(null);
   const [vars, setVars] = useState<Record<string, string>>({});
 
-  const shown = showAll ? snippets : visible;
+  const shown = showAll ? [...snippets].sort(byPinned) : visible;
 
   const close = () => {
     setOpen(false);
@@ -57,16 +58,16 @@ export function SnippetPicker({
     close();
   };
 
-  const addSnippet = (label: string, template: string, locations: string[], position: "top" | "bottom") => {
-    const s: Snippet = { id: uid(), label, template, locations, position };
+  const addSnippet = (label: string, template: string, locations: string[], position: "top" | "bottom", pinned: boolean) => {
+    const s: Snippet = { id: uid(), label, template, locations, position, pinned };
     update((d) => ({ ...d, settings: { ...d.settings, snippets: [...(d.settings.snippets || []), s] } }));
     setMode("list");
   };
 
-  const editSnippet = (id: string, label: string, template: string, locations: string[], position: "top" | "bottom") => {
+  const editSnippet = (id: string, label: string, template: string, locations: string[], position: "top" | "bottom", pinned: boolean) => {
     update((d) => ({
       ...d,
-      settings: { ...d.settings, snippets: (d.settings.snippets || []).map((s) => (s.id === id ? { ...s, label, template, locations, position } : s)) },
+      settings: { ...d.settings, snippets: (d.settings.snippets || []).map((s) => (s.id === id ? { ...s, label, template, locations, position, pinned } : s)) },
     }));
     setMode("list");
     setEditTarget(null);
@@ -96,11 +97,12 @@ export function SnippetPicker({
         initialTemplate={editTarget.template}
         initialLocations={editTarget.locations || []}
         initialPosition={editTarget.position ?? "bottom"}
+        initialPinned={editTarget.pinned ?? false}
         onCancel={() => {
           setMode("list");
           setEditTarget(null);
         }}
-        onSave={(label, template, locations, position) => editSnippet(editTarget.id, label, template, locations, position)}
+        onSave={(label, template, locations, position, pinned) => editSnippet(editTarget.id, label, template, locations, position, pinned)}
       />
     );
   }
@@ -156,6 +158,7 @@ export function SnippetPicker({
         ) : (
           <div key={s.id} style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <button type="button" className="chip" style={{ flex: 1, textAlign: "left" }} onClick={() => pick(s)}>
+              {s.pinned ? "📌 " : ""}
               {s.label}
               {showAll && (
                 <small style={{ display: "block", fontWeight: 400 }}>

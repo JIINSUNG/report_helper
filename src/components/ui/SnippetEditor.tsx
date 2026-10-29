@@ -14,6 +14,7 @@ export function SnippetEditor({
   initialTemplate = "",
   initialLocations = [],
   initialPosition = "bottom",
+  initialPinned = false,
   onSave,
   onCancel,
 }: {
@@ -21,7 +22,8 @@ export function SnippetEditor({
   initialTemplate?: string;
   initialLocations?: string[];
   initialPosition?: "top" | "bottom";
-  onSave: (label: string, template: string, locations: string[], position: "top" | "bottom") => void;
+  initialPinned?: boolean;
+  onSave: (label: string, template: string, locations: string[], position: "top" | "bottom", pinned: boolean) => void;
   onCancel: () => void;
 }) {
   const [label, setLabel] = useState(initialLabel);
@@ -29,6 +31,7 @@ export function SnippetEditor({
   const [varName, setVarName] = useState("");
   const [locations, setLocations] = useState<string[]>(initialLocations);
   const [position, setPosition] = useState<"top" | "bottom">(initialPosition);
+  const [pinned, setPinned] = useState(initialPinned);
   const taRef = useRef<HTMLTextAreaElement>(null);
 
   const toggleLocation = (id: string) => {
@@ -119,6 +122,10 @@ export function SnippetEditor({
           </button>
         </div>
       </div>
+      <label className="tryrow" style={{ fontSize: 13 }}>
+        <input type="checkbox" checked={pinned} onChange={(e) => setPinned(e.target.checked)} />
+        <span style={{ textDecoration: "none", color: "var(--fg2)" }}>매일 반영(문구 불러오기 목록 맨 위에 고정) — 자동으로 들어가진 않고, 찾기 쉽게 고정만 돼요</span>
+      </label>
       <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
         <button type="button" className="btn sm" onClick={onCancel}>
           취소
@@ -127,7 +134,7 @@ export function SnippetEditor({
           type="button"
           className="btn pri sm"
           disabled={!label.trim() || !template.trim()}
-          onClick={() => onSave(label.trim().slice(0, 40), template.trim().slice(0, 500), locations, position)}
+          onClick={() => onSave(label.trim().slice(0, 40), template.trim().slice(0, 500), locations, position, pinned)}
         >
           저장
         </button>
