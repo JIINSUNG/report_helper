@@ -9,7 +9,7 @@ export const METRICS: Record<string, Metric[]> = {
       "label": "멀티코어",
       "unit": "점",
       "desc": "Geekbench 6 멀티코어 · 높을수록 게임, 멀티태스킹, 영상 편집처럼 무거운 작업에 유리",
-      "note": "91mobiles 측정값, 같은 칩은 같은 점수. *노트14 프로는 기본형 디멘시티 7300 점수",
+      "note": "91mobiles 측정값, 같은 칩은 같은 점수. *노트14 프로는 기본형 디멘시티 7300 점수. 갤럭시 S25·S26+·Z 폴드6~8·Z 플립5~8은 GSMArena 자체 실측 리뷰 기준(2026.10 조사, Z 폴드5는 GSMArena가 Geekbench 6을 측정하지 않아 제외)",
       "rows": [
         {
           "n": "아이폰 18 프로",
@@ -36,10 +36,88 @@ export const METRICS: Record<string, Metric[]> = {
           "sub": "스냅드래곤 8 엘리트 5세대 for Galaxy"
         },
         {
-          "n": "갤럭시 S26·S26+·Z 플립8",
+          "n": "갤럭시 S26",
           "v": 11249,
           "x": false,
           "sub": "엑시노스 2600"
+        },
+        {
+          "n": "갤럭시 Z 폴드8 울트라",
+          "v": 11124,
+          "x": false,
+          "sub": "스냅드래곤 8 엘리트 Gen 5 for Galaxy"
+        },
+        {
+          "n": "갤럭시 Z 폴드8",
+          "v": 10619,
+          "x": false,
+          "sub": "스냅드래곤 8 엘리트 Gen 5 for Galaxy"
+        },
+        {
+          "n": "갤럭시 Z 플립8",
+          "v": 10466,
+          "x": false,
+          "sub": "엑시노스 2600"
+        },
+        {
+          "n": "갤럭시 S26+",
+          "v": 10982,
+          "x": false,
+          "sub": "엑시노스 2600"
+        },
+        {
+          "n": "갤럭시 S25",
+          "v": 10050,
+          "x": false,
+          "sub": "스냅드래곤 8 엘리트 for Galaxy"
+        },
+        {
+          "n": "갤럭시 S25 울트라",
+          "v": 9846,
+          "x": false,
+          "sub": "스냅드래곤 8 엘리트 for Galaxy"
+        },
+        {
+          "n": "갤럭시 S25+",
+          "v": 9669,
+          "x": false,
+          "sub": "스냅드래곤 8 엘리트 for Galaxy"
+        },
+        {
+          "n": "갤럭시 Z 폴드7",
+          "v": 9152,
+          "x": false,
+          "sub": "스냅드래곤 8 엘리트 for Galaxy"
+        },
+        {
+          "n": "갤럭시 Z 플립7",
+          "v": 7433,
+          "x": false,
+          "sub": "엑시노스 2500"
+        },
+        {
+          "n": "갤럭시 Z 폴드6",
+          "v": 6757,
+          "x": false,
+          "sub": "스냅드래곤 8 Gen 3 for Galaxy"
+        },
+        {
+          "n": "갤럭시 Z 플립6",
+          "v": 6265,
+          "x": false,
+          "sub": "스냅드래곤 8 Gen 3 for Galaxy"
+        },
+        {
+          "n": "갤럭시 Z 플립7 FE",
+          "v": 6108,
+          "x": false,
+          "sub": "엑시노스 2400"
+        },
+        {
+          "n": "갤럭시 Z 플립5",
+          "v": 5478,
+          "x": false,
+          "sub": "스냅드래곤 8 Gen 2 for Galaxy"
         },
         {
           "n": "아이폰 17·17e",
@@ -132,7 +210,7 @@ export const METRICS: Record<string, Metric[]> = {
       "label": "싱글코어",
       "unit": "점",
       "desc": "Geekbench 6 싱글코어 · 높을수록 앱 실행, 웹 로딩처럼 한 가지 작업의 반응이 빠름",
-      "note": "91mobiles 측정값, 같은 칩은 같은 점수",
+      "note": "91mobiles 측정값, 같은 칩은 같은 점수. 갤럭시 S25·S26+·Z 폴드6~8·Z 플립5~8은 GSMArena 자체 실측 리뷰 기준(2026.10 조사, Z 폴드5는 GSMArena가 Geekbench 6을 측정하지 않아 제외)",
       "rows": [
         {
           "n": "아이폰 18 프로",
@@ -159,10 +237,88 @@ export const METRICS: Record<string, Metric[]> = {
           "sub": "스냅드래곤 8 엘리트 5세대 for Galaxy"
         },
         {
-          "n": "갤럭시 S26·S26+·Z 플립8",
+          "n": "갤럭시 S26",
           "v": 3220,
           "x": false,
           "sub": "엑시노스 2600"
+        },
+        {
+          "n": "갤럭시 Z 폴드8 울트라",
+          "v": 3695,
+          "x": false,
+          "sub": "스냅드래곤 8 엘리트 Gen 5 for Galaxy"
+        },
+        {
+          "n": "갤럭시 Z 폴드8",
+          "v": 3528,
+          "x": false,
+          "sub": "스냅드래곤 8 엘리트 Gen 5 for Galaxy"
+        },
+        {
+          "n": "갤럭시 S26+",
+          "v": 3250,
+          "x": false,
+          "sub": "엑시노스 2600"
+        },
+        {
+          "n": "갤럭시 S25",
+          "v": 3175,
+          "x": false,
+          "sub": "스냅드래곤 8 엘리트 for Galaxy"
+        },
+        {
+          "n": "갤럭시 S25+",
+          "v": 3100,
+          "x": false,
+          "sub": "스냅드래곤 8 엘리트 for Galaxy"
+        },
+        {
+          "n": "갤럭시 Z 폴드7",
+          "v": 2910,
+          "x": false,
+          "sub": "스냅드래곤 8 엘리트 for Galaxy"
+        },
+        {
+          "n": "갤럭시 Z 플립8",
+          "v": 2977,
+          "x": false,
+          "sub": "엑시노스 2600"
+        },
+        {
+          "n": "갤럭시 S25 울트라",
+          "v": 3057,
+          "x": false,
+          "sub": "스냅드래곤 8 엘리트 for Galaxy"
+        },
+        {
+          "n": "갤럭시 Z 폴드6",
+          "v": 2223,
+          "x": false,
+          "sub": "스냅드래곤 8 Gen 3 for Galaxy"
+        },
+        {
+          "n": "갤럭시 Z 플립7",
+          "v": 2099,
+          "x": false,
+          "sub": "엑시노스 2500"
+        },
+        {
+          "n": "갤럭시 Z 플립5",
+          "v": 2100,
+          "x": false,
+          "sub": "스냅드래곤 8 Gen 2 for Galaxy"
+        },
+        {
+          "n": "갤럭시 Z 플립6",
+          "v": 2081,
+          "x": false,
+          "sub": "스냅드래곤 8 Gen 3 for Galaxy"
+        },
+        {
+          "n": "갤럭시 Z 플립7 FE",
+          "v": 1853,
+          "x": false,
+          "sub": "엑시노스 2400"
         },
         {
           "n": "아이폰 17·17e",
@@ -650,13 +806,25 @@ export const METRICS: Record<string, Metric[]> = {
       "label": "칩 성능",
       "unit": "점",
       "desc": "Geekbench 6 멀티코어 · 높을수록 게임, 멀티태스킹에 유리",
-      "note": "제품 비교 문서 기준, 같은 칩은 같은 점수",
+      "note": "제품 비교 문서 기준, 같은 칩은 같은 점수. 아이패드 프로 M4·갤럭시 탭 S11 울트라는 GSMArena 자체 실측 리뷰 기준(2026.10 조사)",
       "rows": [
         {
           "n": "레노버 리전탭 Y700 5세대",
           "v": 11407,
           "x": false,
           "sub": "스냅드래곤 8 엘리트 5세대"
+        },
+        {
+          "n": "아이패드 프로(M4 11형)",
+          "v": 13160,
+          "x": false,
+          "sub": "Apple M4 9코어 · 256GB 모델 기준"
+        },
+        {
+          "n": "갤럭시 탭 S11 울트라",
+          "v": 8861,
+          "x": false,
+          "sub": "디멘시티 9400+"
         },
         {
           "n": "샤오미 패드 미니",
