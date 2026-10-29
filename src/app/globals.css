@@ -387,3 +387,15 @@ details summary{cursor:pointer;font-size:14px;font-weight:600;margin-bottom:8px}
 .quizopt:disabled{opacity:1}
 .quizfb{margin:0;font-size:13px;color:var(--fg2)}
 .quizscore{font-size:30px;font-weight:800;margin:0}
+
+.ftablewrap{overflow-x:auto}
+.ftable{border-collapse:collapse;width:100%;font-size:12.5px;white-space:nowrap}
+.ftable th,.ftable td{padding:8px 10px;text-align:center;border-bottom:1px solid var(--line)}
+.ftable th{color:var(--muted);font-weight:600;font-size:11.5px}
+.ftable .fname{text-align:left;font-weight:600;color:var(--fg2)}
+.ftable tr.me .fname{color:var(--fg);font-weight:700}
+.ftable tr.me{background:var(--soft)}
+.ftable td.ok{color:var(--ok);font-weight:700}
+.ftable td.no{color:var(--warn);font-weight:700}
+.fnotes{margin:10px 0 0;padding-left:18px;display:flex;flex-direction:column;gap:3px}
+.fnotes li{font-size:12px;color:var(--muted);line-height:1.4}

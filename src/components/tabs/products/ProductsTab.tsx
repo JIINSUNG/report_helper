@@ -7,6 +7,7 @@ import { DATA_UPDATED } from "@/data/groups.meta";
 import { ALL_PRODUCTS, effectiveProduct, officialRows } from "@/lib/product-utils";
 import { useShared } from "@/lib/use-shared";
 import { METRICS } from "@/data/metrics";
+import { FEATURES } from "@/data/features";
 import { ProductCard } from "./ProductCard";
 import { RivalCard } from "./RivalCard";
 import { PriceChart } from "./PriceChart";
@@ -15,6 +16,7 @@ import { ScatterChart } from "./ScatterChart";
 import { PriceHistoryCard } from "./PriceHistoryCard";
 import { BulkPriceEditor } from "./BulkPriceEditor";
 import { ProductQuiz } from "./ProductQuiz";
+import { FeatureTable } from "./FeatureTable";
 
 export function ProductsTab() {
   const shared = useShared();
@@ -178,6 +180,12 @@ export function ProductsTab() {
       {!official && !qs && METRICS[grp.id] && (
         <Card title={grp.label + " 가격 대비 성능"} right={<span className="sub">x 가격 · y 성능</span>}>
           <ScatterChart metrics={METRICS[grp.id]} items={items} />
+        </Card>
+      )}
+
+      {!official && !qs && FEATURES[grp.id] && (
+        <Card title={grp.label + " 기능 지원 비교"} right={<span className="sub">O / X</span>}>
+          <FeatureTable data={FEATURES[grp.id]} />
         </Card>
       )}
 

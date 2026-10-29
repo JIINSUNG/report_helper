@@ -57,3 +57,19 @@ export interface OfficialRow {
   s: string;
   a: boolean;
 }
+
+export interface FeatureRow {
+  n: string;
+  /** 샤오미/레드미/포코(우리) 제품이면 true */
+  x: boolean;
+  /** featureId → "O" | "X" | 방수 등급·펜 종류 같은 짧은 텍스트 */
+  values: Record<string, string>;
+}
+
+export interface FeatureGroup {
+  label: string;
+  features: { id: string; label: string }[];
+  rows: FeatureRow[];
+  /** O/X만으로는 설명이 부족한 항목(그립 장착 시 등급 변경 등)을 보충하는 참고 설명 */
+  notes?: string[];
+}
