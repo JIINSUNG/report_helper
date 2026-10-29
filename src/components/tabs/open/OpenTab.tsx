@@ -8,6 +8,7 @@ import { ContextBar } from "@/components/ui/ContextBar";
 import { Reco } from "@/components/ui/Reco";
 import { CustomSectionCard } from "@/components/ui/CustomSectionCard";
 import { SnippetPicker } from "@/components/ui/SnippetPicker";
+import { DailySnippetVars } from "@/components/ui/DailySnippetVars";
 import { VariableFiller } from "@/components/ui/VariableFiller";
 import { getOpen, itemTarget, latestBefore } from "@/lib/local-reports";
 import { insertAtPosition } from "@/lib/snippets";
@@ -106,6 +107,13 @@ export function OpenTab({
         />
         <VariableFiller text={r.comment} onApply={(text) => set({ comment: text })} />
       </Card>
+
+      <DailySnippetVars
+        snippets={data.settings.snippets || []}
+        location="open-comment"
+        values={r.snippetVars || {}}
+        onChange={(id, vars) => set({ snippetVars: { ...(r.snippetVars || {}), [id]: vars } })}
+      />
 
       {customDefs.map((def) =>
         isRevealed(def, r.customRevealed || []) ? (

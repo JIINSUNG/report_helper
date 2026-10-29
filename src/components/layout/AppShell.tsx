@@ -94,8 +94,9 @@ export function AppShell() {
       if (!def || def.type !== "amount" || def.totalBudget == null) return null;
       return amountRemaining(mapsFor(def, data.opens, data.closes), defId, def.totalBudget, date);
     };
-    if (tab === "open") return openText(getOpen(data, date), storeLabel, customDefs, remainingFor);
-    if (tab === "close") return closeText(getClose(data, date), storeLabel, data.settings.inventoryNote, customDefs, remainingFor);
+    if (tab === "open") return openText(getOpen(data, date), storeLabel, customDefs, remainingFor, data.settings.snippets || []);
+    if (tab === "close")
+      return closeText(getClose(data, date), storeLabel, data.settings.inventoryNote, customDefs, remainingFor, data.settings.snippets || []);
     if (tab === "retro") return retroText(data, date);
     return "";
   }, [tab, data, date, storeLabel]);

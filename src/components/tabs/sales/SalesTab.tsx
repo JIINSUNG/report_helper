@@ -4,9 +4,10 @@ import { Card } from "@/components/ui/Card";
 import { Txt, Area } from "@/components/ui/Fields";
 import { CopyBlock } from "@/components/ui/CopyBlock";
 import { SnippetPicker } from "@/components/ui/SnippetPicker";
+import { DailySnippetVars } from "@/components/ui/DailySnippetVars";
 import { VariableFiller } from "@/components/ui/VariableFiller";
 import { getMgr } from "@/lib/local-reports";
-import { insertAtPosition } from "@/lib/snippets";
+import { dailyVarSnippetText, insertAtPosition } from "@/lib/snippets";
 import { caseText, type CaseFields } from "@/lib/report-text";
 import { formSummary, getSumForm, recHints } from "@/lib/sales-summary";
 import { salesSummary, autoS, autoT, autoA, autoR } from "@/lib/record-utils";
@@ -164,6 +165,9 @@ export function SalesTab({
   const hints = recHints(recs);
   const setSF = (p: Partial<typeof sf>) => set({ sumForm: { ...sf, ...p } });
   const recCount = cases.filter((x) => !("manual" in x)).length;
+  const setSnippetVar = (id: string, v: Record<string, string>) => set({ snippetVars: { ...(mg.snippetVars || {}), [id]: v } });
+  const noteText = dailyVarSnippetText(data.settings.snippets || [], "sales-note", mg.snippetVars || {}, mg.note.trim());
+  const planText = dailyVarSnippetText(data.settings.snippets || [], "sales-plan", mg.snippetVars || {}, mg.plan.trim());
 
   return (
     <>
@@ -232,7 +236,8 @@ export function SalesTab({
           onInsert={({ text, position }) => set({ note: insertAtPosition(mg.note, text, position) })}
           update={update}
         />
-        <CopyBlock text={[(mg.summary ?? autoSum).trim(), mg.note.trim() && `- 특이사항: ${mg.note.trim()}`].filter(Boolean).join("\n")} empty="기록을 남기거나 직접 써주세요." />
+        <DailySnippetVars snippets={data.settings.snippets || []} location="sales-note" values={mg.snippetVars || {}} onChange={setSnippetVar} />
+        <CopyBlock text={[(mg.summary ?? autoSum).trim(), noteText && `- 특이사항: ${noteText}`].filter(Boolean).join("\n")} empty="기록을 남기거나 직접 써주세요." />
       </Card>
 
       <Card title="판매 우수 사례" right={<span className="sub">기록에서 ☆ {recCount}/2 · 직접 {(mg.manual || []).length}</span>}>
@@ -297,7 +302,8 @@ export function SalesTab({
           update={update}
         />
         <VariableFiller text={mg.plan} onApply={(text) => set({ plan: text })} />
-        <CopyBlock text={mg.plan.trim()} empty="계획을 쓰면 복사할 수 있어요." />
+        <DailySnippetVars snippets={data.settings.snippets || []} location="sales-plan" values={mg.snippetVars || {}} onChange={setSnippetVar} />
+        <CopyBlock text={planText} empty="계획을 쓰면 복사할 수 있어요." />
       </Card>
     </>
   );

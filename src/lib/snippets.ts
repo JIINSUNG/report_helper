@@ -43,19 +43,53 @@ function dailySnippetsFor(snippets: Snippet[], location: string): Snippet[] {
   return snippets.filter((s) => s.frequency === "daily" && s.locations?.length === 1 && s.locations[0] === location);
 }
 
-/** 변수가 있으면 dailyVars로 채우고, 없으면 템플릿 그대로. */
-const dailyText = (s: Snippet) => fillSnippet(s.template, s.dailyVars || {});
+/**
+ * 변수가 없는 "daily" 문구만. 변수가 있는 문구는 값을 날마다 따로 입력해야 해서
+ * (리테일·포스 같은 전용 입력칸으로) 여기서는 다루지 않는다 — dailyVarSnippetsFor 참고.
+ */
+function dailyPlainSnippetsFor(snippets: Snippet[], location: string): Snippet[] {
+  return dailySnippetsFor(snippets, location).filter((s) => extractVars(s.template).length === 0);
+}
+
+/** 변수가 있는 "daily" 문구만. 이 목록의 각 문구마다, 보고서 화면에 변수 입력칸이 따로 생긴다. */
+export function dailyVarSnippetsFor(snippets: Snippet[], location: string): Snippet[] {
+  return dailySnippetsFor(snippets, location).filter((s) => extractVars(s.template).length > 0);
+}
 
 /**
- * 새 보고서를 만들 때(날짜별로 한 번), "매일 반영"으로 설정한 문구를 자유 텍스트 칸의
+ * 새 보고서를 만들 때(날짜별로 한 번), 변수 없는 "daily" 문구를 자유 텍스트 칸의
  * 기본값에 미리 넣어둔다. base(기존 기본 문구 등)가 있으면 그 뒤/앞에 이어 붙인다.
- * 변수가 있는 문구는 문구를 저장할 때 미리 받아둔 dailyVars로 채워서 넣는다.
  */
 export function dailySnippetText(snippets: Snippet[], location: string, base = ""): string {
-  return dailySnippetsFor(snippets, location).reduce((acc, s) => insertAtPosition(acc, dailyText(s), s.position ?? "bottom"), base);
+  return dailyPlainSnippetsFor(snippets, location).reduce((acc, s) => insertAtPosition(acc, s.template, s.position ?? "bottom"), base);
 }
 
 /** 위와 같은 목적이지만 Section[] 목록(금일 핵심 내용 등)에 넣을 때. */
 export function dailySnippetSections<T extends { t: string; b: string[] }>(snippets: Snippet[], location: string, base: T[] = []): T[] {
-  return dailySnippetsFor(snippets, location).reduce((acc, s) => insertSectionFromSnippet(acc, s.label, dailyText(s), s.position ?? "bottom"), base);
+  return dailyPlainSnippetsFor(snippets, location).reduce((acc, s) => insertSectionFromSnippet(acc, s.label, s.template, s.position ?? "bottom"), base);
+}
+
+/**
+ * 변수가 있는 "daily" 문구를, 그날 입력된 값(snippetVars[문구id])으로 채워 하나의 텍스트로
+ * 이어붙인다. 보고서 텍스트를 만들 때(복사용) base 뒤에 덧붙여 쓴다. 값을 아직 안 넣었으면
+ * 그 문구는 빈 줄도 안 남기고 건너뛴다.
+ */
+export function dailyVarSnippetText(snippets: Snippet[], location: string, snippetVars: Record<string, Record<string, string>>, base = ""): string {
+  const filled = dailyVarSnippetsFor(snippets, location)
+    .map((s) => fillSnippet(s.template, snippetVars[s.id] || {}).trim())
+    .filter(Boolean);
+  return filled.reduce((acc, text) => insertAtPosition(acc, text, "bottom"), base);
+}
+
+/** 위와 같은 목적이지만, 금일 핵심 내용처럼 Section[] 목록으로 나가는 보고서 텍스트에 쓸 때. */
+export function dailyVarSnippetSections<T extends { t: string; b: string[] }>(
+  snippets: Snippet[],
+  location: string,
+  snippetVars: Record<string, Record<string, string>>,
+  base: T[] = []
+): T[] {
+  return dailyVarSnippetsFor(snippets, location).reduce((acc, s) => {
+    const text = fillSnippet(s.template, snippetVars[s.id] || {}).trim();
+    return text ? insertSectionFromSnippet(acc, s.label, text, s.position ?? "bottom") : acc;
+  }, base);
 }

@@ -1,5 +1,6 @@
 import { parts, won, comma } from "./format";
-import type { CloseReport, CustomSectionDef, ItemTarget, OpenReport, Section } from "@/types/report";
+import { dailyVarSnippetSections, dailyVarSnippetText } from "./snippets";
+import type { CloseReport, CustomSectionDef, ItemTarget, OpenReport, Section, Snippet } from "@/types/report";
 
 export const itemsLine = (it: ItemTarget[], k: "target" | "actual") =>
   it.map((i) => `${i.name} ${i[k]}대`).join(", ");
@@ -66,8 +67,15 @@ function customSectionLines(
   return out;
 }
 
-export function openText(r: OpenReport, store: string, customDefs: CustomSectionDef[] = [], remainingFor: (defId: string) => number | null = () => null): string {
+export function openText(
+  r: OpenReport,
+  store: string,
+  customDefs: CustomSectionDef[] = [],
+  remainingFor: (defId: string) => number | null = () => null,
+  snippets: Snippet[] = []
+): string {
   const [y, m, d] = parts(r.date);
+  const comment = dailyVarSnippetText(snippets, "open-comment", r.snippetVars || {}, r.comment.trim());
   return [
     `[${String(y).slice(2)}년 ${m}월 ${d}일] ${store} 오픈보고`,
     `- 전일 전환율 ${r.prevConversion}%`,
@@ -79,7 +87,7 @@ export function openText(r: OpenReport, store: string, customDefs: CustomSection
     itemsLine(r.targetItems, "target"),
     "",
     "- 코멘트",
-    r.comment.trim(),
+    comment,
     ...customSectionLines(r, customDefs, "open", remainingFor),
   ].join("\n");
 }
@@ -89,7 +97,8 @@ export function closeText(
   store: string,
   def?: string,
   customDefs: CustomSectionDef[] = [],
-  remainingFor: (defId: string) => number | null = () => null
+  remainingFor: (defId: string) => number | null = () => null,
+  snippets: Snippet[] = []
 ): string {
   const [y, m, d] = parts(r.date);
   const diff = diffOf(r);
@@ -103,9 +112,12 @@ export function closeText(
             .filter((x) => x.text.trim())
             .map((x) => `- ${x.text.trim()} ${x.side === "retail" ? "리테일" : "포스기"} ${(x.sign ?? 1) < 0 ? "-" : "+"}${won(x.amount)}`),
         ];
-  const hs = sectionsText(r.highlights);
-  const pis = sectionsText(r.phoneInsights || []);
-  const ps = sectionsText(r.plans);
+  const vars = r.snippetVars || {};
+  const inventoryNote = dailyVarSnippetText(snippets, "close-inventory", vars, r.inventoryNote);
+  const hs = sectionsText(dailyVarSnippetSections(snippets, "close-highlight", vars, r.highlights));
+  const pis = sectionsText(dailyVarSnippetSections(snippets, "close-insight", vars, r.phoneInsights || []));
+  const ps = sectionsText(dailyVarSnippetSections(snippets, "close-plan", vars, r.plans));
+  const note = dailyVarSnippetText(snippets, "close-note", vars, r.note.trim());
   return [
     `[${y}년 ${m}월 ${d}일]`,
     `${store} 일일 보고서`,
@@ -129,7 +141,7 @@ export function closeText(
     `- 전환율: ${r.conversion}%`,
     `- 연계율: ${r.attachRate}`,
     `- 객단가: ${r.aov}`,
-    ...invLines(r, def).map((x) => `- ${x}`),
+    ...invLines({ ...r, inventoryNote }, def).map((x) => `- ${x}`),
     `- 금일 리테일 ${won(r.retail)}, 포스기 ${won(r.pos)} 기록하였습니다.`,
     ...dl,
     "",
@@ -142,9 +154,7 @@ export function closeText(
     "[익일계획]",
     "",
     ...(ps ? [ps] : []),
-    ...(r.note.trim()
-      ? ["[특이사항]", ...r.note.trim().split("\n").map((x) => "- " + x.replace(/^-\s*/, ""))]
-      : []),
+    ...(note ? ["[특이사항]", ...note.split("\n").map((x) => "- " + x.replace(/^-\s*/, ""))] : []),
     ...customSectionLines(r, customDefs, "close", remainingFor),
     "이상입니다.",
   ].join("\n");

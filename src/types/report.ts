@@ -17,6 +17,8 @@ export interface OpenReport {
   customAmount?: Record<string, CustomAmountValue>;
   /** frequency가 "optional"인 커스텀 항목 중, 오늘 "+ 추가"로 펼쳐둔 것의 id 목록. */
   customRevealed?: string[];
+  /** "daily" + 변수 있는 문구의 그날 변수값. 문구id → {변수명: 값}. */
+  snippetVars?: Record<string, Record<string, string>>;
 }
 
 export interface ReasonEntry {
@@ -62,6 +64,8 @@ export interface CloseReport {
   customAmount?: Record<string, CustomAmountValue>;
   /** frequency가 "optional"인 커스텀 항목 중, 오늘 "+ 추가"로 펼쳐둔 것의 id 목록. */
   customRevealed?: string[];
+  /** "daily" + 변수 있는 문구의 그날 변수값. 문구id → {변수명: 값}. */
+  snippetVars?: Record<string, Record<string, string>>;
 }
 
 export interface Section {
@@ -104,12 +108,12 @@ export interface Snippet {
   position?: "top" | "bottom";
   /**
    * "daily"면 그 칸이 있는 보고서를 새로 쓸 때 기본값으로 미리 들어가 있다(지우거나 고치면 그대로 저장됨).
+   * 변수가 있는 문구는 텍스트 자체는 안 들어가는 대신, 리테일·포스처럼 그 보고서에 변수 입력칸이
+   * 따로 생겨서 날마다 값을 넣으면 그 값으로 채운 문장이 복사용 보고서 텍스트에 들어간다.
    * "optional"(기본값)이면 지금처럼 '문구 불러오기'로 그때그때 수동으로 넣는다.
    * "daily"는 위치를 정확히 하나만 고른 문구에만 고를 수 있다(여러 칸이면 어디에 넣을지 알 수 없어서).
    */
   frequency?: CustomFrequency;
-  /** frequency가 "daily"이고 변수가 있는 문구라면, 자동으로 넣을 때 쓸 변수별 고정값. */
-  dailyVars?: Record<string, string>;
 }
 
 export interface ContextState {
@@ -175,6 +179,8 @@ export interface SalesManager {
   sumForm?: SummaryForm;
   plan: string;
   note: string;
+  /** "daily" + 변수 있는 문구의 그날 변수값. 문구id → {변수명: 값}. */
+  snippetVars?: Record<string, Record<string, string>>;
 }
 
 export interface Retro {
@@ -193,6 +199,8 @@ export interface Retro {
   r: string;
   learn: string;
   triedPrev: Record<number, boolean>;
+  /** "daily" + 변수 있는 문구의 그날 변수값. 문구id → {변수명: 값}. */
+  snippetVars?: Record<string, Record<string, string>>;
 }
 
 export interface ReportItemSetting {

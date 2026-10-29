@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Card } from "@/components/ui/Card";
 import { Area } from "@/components/ui/Fields";
 import { SnippetPicker } from "@/components/ui/SnippetPicker";
+import { DailySnippetVars } from "@/components/ui/DailySnippetVars";
 import { insertAtPosition } from "@/lib/snippets";
 import { getRetro, lines, prevRetro, didSummary, retroText } from "@/lib/retro-utils";
 import { parts, today } from "@/lib/format";
@@ -172,6 +173,12 @@ export function RetroTab({
           )}
           <Area id="rt-did" rows={3} value={r.did} onChange={(v) => set({ did: v })} ph={off ? "운동, 공부, 약속 등 오늘 한 것" : "상담, 판매, 입고, 진열 등"} />
           <SnippetPicker snippets={data.settings.snippets || []} location="retro-did" onInsert={({ text, position }) => set({ did: insertAtPosition(r.did, text, position) })} update={update} />
+          <DailySnippetVars
+            snippets={data.settings.snippets || []}
+            location="retro-did"
+            values={r.snippetVars || {}}
+            onChange={(id, vars) => set({ snippetVars: { ...(r.snippetVars || {}), [id]: vars } })}
+          />
         </div>
         <RetroField
           id="rt-issues"
