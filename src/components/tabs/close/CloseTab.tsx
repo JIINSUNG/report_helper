@@ -85,6 +85,8 @@ export function CloseTab({
     });
   const covered = diff ? Math.min(100, Math.max(0, Math.round((Math.abs(sum) / Math.abs(diff)) * 100))) : 0;
   const setSnippetVar = (id: string, v: Record<string, string>) => set({ snippetVars: { ...(r.snippetVars || {}), [id]: v } });
+  const toggleSnippetSkip = (id: string) =>
+    set({ snippetSkip: (r.snippetSkip || []).includes(id) ? (r.snippetSkip || []).filter((x) => x !== id) : [...(r.snippetSkip || []), id] });
 
   return (
     <>
@@ -159,7 +161,7 @@ export function CloseTab({
               onInsert={({ text, position }) => set({ inventoryNote: insertAtPosition(r.inventoryNote, text, position) })}
               update={update}
             />
-            <DailySnippetVars snippets={data.settings.snippets || []} location="close-inventory" values={r.snippetVars || {}} onChange={setSnippetVar} />
+            <DailySnippetVars snippets={data.settings.snippets || []} location="close-inventory" values={r.snippetVars || {}} skip={r.snippetSkip || []} onChange={setSnippetVar} onToggleSkip={toggleSnippetSkip} />
             <button
               type="button"
               className="link"
@@ -269,7 +271,7 @@ export function CloseTab({
           onInsert={({ text, label, position }) => set({ highlights: insertSectionFromSnippet(r.highlights, label, text, position) })}
           update={update}
         />
-        <DailySnippetVars snippets={data.settings.snippets || []} location="close-highlight" values={r.snippetVars || {}} onChange={setSnippetVar} />
+        <DailySnippetVars snippets={data.settings.snippets || []} location="close-highlight" values={r.snippetVars || {}} skip={r.snippetSkip || []} onChange={setSnippetVar} onToggleSkip={toggleSnippetSkip} />
       </Card>
       <Card title="금일 스마트폰 인사이트" right={<span className="sub">선택 · 비우면 보고서에 안 나와요</span>}>
         <p className="hint">예: &quot;20대 커플 / Xiaomi 17시리즈&quot; 처럼 고객군·제품을 제목으로 쓰고, 판매·리드 확보 등 결과를 아래에 적어주세요.</p>
@@ -280,7 +282,7 @@ export function CloseTab({
           onInsert={({ text, label, position }) => set({ phoneInsights: insertSectionFromSnippet(r.phoneInsights || [], label, text, position) })}
           update={update}
         />
-        <DailySnippetVars snippets={data.settings.snippets || []} location="close-insight" values={r.snippetVars || {}} onChange={setSnippetVar} />
+        <DailySnippetVars snippets={data.settings.snippets || []} location="close-insight" values={r.snippetVars || {}} skip={r.snippetSkip || []} onChange={setSnippetVar} onToggleSkip={toggleSnippetSkip} />
       </Card>
       <Card title="익일 계획">
         <Reco data={data} update={update} k="plan" tags={tags} manual={manual} vars={vars} onPick={(p) => set({ plans: [...r.plans, p] })} />
@@ -291,7 +293,7 @@ export function CloseTab({
           onInsert={({ text, label, position }) => set({ plans: insertSectionFromSnippet(r.plans, label, text, position) })}
           update={update}
         />
-        <DailySnippetVars snippets={data.settings.snippets || []} location="close-plan" values={r.snippetVars || {}} onChange={setSnippetVar} />
+        <DailySnippetVars snippets={data.settings.snippets || []} location="close-plan" values={r.snippetVars || {}} skip={r.snippetSkip || []} onChange={setSnippetVar} onToggleSkip={toggleSnippetSkip} />
       </Card>
 
       <Card title="특이사항" right={<span className="sub">선택 · 비우면 보고서에 안 나와요</span>}>
@@ -310,7 +312,7 @@ export function CloseTab({
           update={update}
         />
         <VariableFiller text={r.note} onApply={(text) => set({ note: text })} />
-        <DailySnippetVars snippets={data.settings.snippets || []} location="close-note" values={r.snippetVars || {}} onChange={setSnippetVar} />
+        <DailySnippetVars snippets={data.settings.snippets || []} location="close-note" values={r.snippetVars || {}} skip={r.snippetSkip || []} onChange={setSnippetVar} onToggleSkip={toggleSnippetSkip} />
       </Card>
 
       {customDefs.map((def) =>

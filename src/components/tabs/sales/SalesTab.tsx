@@ -166,8 +166,10 @@ export function SalesTab({
   const setSF = (p: Partial<typeof sf>) => set({ sumForm: { ...sf, ...p } });
   const recCount = cases.filter((x) => !("manual" in x)).length;
   const setSnippetVar = (id: string, v: Record<string, string>) => set({ snippetVars: { ...(mg.snippetVars || {}), [id]: v } });
-  const noteText = dailyVarSnippetText(data.settings.snippets || [], "sales-note", mg.snippetVars || {}, mg.note.trim());
-  const planText = dailyVarSnippetText(data.settings.snippets || [], "sales-plan", mg.snippetVars || {}, mg.plan.trim());
+  const toggleSnippetSkip = (id: string) =>
+    set({ snippetSkip: (mg.snippetSkip || []).includes(id) ? (mg.snippetSkip || []).filter((x) => x !== id) : [...(mg.snippetSkip || []), id] });
+  const noteText = dailyVarSnippetText(data.settings.snippets || [], "sales-note", mg.snippetVars || {}, mg.note.trim(), mg.snippetSkip || []);
+  const planText = dailyVarSnippetText(data.settings.snippets || [], "sales-plan", mg.snippetVars || {}, mg.plan.trim(), mg.snippetSkip || []);
 
   return (
     <>
@@ -236,7 +238,7 @@ export function SalesTab({
           onInsert={({ text, position }) => set({ note: insertAtPosition(mg.note, text, position) })}
           update={update}
         />
-        <DailySnippetVars snippets={data.settings.snippets || []} location="sales-note" values={mg.snippetVars || {}} onChange={setSnippetVar} />
+        <DailySnippetVars snippets={data.settings.snippets || []} location="sales-note" values={mg.snippetVars || {}} skip={mg.snippetSkip || []} onChange={setSnippetVar} onToggleSkip={toggleSnippetSkip} />
         <CopyBlock text={[(mg.summary ?? autoSum).trim(), noteText && `- 특이사항: ${noteText}`].filter(Boolean).join("\n")} empty="기록을 남기거나 직접 써주세요." />
       </Card>
 
@@ -302,7 +304,7 @@ export function SalesTab({
           update={update}
         />
         <VariableFiller text={mg.plan} onApply={(text) => set({ plan: text })} />
-        <DailySnippetVars snippets={data.settings.snippets || []} location="sales-plan" values={mg.snippetVars || {}} onChange={setSnippetVar} />
+        <DailySnippetVars snippets={data.settings.snippets || []} location="sales-plan" values={mg.snippetVars || {}} skip={mg.snippetSkip || []} onChange={setSnippetVar} onToggleSkip={toggleSnippetSkip} />
         <CopyBlock text={planText} empty="계획을 쓰면 복사할 수 있어요." />
       </Card>
     </>

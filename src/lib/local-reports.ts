@@ -146,6 +146,7 @@ export function getMgr(d: LocalReportData, date: string): SalesManager {
     plan: existing?.plan ?? dailySnippetText(snippets, "sales-plan"),
     note: existing?.note ?? dailySnippetText(snippets, "sales-note"),
     snippetVars: existing?.snippetVars ?? {},
+    snippetSkip: existing?.snippetSkip ?? [],
   };
 }
 

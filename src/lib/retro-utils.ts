@@ -22,6 +22,7 @@ export function getRetro(d: LocalReportData, date: string): Retro {
     learn: e?.learn ?? "",
     triedPrev: e?.triedPrev ?? {},
     snippetVars: e?.snippetVars ?? {},
+    snippetSkip: e?.snippetSkip ?? [],
   };
 }
 
@@ -62,7 +63,7 @@ export function retroText(d: LocalReportData, date: string): string {
   const pv = prevRetro(d, date);
   const tried = pv ? lines(pv.r.try).map((t, i) => `${r.triedPrev[i] ? "✓" : "·"} ${t}`).join("\n") : "";
   const anyTried = pv && Object.values(r.triedPrev).some(Boolean);
-  const did = dailyVarSnippetText(d.settings.snippets || [], "retro-did", r.snippetVars || {}, r.did);
+  const did = dailyVarSnippetText(d.settings.snippets || [], "retro-did", r.snippetVars || {}, r.did, r.snippetSkip || []);
   return [
     `[${m}월 ${dd}일 회고${r.dayType === "off" ? " · 쉬는 날" : r.dayType === "work" ? " · 근무일" : ""}]${
       r.mood ? ` 오늘 기분: ${MOODS[r.mood - 1]}` : ""

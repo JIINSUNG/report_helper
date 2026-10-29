@@ -75,7 +75,7 @@ export function openText(
   snippets: Snippet[] = []
 ): string {
   const [y, m, d] = parts(r.date);
-  const comment = dailyVarSnippetText(snippets, "open-comment", r.snippetVars || {}, r.comment.trim());
+  const comment = dailyVarSnippetText(snippets, "open-comment", r.snippetVars || {}, r.comment.trim(), r.snippetSkip || []);
   return [
     `[${String(y).slice(2)}년 ${m}월 ${d}일] ${store} 오픈보고`,
     `- 전일 전환율 ${r.prevConversion}%`,
@@ -113,11 +113,12 @@ export function closeText(
             .map((x) => `- ${x.text.trim()} ${x.side === "retail" ? "리테일" : "포스기"} ${(x.sign ?? 1) < 0 ? "-" : "+"}${won(x.amount)}`),
         ];
   const vars = r.snippetVars || {};
-  const inventoryNote = dailyVarSnippetText(snippets, "close-inventory", vars, r.inventoryNote);
-  const hs = sectionsText(dailyVarSnippetSections(snippets, "close-highlight", vars, r.highlights));
-  const pis = sectionsText(dailyVarSnippetSections(snippets, "close-insight", vars, r.phoneInsights || []));
-  const ps = sectionsText(dailyVarSnippetSections(snippets, "close-plan", vars, r.plans));
-  const note = dailyVarSnippetText(snippets, "close-note", vars, r.note.trim());
+  const skip = r.snippetSkip || [];
+  const inventoryNote = dailyVarSnippetText(snippets, "close-inventory", vars, r.inventoryNote, skip);
+  const hs = sectionsText(dailyVarSnippetSections(snippets, "close-highlight", vars, r.highlights, skip));
+  const pis = sectionsText(dailyVarSnippetSections(snippets, "close-insight", vars, r.phoneInsights || [], skip));
+  const ps = sectionsText(dailyVarSnippetSections(snippets, "close-plan", vars, r.plans, skip));
+  const note = dailyVarSnippetText(snippets, "close-note", vars, r.note.trim(), skip);
   return [
     `[${y}년 ${m}월 ${d}일]`,
     `${store} 일일 보고서`,

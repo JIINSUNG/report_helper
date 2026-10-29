@@ -72,10 +72,17 @@ export function dailySnippetSections<T extends { t: string; b: string[] }>(snipp
 /**
  * 변수가 있는 "daily" 문구를, 그날 입력된 값(snippetVars[문구id])으로 채워 하나의 텍스트로
  * 이어붙인다. 보고서 텍스트를 만들 때(복사용) base 뒤에 덧붙여 쓴다. 값을 아직 안 넣었으면
- * 그 문구는 빈 줄도 안 남기고 건너뛴다.
+ * 그 문구는 빈 줄도 안 남기고 건너뛴다. 그날 '빼기'로 뺀 문구(skip)도 건너뛴다.
  */
-export function dailyVarSnippetText(snippets: Snippet[], location: string, snippetVars: Record<string, Record<string, string>>, base = ""): string {
+export function dailyVarSnippetText(
+  snippets: Snippet[],
+  location: string,
+  snippetVars: Record<string, Record<string, string>>,
+  base = "",
+  skip: string[] = []
+): string {
   const filled = dailyVarSnippetsFor(snippets, location)
+    .filter((s) => !skip.includes(s.id))
     .map((s) => fillSnippet(s.template, snippetVars[s.id] || {}).trim())
     .filter(Boolean);
   return filled.reduce((acc, text) => insertAtPosition(acc, text, "bottom"), base);
@@ -86,10 +93,13 @@ export function dailyVarSnippetSections<T extends { t: string; b: string[] }>(
   snippets: Snippet[],
   location: string,
   snippetVars: Record<string, Record<string, string>>,
-  base: T[] = []
+  base: T[] = [],
+  skip: string[] = []
 ): T[] {
-  return dailyVarSnippetsFor(snippets, location).reduce((acc, s) => {
-    const text = fillSnippet(s.template, snippetVars[s.id] || {}).trim();
-    return text ? insertSectionFromSnippet(acc, s.label, text, s.position ?? "bottom") : acc;
-  }, base);
+  return dailyVarSnippetsFor(snippets, location)
+    .filter((s) => !skip.includes(s.id))
+    .reduce((acc, s) => {
+      const text = fillSnippet(s.template, snippetVars[s.id] || {}).trim();
+      return text ? insertSectionFromSnippet(acc, s.label, text, s.position ?? "bottom") : acc;
+    }, base);
 }

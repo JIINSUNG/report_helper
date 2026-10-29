@@ -177,7 +177,11 @@ export function RetroTab({
             snippets={data.settings.snippets || []}
             location="retro-did"
             values={r.snippetVars || {}}
+            skip={r.snippetSkip || []}
             onChange={(id, vars) => set({ snippetVars: { ...(r.snippetVars || {}), [id]: vars } })}
+            onToggleSkip={(id) =>
+              set({ snippetSkip: (r.snippetSkip || []).includes(id) ? (r.snippetSkip || []).filter((x) => x !== id) : [...(r.snippetSkip || []), id] })
+            }
           />
         </div>
         <RetroField

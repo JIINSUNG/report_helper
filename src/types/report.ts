@@ -19,6 +19,8 @@ export interface OpenReport {
   customRevealed?: string[];
   /** "daily" + 변수 있는 문구의 그날 변수값. 문구id → {변수명: 값}. */
   snippetVars?: Record<string, Record<string, string>>;
+  /** "daily" + 변수 있는 문구 중, 오늘은 "빼기"로 뺀 문구id 목록. 보고서 텍스트에서 건너뛴다. */
+  snippetSkip?: string[];
 }
 
 export interface ReasonEntry {
@@ -66,6 +68,8 @@ export interface CloseReport {
   customRevealed?: string[];
   /** "daily" + 변수 있는 문구의 그날 변수값. 문구id → {변수명: 값}. */
   snippetVars?: Record<string, Record<string, string>>;
+  /** "daily" + 변수 있는 문구 중, 오늘은 "빼기"로 뺀 문구id 목록. 보고서 텍스트에서 건너뛴다. */
+  snippetSkip?: string[];
 }
 
 export interface Section {
@@ -181,6 +185,8 @@ export interface SalesManager {
   note: string;
   /** "daily" + 변수 있는 문구의 그날 변수값. 문구id → {변수명: 값}. */
   snippetVars?: Record<string, Record<string, string>>;
+  /** "daily" + 변수 있는 문구 중, 오늘은 "빼기"로 뺀 문구id 목록. 보고서 텍스트에서 건너뛴다. */
+  snippetSkip?: string[];
 }
 
 export interface Retro {
@@ -201,6 +207,8 @@ export interface Retro {
   triedPrev: Record<number, boolean>;
   /** "daily" + 변수 있는 문구의 그날 변수값. 문구id → {변수명: 값}. */
   snippetVars?: Record<string, Record<string, string>>;
+  /** "daily" + 변수 있는 문구 중, 오늘은 "빼기"로 뺀 문구id 목록. 보고서 텍스트에서 건너뛴다. */
+  snippetSkip?: string[];
 }
 
 export interface ReportItemSetting {
