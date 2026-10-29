@@ -15,3 +15,14 @@ export const SNIPPET_LOCATIONS: [string, string][] = [
 export function locationLabel(id: string): string {
   return SNIPPET_LOCATIONS.find(([k]) => k === id)?.[1] ?? id;
 }
+
+/**
+ * "세일즈 · 금일 판매 요약"은 기록을 바탕으로 자동 생성되는 문장(autoSum)과
+ * null(=자동 생성 사용)/직접 쓴 텍스트를 넘나드는 특별한 칸이라, "매일 반영"으로
+ * 기본값을 미리 넣어두면 그 자동 생성 로직과 충돌한다. 이 칸만 "매일 반영"에서 뺀다.
+ */
+const DAILY_UNSUPPORTED = new Set(["sales-summary"]);
+
+export function supportsDaily(id: string): boolean {
+  return !DAILY_UNSUPPORTED.has(id);
+}

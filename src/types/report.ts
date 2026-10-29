@@ -102,8 +102,12 @@ export interface Snippet {
   locations?: string[];
   /** 넣을 때 맨 위(top)에 둘지 맨 아래(bottom)에 둘지. 없으면 맨 아래. */
   position?: "top" | "bottom";
-  /** true면 "문구 불러오기" 목록 맨 위에 항상 고정해서 보여준다(매일 쓰는 문구를 찾기 쉽게). 자동 삽입은 아님. */
-  pinned?: boolean;
+  /**
+   * "daily"면 그 칸이 있는 보고서를 새로 쓸 때 기본값으로 미리 들어가 있다(지우거나 고치면 그대로 저장됨).
+   * "optional"(기본값)이면 지금처럼 '문구 불러오기'로 그때그때 수동으로 넣는다.
+   * "daily"는 위치를 정확히 하나만 고르고 변수가 없는 문구에만 고를 수 있다(자동으로 넣을 값을 알 수 없어서).
+   */
+  frequency?: CustomFrequency;
 }
 
 export interface ContextState {

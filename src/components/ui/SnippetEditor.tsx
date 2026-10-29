@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { extractVars } from "@/lib/snippets";
-import { SNIPPET_LOCATIONS } from "@/data/snippet-locations";
+import { SNIPPET_LOCATIONS, supportsDaily } from "@/data/snippet-locations";
 
 /**
  * 문구(틀) 추가·수정 폼. {변수} 를 직접 타이핑하지 않고도, 변수 이름을 입력해
@@ -14,7 +14,7 @@ export function SnippetEditor({
   initialTemplate = "",
   initialLocations = [],
   initialPosition = "bottom",
-  initialPinned = false,
+  initialFrequency = "optional",
   onSave,
   onCancel,
 }: {
@@ -22,8 +22,8 @@ export function SnippetEditor({
   initialTemplate?: string;
   initialLocations?: string[];
   initialPosition?: "top" | "bottom";
-  initialPinned?: boolean;
-  onSave: (label: string, template: string, locations: string[], position: "top" | "bottom", pinned: boolean) => void;
+  initialFrequency?: "daily" | "optional";
+  onSave: (label: string, template: string, locations: string[], position: "top" | "bottom", frequency: "daily" | "optional") => void;
   onCancel: () => void;
 }) {
   const [label, setLabel] = useState(initialLabel);
@@ -31,7 +31,7 @@ export function SnippetEditor({
   const [varName, setVarName] = useState("");
   const [locations, setLocations] = useState<string[]>(initialLocations);
   const [position, setPosition] = useState<"top" | "bottom">(initialPosition);
-  const [pinned, setPinned] = useState(initialPinned);
+  const [frequency, setFrequency] = useState<"daily" | "optional">(initialFrequency);
   const taRef = useRef<HTMLTextAreaElement>(null);
 
   const toggleLocation = (id: string) => {
@@ -39,6 +39,7 @@ export function SnippetEditor({
   };
 
   const vars = extractVars(template);
+  const canBeDaily = locations.length === 1 && vars.length === 0 && supportsDaily(locations[0]);
 
   const insertVar = (name: string) => {
     const v = name.trim();
@@ -122,10 +123,34 @@ export function SnippetEditor({
           </button>
         </div>
       </div>
-      <label className="tryrow" style={{ fontSize: 13 }}>
-        <input type="checkbox" checked={pinned} onChange={(e) => setPinned(e.target.checked)} />
-        <span style={{ textDecoration: "none", color: "var(--fg2)" }}>매일 반영(문구 불러오기 목록 맨 위에 고정) — 자동으로 들어가진 않고, 찾기 쉽게 고정만 돼요</span>
-      </label>
+      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
+        <span className="hint" style={{ margin: 0, whiteSpace: "nowrap" }}>
+          언제 넣을까요
+        </span>
+        <div className="chips">
+          <button type="button" className="chip" aria-pressed={frequency === "optional"} onClick={() => setFrequency("optional")}>
+            필요할 때만
+          </button>
+          <button
+            type="button"
+            className="chip"
+            aria-pressed={frequency === "daily" && canBeDaily}
+            disabled={!canBeDaily}
+            onClick={() => canBeDaily && setFrequency("daily")}
+          >
+            매일 반영
+          </button>
+        </div>
+      </div>
+      <p className="hint" style={{ margin: 0 }}>
+        {canBeDaily
+          ? frequency === "daily"
+            ? "그 칸이 있는 보고서를 쓸 때마다 이 문구가 기본으로 미리 들어가 있어요. 그날 필요 없으면 지우면 돼요."
+            : "지금처럼 '문구 불러오기'를 눌러야 들어가요."
+          : locations.length === 1 && !supportsDaily(locations[0])
+            ? "'금일 판매 요약'은 자동으로 만들어지는 문장이라 '매일 반영'을 쓸 수 없어요."
+            : "'매일 반영'은 보일 칸을 정확히 하나만 고르고, 변수가 없는 문구에만 쓸 수 있어요(자동으로 채울 값을 알 수 없어서)."}
+      </p>
       <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
         <button type="button" className="btn sm" onClick={onCancel}>
           취소
@@ -134,7 +159,7 @@ export function SnippetEditor({
           type="button"
           className="btn pri sm"
           disabled={!label.trim() || !template.trim()}
-          onClick={() => onSave(label.trim().slice(0, 40), template.trim().slice(0, 500), locations, position, pinned)}
+          onClick={() => onSave(label.trim().slice(0, 40), template.trim().slice(0, 500), locations, position, canBeDaily ? frequency : "optional")}
         >
           저장
         </button>

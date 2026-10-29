@@ -1,5 +1,6 @@
 import { parts, won, pct } from "./format";
 import { MOODS } from "@/data/retro-hints";
+import { dailySnippetText } from "./snippets";
 import type { LocalReportData, Retro } from "@/types/report";
 
 export function getRetro(d: LocalReportData, date: string): Retro {
@@ -9,7 +10,7 @@ export function getRetro(d: LocalReportData, date: string): Retro {
     mode: e?.mode ?? "kpt",
     mood: e?.mood ?? 0,
     day: e?.day ?? "",
-    did: e?.did ?? "",
+    did: e?.did ?? dailySnippetText(d.settings.snippets || [], "retro-did"),
     issues: e?.issues ?? "",
     keep: e?.keep ?? "",
     problem: e?.problem ?? "",

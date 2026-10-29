@@ -3,6 +3,7 @@
 import { useCallback, useState } from "react";
 import { today } from "./format";
 import { isOffDay } from "@/data/holidays";
+import { dailySnippetSections, dailySnippetText } from "./snippets";
 import type {
   CloseReport,
   LocalReportData,
@@ -88,7 +89,7 @@ export function newOpen(data: LocalReportData, date: string): OpenReport {
     targetGMV: po?.targetGMV || 0,
     targetConversion: df.targetConversion || po?.targetConversion || "7",
     targetItems: names.map((n) => ({ name: n, target: defaultTarget(data.settings, date, n), actual: 0 })),
-    comment: "",
+    comment: dailySnippetText(data.settings.snippets || [], "open-comment"),
   };
 }
 
@@ -114,15 +115,15 @@ export function newClose(data: LocalReportData, date: string): CloseReport {
     conversion: "",
     attachRate: "",
     aov: "",
-    inventoryNote: data.settings.inventoryNote,
+    inventoryNote: dailySnippetText(data.settings.snippets || [], "close-inventory", data.settings.inventoryNote),
     inv: { phone: { diff: 0, reason: "" }, tablet: { diff: 0, reason: "" } },
     retail: 0,
     pos: 0,
     reasons: [],
-    highlights: [],
-    phoneInsights: [],
-    plans: [],
-    note: "",
+    highlights: dailySnippetSections(data.settings.snippets || [], "close-highlight"),
+    phoneInsights: dailySnippetSections(data.settings.snippets || [], "close-insight"),
+    plans: dailySnippetSections(data.settings.snippets || [], "close-plan"),
+    note: dailySnippetText(data.settings.snippets || [], "close-note"),
   };
 }
 
@@ -136,13 +137,14 @@ export function getClose(d: LocalReportData, date: string): CloseReport {
 }
 export function getMgr(d: LocalReportData, date: string): SalesManager {
   const existing = d.managers[date];
+  const snippets = d.settings.snippets || [];
   return {
     cases: existing?.cases ?? {},
     manual: existing?.manual ?? [],
     summary: existing?.summary ?? null,
     sumForm: existing?.sumForm,
-    plan: existing?.plan ?? "",
-    note: existing?.note ?? "",
+    plan: existing?.plan ?? dailySnippetText(snippets, "sales-plan"),
+    note: existing?.note ?? dailySnippetText(snippets, "sales-note"),
   };
 }
 

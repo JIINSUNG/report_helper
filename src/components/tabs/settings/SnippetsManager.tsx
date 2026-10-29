@@ -20,16 +20,16 @@ export function SnippetsManager({
   const [editId, setEditId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
-  const add = (label: string, template: string, locations: string[], position: "top" | "bottom", pinned: boolean) => {
-    const s: Snippet = { id: uid(), label, template, locations, position, pinned };
+  const add = (label: string, template: string, locations: string[], position: "top" | "bottom", frequency: "daily" | "optional") => {
+    const s: Snippet = { id: uid(), label, template, locations, position, frequency };
     update((d) => ({ ...d, settings: { ...d.settings, snippets: [...(d.settings.snippets || []), s] } }));
     setAdding(false);
   };
 
-  const edit = (id: string, label: string, template: string, locations: string[], position: "top" | "bottom", pinned: boolean) => {
+  const edit = (id: string, label: string, template: string, locations: string[], position: "top" | "bottom", frequency: "daily" | "optional") => {
     update((d) => ({
       ...d,
-      settings: { ...d.settings, snippets: (d.settings.snippets || []).map((s) => (s.id === id ? { ...s, label, template, locations, position, pinned } : s)) },
+      settings: { ...d.settings, snippets: (d.settings.snippets || []).map((s) => (s.id === id ? { ...s, label, template, locations, position, frequency } : s)) },
     }));
     setEditId(null);
   };
@@ -53,15 +53,15 @@ export function SnippetsManager({
             initialTemplate={s.template}
             initialLocations={s.locations || []}
             initialPosition={s.position ?? "bottom"}
-            initialPinned={s.pinned ?? false}
+            initialFrequency={s.frequency ?? "optional"}
             onCancel={() => setEditId(null)}
-            onSave={(label, template, locations, position, pinned) => edit(s.id, label, template, locations, position, pinned)}
+            onSave={(label, template, locations, position, frequency) => edit(s.id, label, template, locations, position, frequency)}
           />
         ) : (
           <div className="box" key={s.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
             <div>
               <b style={{ fontSize: 14 }}>
-                {s.pinned ? "📌 " : ""}
+                {s.frequency === "daily" ? "📌 " : ""}
                 {s.label}
               </b>
               <p className="hint" style={{ margin: 0 }}>
@@ -70,7 +70,7 @@ export function SnippetsManager({
               </p>
               <p className="hint" style={{ margin: 0 }}>
                 위치: {s.locations && s.locations.length > 0 ? s.locations.map(locationLabel).join(", ") : "모든 칸"} · 넣는 자리: {s.position === "top" ? "맨 위" : "맨 아래"}
-                {s.pinned ? " · 매일 반영(목록 상단 고정)" : ""}
+                {s.frequency === "daily" ? " · 매일 반영(보고서에 기본으로 미리 들어감)" : ""}
               </p>
             </div>
             {deleteId === s.id ? (
