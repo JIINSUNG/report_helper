@@ -255,7 +255,7 @@ export const METRICS: Record<string, Metric[]> = {
       "label": "배터리",
       "unit": "mAh",
       "desc": "배터리 용량 · 클수록 오래 감",
-      "note": "공식 사양 기준. 갤럭시 A37·A57은 5,000mAh",
+      "note": "공식 사양 기준. 갤럭시 A37·A57은 5,000mAh. 갤럭시 S25·S26·Z 폴드·Z 플립 시리즈도 삼성 공식 사양 기준(2026.10 조사)",
       "rows": [
         {
           "n": "포코 X8 프로 맥스",
@@ -316,6 +316,78 @@ export const METRICS: Record<string, Metric[]> = {
           "v": 5000,
           "x": false,
           "sub": ""
+        },
+        {
+          "n": "갤럭시 Z 폴드8 울트라",
+          "v": 5000,
+          "x": false,
+          "sub": ""
+        },
+        {
+          "n": "갤럭시 S25 울트라",
+          "v": 5000,
+          "x": false,
+          "sub": ""
+        },
+        {
+          "n": "갤럭시 S26+",
+          "v": 4900,
+          "x": false,
+          "sub": ""
+        },
+        {
+          "n": "갤럭시 S25+",
+          "v": 4900,
+          "x": false,
+          "sub": ""
+        },
+        {
+          "n": "갤럭시 Z 폴드8",
+          "v": 4800,
+          "x": false,
+          "sub": ""
+        },
+        {
+          "n": "갤럭시 Z 폴드5·폴드6·폴드7",
+          "v": 4400,
+          "x": false,
+          "sub": ""
+        },
+        {
+          "n": "갤럭시 Z 플립7",
+          "v": 4300,
+          "x": false,
+          "sub": ""
+        },
+        {
+          "n": "갤럭시 Z 플립8",
+          "v": 4300,
+          "x": false,
+          "sub": ""
+        },
+        {
+          "n": "갤럭시 S25",
+          "v": 4000,
+          "x": false,
+          "sub": ""
+        },
+        {
+          "n": "갤럭시 Z 플립6",
+          "v": 4000,
+          "x": false,
+          "sub": ""
+        },
+        {
+          "n": "갤럭시 Z 플립7 FE",
+          "v": 4000,
+          "x": false,
+          "sub": ""
+        },
+        {
+          "n": "갤럭시 Z 플립5",
+          "v": 3700,
+          "x": false,
+          "sub": ""
         }
       ]
     },
@@ -324,7 +396,7 @@ export const METRICS: Record<string, Metric[]> = {
       "label": "유선 충전",
       "unit": "W",
       "desc": "최대 유선 충전 속도 · 높을수록 빨리 충전",
-      "note": "샤오미·갤럭시 A: 공식 사양, 갤럭시 S26·아이폰: 9to5Google·BGR·판매처 사양 기준. 폰이 받을 수 있는 만큼만 충전됨",
+      "note": "샤오미·갤럭시 A: 공식 사양, 갤럭시 S26·아이폰: 9to5Google·BGR·판매처 사양 기준. 갤럭시 S25·Z 폴드·Z 플립 시리즈는 삼성 공식 사양 기준(2026.10 조사). 폰이 받을 수 있는 만큼만 충전됨",
       "rows": [
         {
           "n": "샤오미 17",
@@ -415,6 +487,36 @@ export const METRICS: Record<string, Metric[]> = {
           "v": 25,
           "x": false,
           "sub": ""
+        },
+        {
+          "n": "갤럭시 Z 폴드8·폴드8 울트라",
+          "v": 45,
+          "x": false,
+          "sub": ""
+        },
+        {
+          "n": "갤럭시 S25+·S25 울트라",
+          "v": 45,
+          "x": false,
+          "sub": ""
+        },
+        {
+          "n": "갤럭시 S25",
+          "v": 25,
+          "x": false,
+          "sub": ""
+        },
+        {
+          "n": "갤럭시 Z 폴드5·폴드6·폴드7",
+          "v": 25,
+          "x": false,
+          "sub": ""
+        },
+        {
+          "n": "갤럭시 Z 플립5·플립6·플립7·플립7 FE·플립8",
+          "v": 25,
+          "x": false,
+          "sub": ""
         }
       ]
     },
@@ -423,7 +525,7 @@ export const METRICS: Record<string, Metric[]> = {
       "label": "무선 충전",
       "unit": "W",
       "desc": "최대 무선 충전 속도 · 높을수록 충전 패드에서 빨리 참",
-      "note": "샤오미: 공식 사양(무선 50W는 샤오미 전용 무선 충전기 기준), 갤럭시 S26·아이폰: 9to5Google·BGR·맥월드·판매처 사양 기준. S26 울트라 25W는 자석 케이스가 필요할 수 있음",
+      "note": "샤오미: 공식 사양(무선 50W는 샤오미 전용 무선 충전기 기준), 갤럭시 S26·아이폰: 9to5Google·BGR·맥월드·판매처 사양 기준. 갤럭시 S25·Z 폴드·Z 플립 시리즈는 삼성 공식 사양 기준(2026.10 조사). S26 울트라 25W는 자석 케이스가 필요할 수 있음",
       "rows": [
         {
           "n": "샤오미 17 울트라",
@@ -468,7 +570,31 @@ export const METRICS: Record<string, Metric[]> = {
           "sub": ""
         },
         {
+          "n": "갤럭시 Z 폴드8·폴드8 울트라",
+          "v": 20,
+          "x": false,
+          "sub": ""
+        },
+        {
           "n": "갤럭시 S26",
+          "v": 15,
+          "x": false,
+          "sub": ""
+        },
+        {
+          "n": "갤럭시 S25·S25+·S25 울트라",
+          "v": 15,
+          "x": false,
+          "sub": ""
+        },
+        {
+          "n": "갤럭시 Z 폴드5·폴드6·폴드7",
+          "v": 15,
+          "x": false,
+          "sub": ""
+        },
+        {
+          "n": "갤럭시 Z 플립5·플립6·플립7·플립7 FE·플립8",
           "v": 15,
           "x": false,
           "sub": ""
@@ -605,7 +731,7 @@ export const METRICS: Record<string, Metric[]> = {
       "label": "화면 주사율",
       "unit": "Hz",
       "desc": "높을수록 스크롤과 게임 화면이 부드러움",
-      "note": "공식 사양 기준",
+      "note": "공식 사양 기준. 갤럭시 탭 S8~S11 울트라, 아이패드 에어·프로는 2026.10 조사",
       "rows": [
         {
           "n": "샤오미 패드 미니",
@@ -638,6 +764,18 @@ export const METRICS: Record<string, Metric[]> = {
           "sub": ""
         },
         {
+          "n": "갤럭시 탭 S8·S8+·S8 울트라·S9·S9+·S9 울트라·S10+·S10 울트라·S11 울트라",
+          "v": 120,
+          "x": false,
+          "sub": ""
+        },
+        {
+          "n": "아이패드 프로(M2·M4)",
+          "v": 120,
+          "x": false,
+          "sub": "ProMotion"
+        },
+        {
           "n": "레드미 패드 2",
           "v": 90,
           "x": true,
@@ -645,6 +783,12 @@ export const METRICS: Record<string, Metric[]> = {
         },
         {
           "n": "갤럭시 탭 S10 FE",
+          "v": 90,
+          "x": false,
+          "sub": ""
+        },
+        {
+          "n": "갤럭시 탭 S9 FE·S9 FE+",
           "v": 90,
           "x": false,
           "sub": ""
@@ -666,6 +810,12 @@ export const METRICS: Record<string, Metric[]> = {
           "v": 60,
           "x": false,
           "sub": ""
+        },
+        {
+          "n": "아이패드 에어(M1·M2·M3)",
+          "v": 60,
+          "x": false,
+          "sub": ""
         }
       ]
     },
@@ -674,7 +824,7 @@ export const METRICS: Record<string, Metric[]> = {
       "label": "배터리",
       "unit": "mAh",
       "desc": "배터리 용량 · 클수록 오래 감",
-      "note": "공식 사양 기준",
+      "note": "공식 사양 기준. 갤럭시 탭 S8~S11 울트라는 2026.10 조사. 아이패드는 Apple이 mAh를 공개하지 않아 제외",
       "rows": [
         {
           "n": "레드미 패드 2 프로",
@@ -709,6 +859,36 @@ export const METRICS: Record<string, Metric[]> = {
         {
           "n": "갤럭시 탭 A11+",
           "v": 7040,
+          "x": false,
+          "sub": ""
+        },
+        {
+          "n": "갤럭시 탭 S11 울트라",
+          "v": 11600,
+          "x": false,
+          "sub": ""
+        },
+        {
+          "n": "갤럭시 탭 S8 울트라·S9 울트라·S10 울트라",
+          "v": 11200,
+          "x": false,
+          "sub": ""
+        },
+        {
+          "n": "갤럭시 탭 S8+·S9+·S9 FE+·S10+",
+          "v": 10090,
+          "x": false,
+          "sub": ""
+        },
+        {
+          "n": "갤럭시 탭 S9",
+          "v": 8400,
+          "x": false,
+          "sub": ""
+        },
+        {
+          "n": "갤럭시 탭 S8·S9 FE",
+          "v": 8000,
           "x": false,
           "sub": ""
         }

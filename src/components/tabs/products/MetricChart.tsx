@@ -2,10 +2,12 @@
 
 import { useState } from "react";
 import type { Metric } from "@/types/product";
+import { METRIC_GUIDES } from "@/data/metric-guides";
 
-export function MetricChart({ metrics }: { metrics: Metric[] }) {
+export function MetricChart({ metrics, groupId }: { metrics: Metric[]; groupId: string }) {
   const [mid, setMid] = useState(metrics[0].id);
   const m = metrics.find((x) => x.id === mid) || metrics[0];
+  const guideTiers = METRIC_GUIDES[`${groupId}:${m.id}`];
   const rows = [...m.rows].sort((a, b) => (m.low ? a.v - b.v : b.v - a.v));
   const max = Math.max(...rows.map((r) => r.v)) || 1;
   const fmt = (v: number) => `${v.toLocaleString("ko-KR")}${m.unit === "점" ? "" : m.unit}`;
@@ -60,6 +62,18 @@ export function MetricChart({ metrics }: { metrics: Metric[] }) {
         ))}
       </div>
       <p className="hint">{m.note}</p>
+      {guideTiers && (
+        <div className="metricguide">
+          <b>실사용 기준 (참고용, 공식 수치 아님)</b>
+          <ul>
+            {guideTiers.map((t) => (
+              <li key={t.min}>
+                {t.min > 0 ? `${fmt(t.min)} 이상` : "그 미만"} · {t.text}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }

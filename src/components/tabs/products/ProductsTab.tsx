@@ -14,6 +14,7 @@ import { MetricChart } from "./MetricChart";
 import { ScatterChart } from "./ScatterChart";
 import { PriceHistoryCard } from "./PriceHistoryCard";
 import { BulkPriceEditor } from "./BulkPriceEditor";
+import { ProductQuiz } from "./ProductQuiz";
 
 export function ProductsTab() {
   const shared = useShared();
@@ -22,6 +23,7 @@ export function ProductsTab() {
   const [open, setOpen] = useState<string | null>(null);
   const [acc, setAcc] = useState(false);
   const [bulkOpen, setBulkOpen] = useState(false);
+  const [quizOpen, setQuizOpen] = useState(false);
   const official = g === "official";
   const grp = GROUPS.find((x) => x.id === g) || GROUPS[0];
   const qlower = q.trim().toLowerCase();
@@ -64,6 +66,7 @@ export function ProductsTab() {
                 setQ("");
                 setG(x.id);
                 setOpen(null);
+                setQuizOpen(false);
               }}
             >
               {x.label}
@@ -77,6 +80,7 @@ export function ProductsTab() {
               setQ("");
               setG("official");
               setOpen(null);
+              setQuizOpen(false);
             }}
           >
             공식몰 전체
@@ -157,10 +161,19 @@ export function ProductsTab() {
       {!official && !qs && <PriceHistoryCard history={groupHistory} />}
 
       {!official && !qs && METRICS[grp.id] && (
-        <Card title={grp.label + " 성능 비교"} right={<span className="sub">문서 수치 기준</span>}>
-          <MetricChart metrics={METRICS[grp.id]} />
+        <Card
+          title={grp.label + " 성능 비교"}
+          right={
+            <button type="button" className="link" onClick={() => setQuizOpen(true)}>
+              📝 퀴즈로 확인
+            </button>
+          }
+        >
+          <MetricChart metrics={METRICS[grp.id]} groupId={grp.id} />
         </Card>
       )}
+
+      {!official && !qs && quizOpen && <ProductQuiz groupId={grp.id} groupLabel={grp.label} onClose={() => setQuizOpen(false)} />}
 
       {!official && !qs && METRICS[grp.id] && (
         <Card title={grp.label + " 가격 대비 성능"} right={<span className="sub">x 가격 · y 성능</span>}>
