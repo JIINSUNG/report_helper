@@ -105,9 +105,11 @@ export interface Snippet {
   /**
    * "daily"면 그 칸이 있는 보고서를 새로 쓸 때 기본값으로 미리 들어가 있다(지우거나 고치면 그대로 저장됨).
    * "optional"(기본값)이면 지금처럼 '문구 불러오기'로 그때그때 수동으로 넣는다.
-   * "daily"는 위치를 정확히 하나만 고르고 변수가 없는 문구에만 고를 수 있다(자동으로 넣을 값을 알 수 없어서).
+   * "daily"는 위치를 정확히 하나만 고른 문구에만 고를 수 있다(여러 칸이면 어디에 넣을지 알 수 없어서).
    */
   frequency?: CustomFrequency;
+  /** frequency가 "daily"이고 변수가 있는 문구라면, 자동으로 넣을 때 쓸 변수별 고정값. */
+  dailyVars?: Record<string, string>;
 }
 
 export interface ContextState {

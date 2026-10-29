@@ -15,6 +15,7 @@ export function SnippetEditor({
   initialLocations = [],
   initialPosition = "bottom",
   initialFrequency = "optional",
+  initialDailyVars = {},
   onSave,
   onCancel,
 }: {
@@ -23,7 +24,15 @@ export function SnippetEditor({
   initialLocations?: string[];
   initialPosition?: "top" | "bottom";
   initialFrequency?: "daily" | "optional";
-  onSave: (label: string, template: string, locations: string[], position: "top" | "bottom", frequency: "daily" | "optional") => void;
+  initialDailyVars?: Record<string, string>;
+  onSave: (
+    label: string,
+    template: string,
+    locations: string[],
+    position: "top" | "bottom",
+    frequency: "daily" | "optional",
+    dailyVars: Record<string, string>
+  ) => void;
   onCancel: () => void;
 }) {
   const [label, setLabel] = useState(initialLabel);
@@ -32,6 +41,7 @@ export function SnippetEditor({
   const [locations, setLocations] = useState<string[]>(initialLocations);
   const [position, setPosition] = useState<"top" | "bottom">(initialPosition);
   const [frequency, setFrequency] = useState<"daily" | "optional">(initialFrequency);
+  const [dailyVars, setDailyVars] = useState<Record<string, string>>(initialDailyVars);
   const taRef = useRef<HTMLTextAreaElement>(null);
 
   const toggleLocation = (id: string) => {
@@ -39,7 +49,9 @@ export function SnippetEditor({
   };
 
   const vars = extractVars(template);
-  const canBeDaily = locations.length === 1 && vars.length === 0 && supportsDaily(locations[0]);
+  const canBeDaily = locations.length === 1 && supportsDaily(locations[0]);
+  const dailyVarsFilled = vars.every((v) => (dailyVars[v] || "").trim());
+  const dailyReady = canBeDaily && (vars.length === 0 || dailyVarsFilled);
 
   const insertVar = (name: string) => {
     const v = name.trim();
@@ -149,8 +161,29 @@ export function SnippetEditor({
             : "지금처럼 '문구 불러오기'를 눌러야 들어가요."
           : locations.length === 1 && !supportsDaily(locations[0])
             ? "'금일 판매 요약'은 자동으로 만들어지는 문장이라 '매일 반영'을 쓸 수 없어요."
-            : "'매일 반영'은 보일 칸을 정확히 하나만 고르고, 변수가 없는 문구에만 쓸 수 있어요(자동으로 채울 값을 알 수 없어서)."}
+            : "'매일 반영'은 보일 칸을 정확히 하나만 골라야 쓸 수 있어요(여러 칸이면 어디에 넣을지 알 수 없어서)."}
       </p>
+      {frequency === "daily" && canBeDaily && vars.length > 0 && (
+        <div className="box" style={{ gap: 8 }}>
+          <span className="hint" style={{ margin: 0 }}>
+            매일 자동으로 넣을 값을 정해두세요 (여기 변수는 보고서를 쓸 때 다시 묻지 않아요)
+          </span>
+          {vars.map((v) => (
+            <label className="field" key={v} htmlFor={`daily-${v}`}>
+              <span>
+                <span>{v}</span>
+              </span>
+              <input
+                id={`daily-${v}`}
+                className="inp"
+                value={dailyVars[v] || ""}
+                onChange={(e) => setDailyVars({ ...dailyVars, [v]: e.target.value })}
+              />
+            </label>
+          ))}
+          {!dailyVarsFilled && <p className="hint sub">모든 변수에 값을 넣어야 저장할 수 있어요.</p>}
+        </div>
+      )}
       <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
         <button type="button" className="btn sm" onClick={onCancel}>
           취소
@@ -158,8 +191,17 @@ export function SnippetEditor({
         <button
           type="button"
           className="btn pri sm"
-          disabled={!label.trim() || !template.trim()}
-          onClick={() => onSave(label.trim().slice(0, 40), template.trim().slice(0, 500), locations, position, canBeDaily ? frequency : "optional")}
+          disabled={!label.trim() || !template.trim() || (frequency === "daily" && canBeDaily && !dailyReady)}
+          onClick={() =>
+            onSave(
+              label.trim().slice(0, 40),
+              template.trim().slice(0, 500),
+              locations,
+              position,
+              dailyReady ? frequency : "optional",
+              dailyReady && frequency === "daily" ? dailyVars : {}
+            )
+          }
         >
           저장
         </button>

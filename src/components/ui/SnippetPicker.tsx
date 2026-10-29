@@ -58,16 +58,34 @@ export function SnippetPicker({
     close();
   };
 
-  const addSnippet = (label: string, template: string, locations: string[], position: "top" | "bottom", frequency: "daily" | "optional") => {
-    const s: Snippet = { id: uid(), label, template, locations, position, frequency };
+  const addSnippet = (
+    label: string,
+    template: string,
+    locations: string[],
+    position: "top" | "bottom",
+    frequency: "daily" | "optional",
+    dailyVars: Record<string, string>
+  ) => {
+    const s: Snippet = { id: uid(), label, template, locations, position, frequency, dailyVars };
     update((d) => ({ ...d, settings: { ...d.settings, snippets: [...(d.settings.snippets || []), s] } }));
     setMode("list");
   };
 
-  const editSnippet = (id: string, label: string, template: string, locations: string[], position: "top" | "bottom", frequency: "daily" | "optional") => {
+  const editSnippet = (
+    id: string,
+    label: string,
+    template: string,
+    locations: string[],
+    position: "top" | "bottom",
+    frequency: "daily" | "optional",
+    dailyVars: Record<string, string>
+  ) => {
     update((d) => ({
       ...d,
-      settings: { ...d.settings, snippets: (d.settings.snippets || []).map((s) => (s.id === id ? { ...s, label, template, locations, position, frequency } : s)) },
+      settings: {
+        ...d.settings,
+        snippets: (d.settings.snippets || []).map((s) => (s.id === id ? { ...s, label, template, locations, position, frequency, dailyVars } : s)),
+      },
     }));
     setMode("list");
     setEditTarget(null);
@@ -98,11 +116,14 @@ export function SnippetPicker({
         initialLocations={editTarget.locations || []}
         initialPosition={editTarget.position ?? "bottom"}
         initialFrequency={editTarget.frequency ?? "optional"}
+        initialDailyVars={editTarget.dailyVars || {}}
         onCancel={() => {
           setMode("list");
           setEditTarget(null);
         }}
-        onSave={(label, template, locations, position, frequency) => editSnippet(editTarget.id, label, template, locations, position, frequency)}
+        onSave={(label, template, locations, position, frequency, dailyVars) =>
+          editSnippet(editTarget.id, label, template, locations, position, frequency, dailyVars)
+        }
       />
     );
   }

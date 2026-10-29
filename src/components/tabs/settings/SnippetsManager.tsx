@@ -20,16 +20,34 @@ export function SnippetsManager({
   const [editId, setEditId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
-  const add = (label: string, template: string, locations: string[], position: "top" | "bottom", frequency: "daily" | "optional") => {
-    const s: Snippet = { id: uid(), label, template, locations, position, frequency };
+  const add = (
+    label: string,
+    template: string,
+    locations: string[],
+    position: "top" | "bottom",
+    frequency: "daily" | "optional",
+    dailyVars: Record<string, string>
+  ) => {
+    const s: Snippet = { id: uid(), label, template, locations, position, frequency, dailyVars };
     update((d) => ({ ...d, settings: { ...d.settings, snippets: [...(d.settings.snippets || []), s] } }));
     setAdding(false);
   };
 
-  const edit = (id: string, label: string, template: string, locations: string[], position: "top" | "bottom", frequency: "daily" | "optional") => {
+  const edit = (
+    id: string,
+    label: string,
+    template: string,
+    locations: string[],
+    position: "top" | "bottom",
+    frequency: "daily" | "optional",
+    dailyVars: Record<string, string>
+  ) => {
     update((d) => ({
       ...d,
-      settings: { ...d.settings, snippets: (d.settings.snippets || []).map((s) => (s.id === id ? { ...s, label, template, locations, position, frequency } : s)) },
+      settings: {
+        ...d.settings,
+        snippets: (d.settings.snippets || []).map((s) => (s.id === id ? { ...s, label, template, locations, position, frequency, dailyVars } : s)),
+      },
     }));
     setEditId(null);
   };
@@ -54,8 +72,9 @@ export function SnippetsManager({
             initialLocations={s.locations || []}
             initialPosition={s.position ?? "bottom"}
             initialFrequency={s.frequency ?? "optional"}
+            initialDailyVars={s.dailyVars || {}}
             onCancel={() => setEditId(null)}
-            onSave={(label, template, locations, position, frequency) => edit(s.id, label, template, locations, position, frequency)}
+            onSave={(label, template, locations, position, frequency, dailyVars) => edit(s.id, label, template, locations, position, frequency, dailyVars)}
           />
         ) : (
           <div className="box" key={s.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>

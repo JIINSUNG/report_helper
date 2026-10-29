@@ -43,16 +43,19 @@ function dailySnippetsFor(snippets: Snippet[], location: string): Snippet[] {
   return snippets.filter((s) => s.frequency === "daily" && s.locations?.length === 1 && s.locations[0] === location);
 }
 
+/** 변수가 있으면 dailyVars로 채우고, 없으면 템플릿 그대로. */
+const dailyText = (s: Snippet) => fillSnippet(s.template, s.dailyVars || {});
+
 /**
  * 새 보고서를 만들 때(날짜별로 한 번), "매일 반영"으로 설정한 문구를 자유 텍스트 칸의
  * 기본값에 미리 넣어둔다. base(기존 기본 문구 등)가 있으면 그 뒤/앞에 이어 붙인다.
- * 변수가 있는 문구는(채울 값이 없어서) 애초에 "매일 반영"을 고를 수 없게 UI에서 막는다.
+ * 변수가 있는 문구는 문구를 저장할 때 미리 받아둔 dailyVars로 채워서 넣는다.
  */
 export function dailySnippetText(snippets: Snippet[], location: string, base = ""): string {
-  return dailySnippetsFor(snippets, location).reduce((acc, s) => insertAtPosition(acc, s.template, s.position ?? "bottom"), base);
+  return dailySnippetsFor(snippets, location).reduce((acc, s) => insertAtPosition(acc, dailyText(s), s.position ?? "bottom"), base);
 }
 
 /** 위와 같은 목적이지만 Section[] 목록(금일 핵심 내용 등)에 넣을 때. */
 export function dailySnippetSections<T extends { t: string; b: string[] }>(snippets: Snippet[], location: string, base: T[] = []): T[] {
-  return dailySnippetsFor(snippets, location).reduce((acc, s) => insertSectionFromSnippet(acc, s.label, s.template, s.position ?? "bottom"), base);
+  return dailySnippetsFor(snippets, location).reduce((acc, s) => insertSectionFromSnippet(acc, s.label, dailyText(s), s.position ?? "bottom"), base);
 }
