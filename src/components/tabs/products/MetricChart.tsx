@@ -44,7 +44,13 @@ export function MetricChart({ metrics, groupId }: { metrics: Metric[]; groupId: 
           <div className="bl" key={r.n + i}>
             <span className={"bn" + (r.x ? " me" : "")}>
               {r.n}
-              {r.sub && <small>{r.sub}</small>}
+              {(r.sub || r.rel) && (
+                <small>
+                  {r.sub}
+                  {r.sub && r.rel ? " · " : ""}
+                  {r.rel && `${r.rel} 출시`}
+                </small>
+              )}
             </span>
             <div className="tr">
               <div className="track">

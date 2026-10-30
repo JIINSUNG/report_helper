@@ -38,6 +38,8 @@ export interface MetricRow {
   v: number;
   x: boolean;
   sub: string;
+  /** 대략적인 출시 연월(예: "2025.09"). 모르면 생략 — 참고용이라 공식 수치는 아님. */
+  rel?: string;
 }
 
 export interface Metric {
