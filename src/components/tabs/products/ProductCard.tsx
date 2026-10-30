@@ -5,6 +5,8 @@ import { ago, won } from "@/lib/format";
 import { useAuth } from "@/context/auth-context";
 import { useRequests } from "@/lib/use-requests";
 import { ProductCompareCard } from "./ProductCompareCard";
+import { metricRowFor } from "@/lib/chart-utils";
+import { metricGuideText } from "@/data/metric-guides";
 import type { EffectiveProduct } from "@/lib/product-utils";
 import type { useShared } from "@/lib/use-shared";
 import type { CompetitorProduct, Metric } from "@/types/product";
@@ -194,6 +196,9 @@ export function ProductCard({
   const [edit, setEdit] = useState(false);
   const [hideConfirm, setHideConfirm] = useState(false);
   const pending = reqs.pendingFor("product", p.id);
+  const multiMetric = metrics?.find((m) => m.id === "multi");
+  const myMultiRow = multiMetric ? metricRowFor(p.name, multiMetric.rows) : null;
+  const usageGuide = myMultiRow ? metricGuideText(p.group, "multi", myMultiRow.v) : null;
 
   return (
     <section className="card pcard">
@@ -215,6 +220,31 @@ export function ProductCard({
             <a className="olink big" href={p.link} target="_blank" rel="noopener noreferrer">
               샤오미 공식몰 상품 페이지 ↗
             </a>
+          )}
+          {p.specTable && p.specTable.length > 0 ? (
+            <table className="spectable">
+              <tbody>
+                {p.specTable.map((row) => (
+                  <tr key={row.label}>
+                    <th>{row.label}</th>
+                    <td>{row.value}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <p className="pspec" style={{ margin: 0 }}>
+              {p.spec}
+            </p>
+          )}
+          {usageGuide && (
+            <div className="usageguide">
+              <b>🎮 실사용 체감</b>
+              <p>{usageGuide}</p>
+              <small className="hint" style={{ margin: 0 }}>
+                칩 성능 점수 기준 참고용 설명이에요 · &quot;성능 비교&quot; 그래프에서 더 자세히 볼 수 있어요
+              </small>
+            </div>
           )}
           <div className="kv">
             <span>추천 고객</span>

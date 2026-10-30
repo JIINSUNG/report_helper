@@ -35,6 +35,13 @@ export const GROUPS: ProductGroup[] = [
         "name": "포코 M8 5G",
         "p": 369900,
         "spec": "8+256GB · AMOLED 120Hz 3,200니트 · 5,520mAh 45W · 178g · IP66",
+        "specTable": [
+          { "label": "저장공간", "value": "8+256GB" },
+          { "label": "디스플레이", "value": "AMOLED 120Hz · 3,200니트" },
+          { "label": "배터리·충전", "value": "5,520mAh · 45W" },
+          { "label": "무게", "value": "178g" },
+          { "label": "방수", "value": "IP66" }
+        ],
         "for": "부모님, 첫 폰, 서브폰",
         "pitch": "두께 7.35mm 가벼운 몸에 5,520mAh 배터리, 화면도 밝아서 야외에서 잘 보여요.",
         "points": [
@@ -62,6 +69,13 @@ export const GROUPS: ProductGroup[] = [
         "name": "레드미 노트14 프로 5G",
         "p": 399400,
         "spec": "12+512GB · 1.5K AMOLED 120Hz · 200MP OIS · 5,110mAh 45W · IP68",
+        "specTable": [
+          { "label": "저장공간", "value": "12+512GB" },
+          { "label": "디스플레이", "value": "1.5K AMOLED · 120Hz" },
+          { "label": "카메라", "value": "200MP OIS" },
+          { "label": "배터리·충전", "value": "5,110mAh · 45W" },
+          { "label": "방수", "value": "IP68" }
+        ],
         "for": "사진 많이 찍는 가성비 고객",
         "pitch": "40만 원이 안 되는데 200MP 카메라에 512GB, IP68 방수, 충전기까지 들어 있어요.",
         "points": [
@@ -89,6 +103,13 @@ export const GROUPS: ProductGroup[] = [
         "name": "포코 X8 프로",
         "p": 499000,
         "spec": "8+256GB · 1.5K AMOLED 3,500니트 · 6,500mAh 100W · 201g · IP68",
+        "specTable": [
+          { "label": "저장공간", "value": "8+256GB" },
+          { "label": "디스플레이", "value": "1.5K AMOLED · 3,500니트" },
+          { "label": "배터리·충전", "value": "6,500mAh · 100W" },
+          { "label": "무게", "value": "201g" },
+          { "label": "방수", "value": "IP68" }
+        ],
         "for": "게임하는 학생, 배터리 중시",
         "pitch": "50만 원에 6,500mAh·100W 충전이고, 칩 성능은 갤럭시 A37의 약 2배예요.",
         "points": [
@@ -116,6 +137,13 @@ export const GROUPS: ProductGroup[] = [
         "name": "샤오미 15T 프로",
         "p": 649970,
         "spec": "12+512GB · AMOLED 144Hz · 라이카 50MP + 115mm 망원 · 5,500mAh 90W · 무선 50W",
+        "specTable": [
+          { "label": "저장공간", "value": "12+512GB" },
+          { "label": "디스플레이", "value": "AMOLED · 144Hz" },
+          { "label": "카메라", "value": "라이카 50MP + 115mm 망원" },
+          { "label": "배터리·충전", "value": "5,500mAh · 90W" },
+          { "label": "무선충전", "value": "50W" }
+        ],
         "for": "카메라 좋은 가성비 플래그십",
         "pitch": "65만 원에 라이카 5배 망원, 144Hz 화면, 512GB예요. 아이폰 17e보다 50만 원 싸요.",
         "points": [
@@ -144,6 +172,13 @@ export const GROUPS: ProductGroup[] = [
         "name": "포코 X8 프로 맥스",
         "p": 699000,
         "spec": "12+256GB · 1.5K AMOLED 3,500니트 · 8,500mAh 100W · 218g · IP68",
+        "specTable": [
+          { "label": "저장공간", "value": "12+256GB" },
+          { "label": "디스플레이", "value": "1.5K AMOLED · 3,500니트" },
+          { "label": "배터리·충전", "value": "8,500mAh · 100W" },
+          { "label": "무게", "value": "218g" },
+          { "label": "방수", "value": "IP68" }
+        ],
         "for": "배터리가 제일 중요한 고객, 게이머",
         "pitch": "8,500mAh에 100W라 하루 종일 게임해도 걱정 없어요.",
         "points": [
@@ -170,6 +205,14 @@ export const GROUPS: ProductGroup[] = [
         "name": "샤오미 15",
         "p": 759900,
         "spec": "12+256GB · 120Hz · 라이카 50MP + 60mm 망원 · 5,240mAh 90W · 무선 50W · 191g",
+        "specTable": [
+          { "label": "저장공간", "value": "12+256GB" },
+          { "label": "디스플레이", "value": "120Hz" },
+          { "label": "카메라", "value": "라이카 50MP + 60mm 망원" },
+          { "label": "배터리·충전", "value": "5,240mAh · 90W" },
+          { "label": "무선충전", "value": "50W" },
+          { "label": "무게", "value": "191g" }
+        ],
         "for": "작은 폰을 원하는 고객, 갤럭시 S25 FE 보러 온 고객",
         "pitch": "한 손에 잡히는 191g인데 스냅드래곤 8 엘리트에 라이카 카메라 3개예요.",
         "points": [
@@ -197,6 +240,12 @@ export const GROUPS: ProductGroup[] = [
         "name": "샤오미 17T",
         "p": 819800,
         "spec": "12+256GB · 1.5K AMOLED 3,500니트 · 라이카 115mm 망원 · 6,500mAh 67W",
+        "specTable": [
+          { "label": "저장공간", "value": "12+256GB" },
+          { "label": "디스플레이", "value": "1.5K AMOLED · 3,500니트" },
+          { "label": "카메라", "value": "라이카 115mm 망원" },
+          { "label": "배터리·충전", "value": "6,500mAh · 67W" }
+        ],
         "for": "최신 라이카 망원 + 배터리",
         "pitch": "라이카 5배 망원에 6,500mAh 실리콘-카본 배터리, 최신 HyperOS 3예요.",
         "points": [
@@ -224,6 +273,14 @@ export const GROUPS: ProductGroup[] = [
         "name": "샤오미 17",
         "p": 1299000,
         "spec": "12+512GB · OLED 120Hz · 라이카 50MP + 60mm · 6,330mAh 100W · 무선 50W · 191g",
+        "specTable": [
+          { "label": "저장공간", "value": "12+512GB" },
+          { "label": "디스플레이", "value": "OLED · 120Hz" },
+          { "label": "카메라", "value": "라이카 50MP + 60mm" },
+          { "label": "배터리·충전", "value": "6,330mAh · 100W" },
+          { "label": "무선충전", "value": "50W" },
+          { "label": "무게", "value": "191g" }
+        ],
         "for": "갤럭시 S·아이폰 기본형 고려 고객",
         "pitch": "갤럭시 S26보다 10만 원 싼데 저장공간은 512GB로 2배, 배터리 6,330mAh에 100W예요.",
         "points": [
@@ -251,6 +308,12 @@ export const GROUPS: ProductGroup[] = [
         "name": "샤오미 17 울트라",
         "p": 1899000,
         "spec": "16+512GB · OLED 3,500니트 · 1인치 50MP + 200MP 광학 줌 · 6,000mAh 90W",
+        "specTable": [
+          { "label": "저장공간", "value": "16+512GB" },
+          { "label": "디스플레이", "value": "OLED · 3,500니트" },
+          { "label": "카메라", "value": "1인치 50MP + 200MP 광학 줌" },
+          { "label": "배터리·충전", "value": "6,000mAh · 90W" }
+        ],
         "for": "카메라 마니아",
         "pitch": "1인치 센서에 200MP 광학 줌이에요. S26 울트라보다 싸고 512GB예요.",
         "points": [
@@ -329,6 +392,13 @@ export const GROUPS: ProductGroup[] = [
         "name": "레드미 패드 2 9.7",
         "p": 279800,
         "spec": "9.7인치 2K 120Hz · 스냅드래곤 6s 4G Gen 2 · 7600mAh · 406g · 이어폰 잭",
+        "specTable": [
+          { "label": "화면", "value": "9.7인치 · 2K · 120Hz" },
+          { "label": "칩", "value": "스냅드래곤 6s 4G Gen 2" },
+          { "label": "배터리", "value": "7,600mAh" },
+          { "label": "무게", "value": "406g" },
+          { "label": "기타", "value": "이어폰 잭" }
+        ],
         "for": "자녀용, 부모님 선물, 저예산 독서",
         "pitch": "가볍고(406g) 120Hz라 화면이 부드러워요. 이 가격대에서 제일 무난해요.",
         "points": [
@@ -350,6 +420,12 @@ export const GROUPS: ProductGroup[] = [
         "name": "레드미 패드 2",
         "p": 309800,
         "spec": "11인치 2.5K 90Hz · Helio G100 Ultra · 9000mAh · 쿼드 스피커",
+        "specTable": [
+          { "label": "화면", "value": "11인치 · 2.5K · 90Hz" },
+          { "label": "칩", "value": "Helio G100 Ultra" },
+          { "label": "배터리", "value": "9,000mAh" },
+          { "label": "기타", "value": "쿼드 스피커" }
+        ],
         "for": "영상 위주, 예산 30만 원대",
         "pitch": "11인치 2.5K 화면에 스피커 4개, 배터리 9000mAh라 영상 보기 좋아요.",
         "points": [
@@ -371,6 +447,12 @@ export const GROUPS: ProductGroup[] = [
         "name": "레드미 패드 2 프로",
         "p": 449800,
         "spec": "12.1인치 2.5K 120Hz · 스냅드래곤 7s Gen 4 · 12000mAh · 27W 역방향 충전",
+        "specTable": [
+          { "label": "화면", "value": "12.1인치 · 2.5K · 120Hz" },
+          { "label": "칩", "value": "스냅드래곤 7s Gen 4" },
+          { "label": "배터리", "value": "12,000mAh" },
+          { "label": "기타", "value": "27W 역방향 충전" }
+        ],
         "for": "영상 감상(넷플릭스·유튜브), 갤럭시 탭 FE 보러 온 고객",
         "pitch": "12.1인치에 스피커 4개라 침대에서 TV처럼 보세요. 배터리도 12000mAh예요.",
         "points": [
@@ -398,6 +480,12 @@ export const GROUPS: ProductGroup[] = [
         "name": "레드미 패드 2 프로 매트글라스",
         "p": 519800,
         "spec": "패드 2 프로와 동일 + 반사 최대 97% 감소",
+        "specTable": [
+          { "label": "화면", "value": "12.1인치 · 2.5K · 120Hz · 매트 글라스(반사 최대 97% 감소)" },
+          { "label": "칩", "value": "스냅드래곤 7s Gen 4" },
+          { "label": "배터리", "value": "12,000mAh" },
+          { "label": "기타", "value": "27W 역방향 충전 (그 외 패드 2 프로와 동일)" }
+        ],
         "for": "학생(인강·필기), 독서, 창가 자리",
         "pitch": "반사가 거의 없어서 오래 봐도 눈이 덜 피곤해요. 큰 화면이라 인강 띄우고 필기하기 좋아요.",
         "points": [
@@ -419,6 +507,12 @@ export const GROUPS: ProductGroup[] = [
         "p": 669800,
         "note": "669,800원부터",
         "spec": "11.2인치 3.2K 144Hz · 스냅드래곤 8s Gen 4 · 9200mAh 45W · 두께 5.75mm",
+        "specTable": [
+          { "label": "화면", "value": "11.2인치 · 3.2K · 144Hz" },
+          { "label": "칩", "value": "스냅드래곤 8s Gen 4" },
+          { "label": "배터리·충전", "value": "9,200mAh · 45W" },
+          { "label": "기타", "value": "두께 5.75mm" }
+        ],
         "for": "아이폰·맥북 유저, 업무용(포커스 키보드와 함께)",
         "pitch": "아이패드 11세대보다 약 8만 원 싸고 화면은 144Hz예요. 맥북 화면 확장이랑 애플 기기 파일 전송도 돼요.",
         "points": [
@@ -446,6 +540,12 @@ export const GROUPS: ProductGroup[] = [
         "name": "샤오미 패드 미니",
         "p": 699600,
         "spec": "8.8인치 3K 165Hz · 디멘시티 9400+ · 7500mAh 67W · 듀얼 USB-C",
+        "specTable": [
+          { "label": "화면", "value": "8.8인치 · 3K · 165Hz" },
+          { "label": "칩", "value": "디멘시티 9400+" },
+          { "label": "배터리·충전", "value": "7,500mAh · 67W" },
+          { "label": "기타", "value": "듀얼 USB-C" }
+        ],
         "for": "모바일 게이머, 독서·웹툰",
         "pitch": "플래그십 칩에 165Hz라 게임용으로 이 크기에서 따라올 게 없어요. 67W라 충전도 빨라요.",
         "points": [

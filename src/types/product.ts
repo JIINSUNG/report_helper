@@ -13,6 +13,8 @@ export interface ProductItem {
   p: number | null;
   note?: string;
   spec: string;
+  /** spec을 항목별로 나눈 표. 없으면 상세보기에서 spec 한 줄을 그대로 보여준다. */
+  specTable?: { label: string; value: string }[];
   for: string;
   pitch: string;
   points: string[];
