@@ -388,14 +388,16 @@ details summary{cursor:pointer;font-size:14px;font-weight:600;margin-bottom:8px}
 .quizfb{margin:0;font-size:13px;color:var(--fg2)}
 .quizscore{font-size:30px;font-weight:800;margin:0}
 
-.ftablewrap{overflow-x:auto}
-.ftable{border-collapse:collapse;width:100%;font-size:12.5px;white-space:nowrap}
-.ftable th,.ftable td{padding:8px 10px;text-align:center;border-bottom:1px solid var(--line)}
-.ftable th{color:var(--muted);font-weight:600;font-size:11.5px}
-.ftable .fname{text-align:left;font-weight:600;color:var(--fg2)}
-.ftable tr.me .fname{color:var(--fg);font-weight:700}
-.ftable tr.me{background:var(--soft)}
-.ftable td.ok{color:var(--ok);font-weight:700}
-.ftable td.no{color:var(--warn);font-weight:700}
-.fnotes{margin:10px 0 0;padding-left:18px;display:flex;flex-direction:column;gap:3px}
+.ftablewrap{display:flex;flex-direction:column;gap:10px}
+.fcards{display:flex;flex-direction:column;gap:8px}
+.fcard{display:flex;flex-direction:column;gap:6px;padding:10px 12px;border-radius:12px;box-shadow:inset 0 0 0 1px var(--line)}
+.fcard.me{background:var(--soft)}
+.fcard .fname{font-size:13.5px;color:var(--fg2)}
+.fcard.me .fname{color:var(--fg);font-weight:700}
+.fchips{display:flex;flex-wrap:wrap;gap:6px}
+.fchip{display:inline-flex;align-items:center;gap:5px;padding:4px 9px;border-radius:999px;background:var(--field);font-size:12px;box-shadow:inset 0 0 0 1px var(--line);white-space:nowrap}
+.fchip i{font-style:normal;color:var(--muted);font-weight:600}
+.fchip.ok{color:var(--ok)}
+.fchip.no{color:var(--warn)}
+.fnotes{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:3px}
 .fnotes li{font-size:12px;color:var(--muted);line-height:1.4}
