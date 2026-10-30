@@ -59,10 +59,73 @@ export const FEATURES: Record<string, FeatureGroup> = {
         x: true,
         values: { nfc: "O", wireless: "O(50W)", sd: "X", jack: "X", ip: "IP68*" },
       },
+      {
+        n: "아이폰 13·13 미니·13 프로·13 프로맥스",
+        x: false,
+        values: { nfc: "O", wireless: "O(MagSafe)", sd: "X", jack: "X", ip: "IP68(6m/30분)" },
+      },
+      {
+        n: "아이폰 14·14 Plus·14 프로·14 프로맥스",
+        x: false,
+        values: { nfc: "O", wireless: "O(MagSafe)", sd: "X", jack: "X", ip: "IP68(6m/30분)" },
+      },
+      {
+        n: "아이폰 15·15 Plus·15 프로·15 프로맥스",
+        x: false,
+        values: { nfc: "O", wireless: "O(MagSafe·Qi2)", sd: "X", jack: "X", ip: "IP68(6m/30분)" },
+      },
+      {
+        n: "아이폰 16·16 Plus·16 프로·16 프로맥스",
+        x: false,
+        values: { nfc: "O", wireless: "O(MagSafe·Qi2)", sd: "X", jack: "X", ip: "IP68(6m/30분)" },
+      },
+      {
+        n: "아이폰 16e",
+        x: false,
+        values: { nfc: "O", wireless: "O(Qi 7.5W, MagSafe 없음**)", sd: "X", jack: "X", ip: "IP68(6m/30분)" },
+      },
+      {
+        n: "아이폰 17·17 프로·17 프로맥스·17e·18 프로·18 프로맥스",
+        x: false,
+        values: { nfc: "O", wireless: "O(MagSafe·Qi2)", sd: "X", jack: "X", ip: "IP68(6m/30분)" },
+      },
+      {
+        n: "갤럭시 S23·S23+·S23 울트라·S23 FE",
+        x: false,
+        values: { nfc: "O", wireless: "O(역충전 PowerShare)", sd: "X", jack: "X", ip: "IP68(1.5m/30분)" },
+      },
+      {
+        n: "갤럭시 S24·S24+·S24 울트라·S24 FE",
+        x: false,
+        values: { nfc: "O", wireless: "O(역충전 PowerShare)", sd: "X", jack: "X", ip: "IP68(1.5m/30분)" },
+      },
+      {
+        n: "갤럭시 S25·S25+·S25 울트라·S25 FE",
+        x: false,
+        values: { nfc: "O", wireless: "O(역충전 PowerShare)", sd: "X", jack: "X", ip: "IP68(1.5m/30분)" },
+      },
+      {
+        n: "갤럭시 S26·S26+·S26 울트라·S26 FE",
+        x: false,
+        values: { nfc: "O", wireless: "O(역충전 PowerShare)", sd: "X", jack: "X", ip: "IP68(1.5m/30분)" },
+      },
+      {
+        n: "갤럭시 A35",
+        x: false,
+        values: { nfc: "O", wireless: "X", sd: "O(하이브리드)", jack: "X", ip: "IP67(1m/30분)" },
+      },
+      {
+        n: "갤럭시 퀀텀5 (A55)***",
+        x: false,
+        values: { nfc: "O", wireless: "X", sd: "O(하이브리드)", jack: "X", ip: "IP67(1m/30분)" },
+      },
     ],
     notes: [
-      "포코 M8 5G의 SD카드는 듀얼심과 겸용되는 하이브리드 슬롯이라, SD카드를 쓰려면 유심 하나를 포기해야 해요.",
+      "포코 M8 5G·갤럭시 A35·갤럭시 퀀텀5(A55)의 SD카드는 듀얼심과 겸용되는 하이브리드 슬롯이라, SD카드를 쓰려면 유심 하나를 포기해야 해요.",
       "* 샤오미 17 울트라는 본체만 IP68이고, 촬영 그립 액세서리를 끼우면 그립+폰 조합 등급이 IP54로 낮아져요.",
+      "** 아이폰 16e만 MagSafe 자석이 없어서 일반 Qi 충전기에서만(최대 7.5W) 무선충전돼요. 16e 앞뒤로는(13~18 프로맥스까지) 전부 MagSafe 지원.",
+      "*** '퀀텀5'는 SKT 전용 명칭이에요. KT·LG U+·자급제로 파는 같은 기기는 그냥 '갤럭시 A55 5G'로 불려요.",
+      "레드미 노트14 프로 5G(매장 판매 모델, 5G)는 이어폰잭이 없어요(X) — 잭이 있는 건 국내에 안 들어오는 4G 모델이라 혼동하기 쉬우니 주의하세요.",
     ],
   },
   tablet: {
