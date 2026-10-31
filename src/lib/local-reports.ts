@@ -60,6 +60,7 @@ export function blankReportData(storeName: string): LocalReportData {
     records: {},
     managers: {},
     retros: {},
+    calls: {},
     favorites: [],
   };
 }
@@ -155,7 +156,7 @@ export function useLocalReports(storeName: string) {
     if (typeof window === "undefined") return blankReportData(storeName);
     try {
       const raw = window.localStorage.getItem(STORAGE_KEY);
-      if (raw) return JSON.parse(raw) as LocalReportData;
+      if (raw) return { ...blankReportData(storeName), ...(JSON.parse(raw) as LocalReportData) };
     } catch {
       // ignore corrupt storage — fall through to blank
     }

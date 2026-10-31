@@ -135,7 +135,7 @@ export function AppShell() {
               {isGuest ? "" : storeLabel + " "}
               <span>보고 도우미</span>
             </h1>
-            {tab !== "settings" && tab !== "products" && tab !== "community" && tab !== "schedule" && tab !== "admin" && tab !== "service" && (
+            {tab !== "settings" && tab !== "products" && tab !== "community" && tab !== "schedule" && tab !== "admin" && (
               <div className="datebox">
                 <button type="button" className="iconbtn" aria-label="이전 날" onClick={() => setDate(shift(date, -1))}>
                   ‹
@@ -169,7 +169,7 @@ export function AppShell() {
       </header>
 
       <main className="wrap">
-        {["open", "record", "close", "sales", "retro"].includes(tab) && (
+        {["open", "record", "close", "sales", "retro", "service"].includes(tab) && (
           <div className="localnote" role="note">
             <b>🔒 이 기기에만 저장</b> 매출·목표·고객 정보는 법적 문제 방지를 위해 서버에 저장하지 않아요. 브라우저
             캐시·사이트 데이터를 지우거나 기기를 바꾸면 사라져요. 남겨둘 내용은 복사해서 개인 메모에 따로
@@ -187,7 +187,7 @@ export function AppShell() {
         {tab === "retro" && <RetroTab data={data} update={update} date={date} setDate={setDate} />}
         {tab === "settings" && <SettingsTab data={data} update={update} />}
         {tab === "products" && <ProductsTab />}
-        {tab === "service" && <ServiceTab />}
+        {tab === "service" && <ServiceTab data={data} update={update} date={date} />}
         {tab === "schedule" && !isGuest && <ScheduleTab storeLabel={storeLabel} />}
         {tab === "community" && !isGuest && <CommunityTab storeLabel={storeLabel} />}
         {tab === "admin" && isAdmin && <AdminTab />}

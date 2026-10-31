@@ -189,6 +189,17 @@ export interface SalesManager {
   snippetSkip?: string[];
 }
 
+export interface CallLog {
+  id: string;
+  time: string;
+  kind: "inquiry" | "complaint";
+  s: string;
+  t: string;
+  a: string;
+  r: string;
+  resolved: boolean;
+}
+
 export interface Retro {
   dayType: "work" | "off";
   mode: "kpt" | "star";
@@ -244,5 +255,6 @@ export interface LocalReportData {
   records: Record<string, SalesRecord[]>;
   managers: Record<string, SalesManager>;
   retros: Record<string, Retro>;
+  calls: Record<string, CallLog[]>;
   favorites: string[];
 }

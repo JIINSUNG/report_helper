@@ -3,14 +3,26 @@
 import { useState, type CSSProperties } from "react";
 import { Card } from "@/components/ui/Card";
 import { SERVICE_COMMON_MISTAKES, SERVICE_STAGES } from "@/data/service-standard";
+import { CallLogSection } from "./CallLogSection";
+import type { LocalReportData } from "@/types/report";
 
 const listStyle: CSSProperties = { margin: "6px 0 0", paddingLeft: 18, display: "flex", flexDirection: "column", gap: 4, fontSize: 13.5 };
 
-export function ServiceTab() {
+export function ServiceTab({
+  data,
+  update,
+  date,
+}: {
+  data: LocalReportData;
+  update: (fn: (d: LocalReportData) => LocalReportData) => void;
+  date: string;
+}) {
   const [open, setOpen] = useState<string | null>(SERVICE_STAGES[0]?.id ?? null);
 
   return (
     <>
+      <CallLogSection data={data} update={update} date={date} />
+
       <Card title="구매자와 신뢰를 쌓는 응대 5단계">
         <p className="hint" style={{ margin: 0 }}>
           특정 회사의 사내 응대 표준이 아니라, 매장 상담 경험을 바탕으로 정리한 응대 기준이에요. 판매 수치보다{" "}
