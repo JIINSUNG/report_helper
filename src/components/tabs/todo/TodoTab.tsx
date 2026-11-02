@@ -13,12 +13,29 @@ import {
 import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import { useDroppable } from "@dnd-kit/core";
 import { useTodo } from "@/lib/use-todo";
-import { SHIFTS, WD, WHENS, secOn, todoBlank, todoSeed, type TodoData, type TodoItem, type TodoSection, type TodoWhen } from "@/data/todo-seed";
+import {
+  ITEM_WHENS,
+  SHIFTS,
+  WD,
+  WHENS,
+  secOn,
+  todoBlank,
+  todoSeed,
+  type TodoData,
+  type TodoExtraItem,
+  type TodoItem,
+  type TodoSection,
+  type TodoWhen,
+} from "@/data/todo-seed";
 import { TODO_LINKS } from "@/data/retro-hints";
 import { TAB_OPTIONS } from "@/data/tabs";
 
 function uid(prefix: string) {
   return `${prefix}${Math.random().toString(36).slice(2, 9)}`;
+}
+
+function itemWhenLabel(w: TodoWhen | undefined) {
+  return w && w !== "all" ? ITEM_WHENS.find(([k]) => k === w)?.[1] : "";
 }
 
 const LONG_PRESS_MS = 500;
@@ -320,6 +337,7 @@ function SortableItemRow({
           <div className="tbody" style={{ cursor: "pointer" }} onClick={onToggle}>
             <span>{item.text}</span>
             {dayTxt && <small>{dayTxt} 반복</small>}
+            {itemWhenLabel(item.when) && <small>{itemWhenLabel(item.when)}</small>}
           </div>
           {linkTab && !done && (
             <button type="button" className="link" style={{ whiteSpace: "nowrap", fontSize: 12.5 }} onClick={() => onOpenTab(linkTab[0])}>
@@ -347,6 +365,7 @@ export function TodoTab({ setTab }: { setTab: (id: string) => void }) {
   const [shift, setShiftState] = useState(() => todo?.lastShift ?? "full");
   const [draft, setDraft] = useState<Record<string, string>>({});
   const [rep, setRep] = useState<Record<string, boolean>>({});
+  const [whenSel, setWhenSel] = useState<Record<string, TodoWhen>>({});
   const [daysOpenFor, setDaysOpenFor] = useState<string | null>(null);
   const [newSecName, setNewSecName] = useState("");
   const [newSecWhen, setNewSecWhen] = useState<TodoWhen>("all");
@@ -406,7 +425,8 @@ export function TodoTab({ setTab }: { setTab: (id: string) => void }) {
 
   const secs = edit ? todo.sections : todo.sections.filter((s) => secOn(s.when, shift));
 
-  const itemsBySec = (sec: string) => todo.items.filter((i) => i.sec === sec && !i.parent);
+  const itemsBySec = (sec: string) => todo.items.filter((i) => i.sec === sec && !i.parent && (edit || secOn(i.when ?? "all", shift)));
+  const extraBySec = (sec: string): TodoExtraItem[] => extra.filter((x) => x.sec === sec && (edit || secOn(x.when ?? "all", shift)));
   const kidsOf = (id: string) => todo.items.filter((i) => i.parent === id);
 
   const toggleDay = (item: TodoItem, d: number) => {
@@ -422,11 +442,12 @@ export function TodoTab({ setTab }: { setTab: (id: string) => void }) {
   const addItem = (sec: string) => {
     const v = (draft[sec] || "").trim();
     if (!v) return;
+    const when = whenSel[sec] ?? "all";
     if (rep[sec] || edit) {
-      update((prev) => (prev ? { ...prev, items: [...prev.items, { id: uid("u"), sec, text: v.slice(0, 80), days: null }] } : prev));
+      update((prev) => (prev ? { ...prev, items: [...prev.items, { id: uid("u"), sec, text: v.slice(0, 80), days: null, when }] } : prev));
     } else {
       update((prev) =>
-        prev ? { ...prev, extra: { ...prev.extra, [date]: [...(prev.extra[date] || []), { id: uid("x"), sec, text: v.slice(0, 80) }] } } : prev
+        prev ? { ...prev, extra: { ...prev.extra, [date]: [...(prev.extra[date] || []), { id: uid("x"), sec, text: v.slice(0, 80), when }] } } : prev
       );
     }
     setDraft({ ...draft, [sec]: "" });
@@ -434,11 +455,14 @@ export function TodoTab({ setTab }: { setTab: (id: string) => void }) {
 
   const addBulk = (sec: string, lines: string[]) => {
     if (!lines.length) return;
+    const when = whenSel[sec] ?? "all";
     if (rep[sec] || edit) {
-      update((prev) => (prev ? { ...prev, items: [...prev.items, ...lines.map((v) => ({ id: uid("u"), sec, text: v.slice(0, 80), days: null }))] } : prev));
+      update((prev) => (prev ? { ...prev, items: [...prev.items, ...lines.map((v) => ({ id: uid("u"), sec, text: v.slice(0, 80), days: null, when }))] } : prev));
     } else {
       update((prev) =>
-        prev ? { ...prev, extra: { ...prev.extra, [date]: [...(prev.extra[date] || []), ...lines.map((v) => ({ id: uid("x"), sec, text: v.slice(0, 80) }))] } } : prev
+        prev
+          ? { ...prev, extra: { ...prev.extra, [date]: [...(prev.extra[date] || []), ...lines.map((v) => ({ id: uid("x"), sec, text: v.slice(0, 80), when }))] } }
+          : prev
       );
     }
   };
@@ -520,7 +544,7 @@ export function TodoTab({ setTab }: { setTab: (id: string) => void }) {
     });
   };
 
-  const allLeaf: { id: string }[] = secs.flatMap((s) => [...itemsBySec(s.id), ...extra.filter((x) => x.sec === s.id)]);
+  const allLeaf: { id: string }[] = secs.flatMap((s) => [...itemsBySec(s.id), ...extraBySec(s.id)]);
   const cnt = allLeaf.filter((i) => done[i.id]).length;
 
   return (
@@ -584,7 +608,7 @@ export function TodoTab({ setTab }: { setTab: (id: string) => void }) {
               edit={edit}
               items={itemsBySec(sc.id)}
               kidsOf={kidsOf}
-              extra={extra.filter((x) => x.sec === sc.id)}
+              extra={extraBySec(sc.id)}
               done={done}
               draft={draft[sc.id] || ""}
               onDraft={(v) => setDraft({ ...draft, [sc.id]: v })}
@@ -606,10 +630,12 @@ export function TodoTab({ setTab }: { setTab: (id: string) => void }) {
               onSetLinkTab={setLinkTab}
               repeat={!!rep[sc.id]}
               onToggleRepeat={() => setRep({ ...rep, [sc.id]: !rep[sc.id] })}
+              itemWhen={whenSel[sc.id] ?? "all"}
+              onSetItemWhen={(w) => setWhenSel({ ...whenSel, [sc.id]: w })}
               onDeleteExtra={delExtra}
               onRequestEdit={enterEdit}
               onToggleAll={() => {
-                const ids = [...itemsBySec(sc.id).map((i) => i.id), ...extra.filter((x) => x.sec === sc.id).map((x) => x.id)];
+                const ids = [...itemsBySec(sc.id).map((i) => i.id), ...extraBySec(sc.id).map((x) => x.id)];
                 const allDone = ids.length > 0 && ids.every((id) => done[id]);
                 setAllDone(ids, !allDone);
               }}
@@ -687,6 +713,8 @@ function TodoSectionCard({
   onSetLinkTab,
   repeat,
   onToggleRepeat,
+  itemWhen,
+  onSetItemWhen,
   onDeleteExtra,
   onRequestEdit,
   onToggleAll,
@@ -696,7 +724,7 @@ function TodoSectionCard({
   edit: boolean;
   items: TodoItem[];
   kidsOf: (id: string) => TodoItem[];
-  extra: { id: string; sec: string; text: string }[];
+  extra: TodoExtraItem[];
   done: Record<string, boolean>;
   draft: string;
   onDraft: (v: string) => void;
@@ -718,6 +746,8 @@ function TodoSectionCard({
   onSetLinkTab: (id: string, tab: string | null) => void;
   repeat: boolean;
   onToggleRepeat: () => void;
+  itemWhen: TodoWhen;
+  onSetItemWhen: (w: TodoWhen) => void;
   onDeleteExtra: (id: string) => void;
   onRequestEdit: () => void;
   onToggleAll: () => void;
@@ -817,7 +847,7 @@ function TodoSectionCard({
                   </button>
                   <div className="tbody" style={{ cursor: "pointer" }} onClick={() => onToggle(x.id)}>
                     <span>{x.text}</span>
-                    <small>오늘만</small>
+                    <small>오늘만{itemWhenLabel(x.when) ? ` · ${itemWhenLabel(x.when)}` : ""}</small>
                   </div>
                   <button type="button" className="iconbtn" aria-label={x.text + " 삭제"} onClick={() => onDeleteExtra(x.id)}>
                     ✕
@@ -845,6 +875,15 @@ function TodoSectionCard({
           추가
         </button>
       </div>
+      {!edit && (
+        <div className="chips" style={{ margin: 0 }}>
+          {ITEM_WHENS.map(([w, l]) => (
+            <button key={w} type="button" className="chip sm" aria-pressed={itemWhen === w} onClick={() => onSetItemWhen(w)}>
+              {l}
+            </button>
+          ))}
+        </div>
+      )}
       <button type="button" className="link" style={{ alignSelf: "flex-start", fontSize: 12.5 }} onClick={() => setBulkOpen(!bulkOpen)}>
         {bulkOpen ? "여러 개 추가 닫기" : "+ 여러 개 한 번에 추가"}
       </button>

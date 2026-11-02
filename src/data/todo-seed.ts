@@ -14,12 +14,16 @@ export interface TodoItem {
   parent?: string;
   /** 직접 고른 탭 바로가기 (예: "products"). 안 고르면 TODO_LINKS 자동 매칭을 써요. */
   linkTab?: string | null;
+  /** 묶음의 when과 별개로, 이 항목만 오픈·마감 근무로 좁힐 때. 안 정하면(undefined) "all" */
+  when?: TodoWhen;
 }
 
 export interface TodoExtraItem {
   id: string;
   sec: string;
   text: string;
+  /** 묶음의 when과 별개로, 이 항목만 오픈·마감 근무로 좁힐 때. 안 정하면(undefined) "all" */
+  when?: TodoWhen;
 }
 
 export interface TodoData {
@@ -144,6 +148,13 @@ export const WHENS: [TodoWhen, string][] = [
   ["all", "항상"],
   ["open", "오픈 근무"],
   ["close", "마감 근무"],
+];
+
+/** 항목 추가 시 쓰는 표현(묶음의 "항상/오픈 근무/마감 근무"와 구분). */
+export const ITEM_WHENS: [TodoWhen, string][] = [
+  ["all", "둘다"],
+  ["open", "오픈만"],
+  ["close", "마감만"],
 ];
 
 export function secOn(when: TodoWhen, shift: string) {
