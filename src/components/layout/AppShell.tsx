@@ -19,6 +19,7 @@ import { TodoTab } from "@/components/tabs/todo/TodoTab";
 import { SettingsTab } from "@/components/tabs/settings/SettingsTab";
 import { ProductsTab } from "@/components/tabs/products/ProductsTab";
 import { ServiceTab } from "@/components/tabs/service/ServiceTab";
+import { WarehouseTab } from "@/components/tabs/warehouse/WarehouseTab";
 import { ScheduleTab } from "@/components/tabs/schedule/ScheduleTab";
 import { CommunityTab } from "@/components/tabs/community/CommunityTab";
 import { AdminTab } from "@/components/tabs/admin/AdminTab";
@@ -65,7 +66,7 @@ export function AppShell() {
 
   const isGuest = role === "guest";
   const isAdmin = role === "admin";
-  const tabs = TABS.filter(([id]) => !(isGuest && (id === "community" || id === "schedule")));
+  const tabs = TABS.filter(([id]) => !(isGuest && (id === "community" || id === "schedule" || id === "warehouse")));
   if (isAdmin) tabs.push(["admin", "관리"]);
 
   const tab = tabs.some(([id]) => id === savedTab) ? savedTab : "record";
@@ -136,7 +137,7 @@ export function AppShell() {
               {isGuest ? "" : storeLabel + " "}
               <span>보고 도우미</span>
             </h1>
-            {tab !== "settings" && tab !== "products" && tab !== "community" && tab !== "schedule" && tab !== "admin" && (
+            {tab !== "settings" && tab !== "products" && tab !== "community" && tab !== "schedule" && tab !== "admin" && tab !== "warehouse" && (
               <div className="datebox">
                 <button type="button" className="iconbtn" aria-label="이전 날" onClick={() => setDate(shift(date, -1))}>
                   ‹
@@ -189,6 +190,7 @@ export function AppShell() {
         {tab === "settings" && <SettingsTab data={data} update={update} />}
         {tab === "products" && <ProductsTab />}
         {tab === "service" && <ServiceTab data={data} update={update} date={date} />}
+        {tab === "warehouse" && !isGuest && <WarehouseTab />}
         {tab === "schedule" && !isGuest && <ScheduleTab storeLabel={storeLabel} />}
         {tab === "community" && !isGuest && <CommunityTab storeLabel={storeLabel} />}
         {tab === "admin" && isAdmin && <AdminTab />}

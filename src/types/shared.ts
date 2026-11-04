@@ -93,6 +93,15 @@ export interface Comment {
   editedAt?: string;
 }
 
+/** 창고 칸 하나에 뭐가 들어있는지 — 직원 누구나 보고 고칠 수 있는 공유 메모. */
+export interface WarehouseCell {
+  id: string;
+  text: string;
+  by: string | null;
+  byName?: string;
+  at: string;
+}
+
 export type DelReqKind = "post" | "comment" | "tip" | "rival" | "event" | "product";
 
 export interface DelRequest {

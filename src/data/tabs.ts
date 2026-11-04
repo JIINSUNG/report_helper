@@ -5,6 +5,7 @@ export const TAB_OPTIONS: [string, string][] = [
   ["close", "마감"],
   ["sales", "세일즈"],
   ["service", "응대"],
+  ["warehouse", "창고"],
   ["schedule", "일정"],
   ["community", "공유"],
   ["retro", "회고"],
