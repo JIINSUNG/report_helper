@@ -5,6 +5,7 @@ import { useAuth } from "@/context/auth-context";
 import { useLocalReports } from "@/lib/local-reports";
 import { getClose, getOpen } from "@/lib/local-reports";
 import { closeText, openText } from "@/lib/report-text";
+import { ReportPreview } from "@/components/ui/ReportPreview";
 import { retroText } from "@/lib/retro-utils";
 import { amountRemaining, mapsFor } from "@/lib/custom-sections";
 import { shift, parts, today as todayStr } from "@/lib/format";
@@ -215,7 +216,7 @@ export function AppShell() {
                 닫기
               </button>
             </div>
-            <pre>{text}</pre>
+            <ReportPreview text={text} />
             <button type="button" className="btn pri" onClick={doCopy}>
               복사하기
             </button>
