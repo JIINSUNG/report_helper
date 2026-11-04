@@ -102,6 +102,23 @@ export interface WarehouseCell {
   at: string;
 }
 
+/** 창고 구역 하나(선반 또는 넓은 공간) — 직원이 이름·구조를 직접 고칠 수 있다. */
+export interface WarehouseZone {
+  id: string;
+  kind: "shelf" | "area";
+  label: string;
+  /** area 전용 — "선반 2개 크기" 같은 설명. */
+  sub?: string;
+  /** shelf 전용 — 단 개수(1~8). */
+  tiers?: number;
+  /** shelf 전용 — 맨 위 평평한 면도 칸으로 쓸지. */
+  hasTop?: boolean;
+}
+
+export interface WarehouseLayoutDoc {
+  zones: WarehouseZone[];
+}
+
 export type DelReqKind = "post" | "comment" | "tip" | "rival" | "event" | "product";
 
 export interface DelRequest {

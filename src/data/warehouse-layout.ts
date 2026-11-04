@@ -1,42 +1,40 @@
-/** 실제 창고 구조를 그대로 옮긴 레이아웃. 칸(cell) id는 Firestore 문서 id로도 쓰인다. */
-export interface WarehouseShelf {
-  id: string;
-  label: string;
-  tiers: number;
-}
+import type { WarehouseZone } from "@/types/shared";
 
-export const WAREHOUSE_SHELVES: WarehouseShelf[] = [
-  { id: "shelf-a", label: "A선반", tiers: 4 },
-  { id: "shelf-b", label: "B선반", tiers: 4 },
-  { id: "shelf-c", label: "C선반", tiers: 4 },
-  { id: "shelf-d", label: "D선반", tiers: 4 },
+/** 처음 쓸 때 보여줄 기본 구조(실제 창고 그대로). Firestore에 구조 문서가 없을 때만 이 값을 쓴다 —
+ * 한 번이라도 구조를 고치면 그 뒤로는 Firestore 쪽 값이 기준이 된다. */
+export const DEFAULT_WAREHOUSE_ZONES: WarehouseZone[] = [
+  { id: "corner", kind: "area", label: "구석 공간" },
+  { id: "shelf-a", kind: "shelf", label: "A선반", tiers: 4, hasTop: true },
+  { id: "shelf-b", kind: "shelf", label: "B선반", tiers: 4, hasTop: true },
+  { id: "shelf-c", kind: "shelf", label: "C선반", tiers: 4, hasTop: true },
+  { id: "shelf-d", kind: "shelf", label: "D선반", tiers: 4, hasTop: true },
+  { id: "middle", kind: "area", label: "가운데 공간", sub: "선반 2개 크기" },
+  { id: "right-floor", kind: "area", label: "오른쪽 바닥", sub: "선반 3개 크기" },
 ];
 
-export function shelfCellId(shelfId: string, tier: number) {
-  return `${shelfId}-${tier}`;
+export function shelfCellId(zoneId: string, tier: number) {
+  return `${zoneId}-${tier}`;
 }
 
-export function shelfCellLabel(shelf: WarehouseShelf, tier: number) {
-  return `${shelf.label} ${tier}단`;
+export function shelfCellLabel(zone: WarehouseZone, tier: number) {
+  return `${zone.label} ${tier}단`;
 }
 
-/** 4단 선반이지만 맨 위(5번째 면)에도 물건을 놓을 수 있어서 따로 칸을 둔다. */
-export function shelfTopCellId(shelfId: string) {
-  return `${shelfId}-top`;
+export function shelfTopCellId(zoneId: string) {
+  return `${zoneId}-top`;
 }
 
-export function shelfTopCellLabel(shelf: WarehouseShelf) {
-  return `${shelf.label} 맨 위`;
+export function shelfTopCellLabel(zone: WarehouseZone) {
+  return `${zone.label} 맨 위`;
 }
 
-export const WAREHOUSE_CORNER = { id: "corner", label: "구석 공간" };
-export const WAREHOUSE_MIDDLE = { id: "middle", label: "가운데 공간", sub: "선반 2개 크기" };
-export const WAREHOUSE_RIGHT_FLOOR = { id: "right-floor", label: "오른쪽 바닥", sub: "선반 3개 크기" };
+/** 구역 하나가 가진 칸 id 전부(선반이면 맨 위+각 단, 넓은 공간이면 구역 id 자체 하나). */
+export function zoneCellIds(zone: WarehouseZone): string[] {
+  if (zone.kind === "area") return [zone.id];
+  const tiers = zone.tiers ?? 4;
+  return [...(zone.hasTop ? [shelfTopCellId(zone.id)] : []), ...Array.from({ length: tiers }, (_, i) => shelfCellId(zone.id, i + 1))];
+}
 
-/** 모든 칸 id를 한 번에 — 안내 문구·빈 상태 계산 등에 쓴다. */
-export const ALL_CELL_IDS: string[] = [
-  WAREHOUSE_CORNER.id,
-  ...WAREHOUSE_SHELVES.flatMap((s) => [shelfTopCellId(s.id), ...[1, 2, 3, 4].map((t) => shelfCellId(s.id, t))]),
-  WAREHOUSE_MIDDLE.id,
-  WAREHOUSE_RIGHT_FLOOR.id,
-];
+export function allCellIds(zones: WarehouseZone[]): string[] {
+  return zones.flatMap(zoneCellIds);
+}

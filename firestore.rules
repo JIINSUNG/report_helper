@@ -106,6 +106,12 @@ service cloud.firestore {
       allow create, update, delete: if isStaffOrAdmin();
     }
 
+    // 창고 구역 구조(선반 이름·단 개수 등) — 문서 하나(main)에 전체 구조를 담아 직원 누구나 고칠 수 있다.
+    match /warehouse-layout/{docId} {
+      allow read: if isStaffOrAdmin();
+      allow create, update, delete: if isStaffOrAdmin();
+    }
+
     // 삭제 요청 — 직원이 만들고(by 고정), 관리자가 처리(상태 변경)·삭제.
     // list도 직원까지 허용하는 이유: 직원이 "이미 요청했어요" 중복 방지 표시를 보려면
     // 같은 대상에 열려 있는 요청을 조회할 수 있어야 한다 (내용은 대상 id·라벨 정도로 민감하지 않음).
