@@ -39,6 +39,69 @@ function itemWhenLabel(w: TodoWhen | undefined) {
   return w && w !== "all" ? ITEM_WHENS.find(([k]) => k === w)?.[1] : "";
 }
 
+function repeatLabel(days: number[] | null | undefined, monthDay: number | null | undefined) {
+  if (monthDay) return `매월 ${monthDay}일`;
+  if (days) return days.map((d) => WD[d]).join("·");
+  return "매일";
+}
+
+/** 요일 반복 ↔ 매월 특정 일 반복을 고르는 공용 패널. 항목 추가할 때·편집 모드에서 둘 다 쓴다. */
+function RepeatPicker({
+  days,
+  monthDay,
+  onToggleDay,
+  onSetMonthDay,
+}: {
+  days: number[] | null | undefined;
+  monthDay: number | null | undefined;
+  onToggleDay: (d: number) => void;
+  onSetMonthDay: (day: number | null) => void;
+}) {
+  return (
+    <>
+      <div className="chips" style={{ flexBasis: "100%" }}>
+        <button type="button" className="chip" aria-pressed={!monthDay} onClick={() => onSetMonthDay(null)}>
+          요일 반복
+        </button>
+        <button type="button" className="chip" aria-pressed={!!monthDay} onClick={() => onSetMonthDay(monthDay || new Date().getDate())}>
+          매월 특정 일
+        </button>
+      </div>
+      {monthDay ? (
+        <div style={{ flexBasis: "100%", display: "flex", alignItems: "center", gap: 8 }}>
+          <span className="hint" style={{ margin: 0 }}>
+            매월
+          </span>
+          <input
+            type="number"
+            className="inp mini"
+            style={{ width: 60 }}
+            min={1}
+            max={31}
+            value={monthDay}
+            onChange={(e) => onSetMonthDay(Math.min(31, Math.max(1, Number(e.target.value) || 1)))}
+            aria-label="매월 반복 일자"
+          />
+          <span className="hint" style={{ margin: 0 }}>
+            일 · 31일 없는 달은 자동으로 건너뛰어요
+          </span>
+        </div>
+      ) : (
+        <div className="wdpick">
+          {[...WD].map((w, d) => {
+            const on = !days || days.includes(d);
+            return (
+              <button key={d} type="button" aria-pressed={on} aria-label={w + "요일"} onClick={() => onToggleDay(d)}>
+                {w}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </>
+  );
+}
+
 const LONG_PRESS_MS = 500;
 
 function useLongPress(onLongPress: () => void) {
@@ -209,7 +272,7 @@ function SortableItemRow({
   const [addingKid, setAddingKid] = useState(false);
   const [renaming, setRenaming] = useState(false);
   const [renameText, setRenameText] = useState(item.text);
-  const dayTxt = item.monthDay ? `매월 ${item.monthDay}일` : item.days ? item.days.map((d) => WD[d]).join("·") : "";
+  const dayTxt = repeatLabel(item.days, item.monthDay);
   const isKid = !!item.parent;
   const swipe = useSwipeRow(onRequestEdit);
 
@@ -230,7 +293,7 @@ function SortableItemRow({
         </div>
         <div className="tact">
           <button type="button" className={"daybtn" + (daysOpen ? " on" : "")} aria-expanded={daysOpen} onClick={onOpenDays}>
-            {item.monthDay || item.days ? dayTxt : "매일"} ▾
+            {dayTxt} ▾
           </button>
           <button type="button" className="iconbtn" style={{ color: "var(--warn)" }} aria-label="삭제" onClick={onDelete}>
             ✕
@@ -252,45 +315,7 @@ function SortableItemRow({
         </div>
         {daysOpen && (
           <>
-            <div className="chips" style={{ flexBasis: "100%" }}>
-              <button type="button" className="chip" aria-pressed={!item.monthDay} onClick={() => onSetMonthDay(null)}>
-                요일 반복
-              </button>
-              <button type="button" className="chip" aria-pressed={!!item.monthDay} onClick={() => onSetMonthDay(item.monthDay || new Date().getDate())}>
-                매월 특정 일
-              </button>
-            </div>
-            {item.monthDay ? (
-              <div style={{ flexBasis: "100%", display: "flex", alignItems: "center", gap: 8 }}>
-                <span className="hint" style={{ margin: 0 }}>
-                  매월
-                </span>
-                <input
-                  type="number"
-                  className="inp mini"
-                  style={{ width: 60 }}
-                  min={1}
-                  max={31}
-                  value={item.monthDay}
-                  onChange={(e) => onSetMonthDay(Math.min(31, Math.max(1, Number(e.target.value) || 1)))}
-                  aria-label="매월 반복 일자"
-                />
-                <span className="hint" style={{ margin: 0 }}>
-                  일 · 31일 없는 달은 자동으로 건너뛰어요
-                </span>
-              </div>
-            ) : (
-              <div className="wdpick">
-                {[...WD].map((w, d) => {
-                  const on = !item.days || item.days.includes(d);
-                  return (
-                    <button key={d} type="button" aria-pressed={on} aria-label={w + "요일"} onClick={() => onToggleDay(d)}>
-                      {w}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
+            <RepeatPicker days={item.days} monthDay={item.monthDay} onToggleDay={onToggleDay} onSetMonthDay={onSetMonthDay} />
             <button type="button" className="link" style={{ flexBasis: "100%", textAlign: "left", fontSize: 12.5 }} onClick={() => setAddingKid(!addingKid)}>
               + 세부 항목 추가
             </button>
@@ -401,6 +426,9 @@ export function TodoTab({ setTab }: { setTab: (id: string) => void }) {
   const [draft, setDraft] = useState<Record<string, string>>({});
   const [rep, setRep] = useState<Record<string, boolean>>({});
   const [whenSel, setWhenSel] = useState<Record<string, TodoWhen>>({});
+  const [daysSel, setDaysSel] = useState<Record<string, number[] | null>>({});
+  const [monthDaySel, setMonthDaySel] = useState<Record<string, number | null>>({});
+  const [repeatPickerFor, setRepeatPickerFor] = useState<string | null>(null);
   const [daysOpenFor, setDaysOpenFor] = useState<string | null>(null);
   const [newSecName, setNewSecName] = useState("");
   const [newSecWhen, setNewSecWhen] = useState<TodoWhen>("all");
@@ -483,7 +511,11 @@ export function TodoTab({ setTab }: { setTab: (id: string) => void }) {
     if (!v) return;
     const when = whenSel[sec] ?? "all";
     if (rep[sec] || edit) {
-      update((prev) => (prev ? { ...prev, items: [...prev.items, { id: uid("u"), sec, text: v.slice(0, 80), days: null, when }] } : prev));
+      const days = daysSel[sec] ?? null;
+      const monthDay = monthDaySel[sec] ?? null;
+      update((prev) => (prev ? { ...prev, items: [...prev.items, { id: uid("u"), sec, text: v.slice(0, 80), days, monthDay, when }] } : prev));
+      setDaysSel({ ...daysSel, [sec]: null });
+      setMonthDaySel({ ...monthDaySel, [sec]: null });
     } else {
       update((prev) =>
         prev ? { ...prev, extra: { ...prev.extra, [date]: [...(prev.extra[date] || []), { id: uid("x"), sec, text: v.slice(0, 80), when }] } } : prev
@@ -496,7 +528,13 @@ export function TodoTab({ setTab }: { setTab: (id: string) => void }) {
     if (!lines.length) return;
     const when = whenSel[sec] ?? "all";
     if (rep[sec] || edit) {
-      update((prev) => (prev ? { ...prev, items: [...prev.items, ...lines.map((v) => ({ id: uid("u"), sec, text: v.slice(0, 80), days: null, when }))] } : prev));
+      const days = daysSel[sec] ?? null;
+      const monthDay = monthDaySel[sec] ?? null;
+      update((prev) =>
+        prev ? { ...prev, items: [...prev.items, ...lines.map((v) => ({ id: uid("u"), sec, text: v.slice(0, 80), days, monthDay, when }))] } : prev
+      );
+      setDaysSel({ ...daysSel, [sec]: null });
+      setMonthDaySel({ ...monthDaySel, [sec]: null });
     } else {
       update((prev) =>
         prev
@@ -672,6 +710,20 @@ export function TodoTab({ setTab }: { setTab: (id: string) => void }) {
               onToggleRepeat={() => setRep({ ...rep, [sc.id]: !rep[sc.id] })}
               itemWhen={whenSel[sc.id] ?? "all"}
               onSetItemWhen={(w) => setWhenSel({ ...whenSel, [sc.id]: w })}
+              draftDays={daysSel[sc.id] ?? null}
+              draftMonthDay={monthDaySel[sc.id] ?? null}
+              onToggleDraftDay={(d) => {
+                const cur = daysSel[sc.id] || [0, 1, 2, 3, 4, 5, 6];
+                const next = cur.includes(d) ? cur.filter((x) => x !== d) : [...cur, d].sort();
+                setDaysSel({ ...daysSel, [sc.id]: next.length < 7 ? next : null });
+                setMonthDaySel({ ...monthDaySel, [sc.id]: null });
+              }}
+              onSetDraftMonthDay={(day) => {
+                setMonthDaySel({ ...monthDaySel, [sc.id]: day });
+                if (day) setDaysSel({ ...daysSel, [sc.id]: null });
+              }}
+              repeatPickerOpen={repeatPickerFor === sc.id}
+              onToggleRepeatPicker={() => setRepeatPickerFor(repeatPickerFor === sc.id ? null : sc.id)}
               onDeleteExtra={delExtra}
               onRequestEdit={enterEdit}
               onToggleAll={() => {
@@ -756,6 +808,12 @@ function TodoSectionCard({
   onToggleRepeat,
   itemWhen,
   onSetItemWhen,
+  draftDays,
+  draftMonthDay,
+  onToggleDraftDay,
+  onSetDraftMonthDay,
+  repeatPickerOpen,
+  onToggleRepeatPicker,
   onDeleteExtra,
   onRequestEdit,
   onToggleAll,
@@ -790,6 +848,12 @@ function TodoSectionCard({
   onToggleRepeat: () => void;
   itemWhen: TodoWhen;
   onSetItemWhen: (w: TodoWhen) => void;
+  draftDays: number[] | null;
+  draftMonthDay: number | null;
+  onToggleDraftDay: (d: number) => void;
+  onSetDraftMonthDay: (day: number | null) => void;
+  repeatPickerOpen: boolean;
+  onToggleRepeatPicker: () => void;
   onDeleteExtra: (id: string) => void;
   onRequestEdit: () => void;
   onToggleAll: () => void;
@@ -914,10 +978,18 @@ function TodoSectionCard({
             {repeat ? "반복" : "오늘만"}
           </button>
         )}
+        {!edit && repeat && (
+          <button type="button" className={"daybtn" + (repeatPickerOpen ? " on" : "")} aria-expanded={repeatPickerOpen} onClick={onToggleRepeatPicker}>
+            {repeatLabel(draftDays, draftMonthDay)} ▾
+          </button>
+        )}
         <button type="button" className="btn sm" onClick={onAdd}>
           추가
         </button>
       </div>
+      {!edit && repeat && repeatPickerOpen && (
+        <RepeatPicker days={draftDays} monthDay={draftMonthDay} onToggleDay={onToggleDraftDay} onSetMonthDay={onSetDraftMonthDay} />
+      )}
       {!edit && (
         <div className="chips" style={{ margin: 0 }}>
           {ITEM_WHENS.map(([w, l]) => (

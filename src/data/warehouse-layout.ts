@@ -20,6 +20,15 @@ export function shelfCellLabel(shelf: WarehouseShelf, tier: number) {
   return `${shelf.label} ${tier}단`;
 }
 
+/** 4단 선반이지만 맨 위(5번째 면)에도 물건을 놓을 수 있어서 따로 칸을 둔다. */
+export function shelfTopCellId(shelfId: string) {
+  return `${shelfId}-top`;
+}
+
+export function shelfTopCellLabel(shelf: WarehouseShelf) {
+  return `${shelf.label} 맨 위`;
+}
+
 export const WAREHOUSE_CORNER = { id: "corner", label: "구석 공간" };
 export const WAREHOUSE_MIDDLE = { id: "middle", label: "가운데 공간", sub: "선반 2개 크기" };
 export const WAREHOUSE_RIGHT_FLOOR = { id: "right-floor", label: "오른쪽 바닥", sub: "선반 3개 크기" };
@@ -27,7 +36,7 @@ export const WAREHOUSE_RIGHT_FLOOR = { id: "right-floor", label: "오른쪽 바�
 /** 모든 칸 id를 한 번에 — 안내 문구·빈 상태 계산 등에 쓴다. */
 export const ALL_CELL_IDS: string[] = [
   WAREHOUSE_CORNER.id,
-  ...WAREHOUSE_SHELVES.flatMap((s) => [1, 2, 3, 4].map((t) => shelfCellId(s.id, t))),
+  ...WAREHOUSE_SHELVES.flatMap((s) => [shelfTopCellId(s.id), ...[1, 2, 3, 4].map((t) => shelfCellId(s.id, t))]),
   WAREHOUSE_MIDDLE.id,
   WAREHOUSE_RIGHT_FLOOR.id,
 ];

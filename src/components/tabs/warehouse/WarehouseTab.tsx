@@ -11,6 +11,8 @@ import {
   WAREHOUSE_SHELVES,
   shelfCellId,
   shelfCellLabel,
+  shelfTopCellId,
+  shelfTopCellLabel,
 } from "@/data/warehouse-layout";
 
 const MAX_ANGLE = 42; // 도. 중앙에서 멀어질수록 이만큼까지 옆벽처럼 회전된다.
@@ -48,7 +50,10 @@ export function WarehouseTab() {
     ...WAREHOUSE_SHELVES.map((shelf) => ({
       id: shelf.id,
       label: shelf.label,
-      cells: [1, 2, 3, 4].map((tier) => ({ id: shelfCellId(shelf.id, tier), label: shelfCellLabel(shelf, tier) })),
+      cells: [
+        { id: shelfTopCellId(shelf.id), label: shelfTopCellLabel(shelf) },
+        ...[1, 2, 3, 4].map((tier) => ({ id: shelfCellId(shelf.id, tier), label: shelfCellLabel(shelf, tier) })),
+      ],
     })),
     { id: WAREHOUSE_MIDDLE.id, label: WAREHOUSE_MIDDLE.label, sub: WAREHOUSE_MIDDLE.sub, cells: [{ id: WAREHOUSE_MIDDLE.id, label: "" }] },
     { id: WAREHOUSE_RIGHT_FLOOR.id, label: WAREHOUSE_RIGHT_FLOOR.label, sub: WAREHOUSE_RIGHT_FLOOR.sub, cells: [{ id: WAREHOUSE_RIGHT_FLOOR.id, label: "" }] },
@@ -162,7 +167,7 @@ export function WarehouseTab() {
               </div>
               <div className={"wh-panel-cells" + (p.cells.length > 1 ? " stack" : "")}>
                 {p.cells.map((c) => (
-                  <CellBox key={c.id} label={c.label} text={cells[c.id]?.text || ""} onOpen={() => open(c.id, c.label ? `${p.label} ${c.label}` : p.label)} />
+                  <CellBox key={c.id} label={c.label} text={cells[c.id]?.text || ""} onOpen={() => open(c.id, c.label || p.label)} />
                 ))}
               </div>
             </div>
