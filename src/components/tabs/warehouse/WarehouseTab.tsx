@@ -7,7 +7,7 @@ import { shelfCellId, shelfCellLabel, shelfTopCellId, shelfTopCellLabel, allCell
 import type { WarehouseZone } from "@/types/shared";
 
 const PANEL_WIDTH = 176;
-const SENS = 0.4; // 드래그 1px당 회전 각도
+const SENS = 0.6; // 드래그 1px당 회전 각도
 
 interface Panel {
   id: string;
@@ -60,30 +60,46 @@ function Carousel({
   const [rotation, setRotation] = useState(0);
   const [active, setActive] = useState(0);
   const [dragging, setDragging] = useState(false);
+  // state(dragging)는 다음 렌더까지 반영이 안 돼서, 드래그 시작 직후 오는 pointermove를
+  // 놓치는 경우가 있었다(그래서 "슬라이드가 안 된다"는 느낌이 났음) — ref로 즉시 읽는다.
+  const rotationRef = useRef(0);
+  const draggingRef = useRef(false);
   const dragStart = useRef({ x: 0, rotation: 0, moved: false });
 
   const goTo = (i: number) => {
     const clamped = ((i % n) + n) % n;
-    setRotation(-clamped * stepDeg);
+    rotationRef.current = -clamped * stepDeg;
+    setRotation(rotationRef.current);
     setActive(clamped);
   };
 
   const onPointerDown = (e: React.PointerEvent) => {
-    dragStart.current = { x: e.clientX, rotation, moved: false };
+    dragStart.current = { x: e.clientX, rotation: rotationRef.current, moved: false };
+    draggingRef.current = true;
     setDragging(true);
     (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
   };
   const onPointerMove = (e: React.PointerEvent) => {
-    if (!dragging) return;
+    if (!draggingRef.current) return;
     const dx = e.clientX - dragStart.current.x;
     if (Math.abs(dx) > 4) dragStart.current.moved = true;
-    setRotation(dragStart.current.rotation + dx * SENS);
+    rotationRef.current = dragStart.current.rotation + dx * SENS;
+    setRotation(rotationRef.current);
   };
   const onPointerUp = () => {
-    if (!dragging) return;
+    if (!draggingRef.current) return;
+    draggingRef.current = false;
     setDragging(false);
-    const nearest = Math.round(-rotation / stepDeg);
+    const nearest = Math.round(-rotationRef.current / stepDeg);
     goTo(nearest);
+  };
+  // 칸(button) 위에서 드래그가 일어났으면, 손을 뗀 자리에서 그 칸의 클릭(수정 시트 열기)이
+  // 바로 이어서 발생하는 걸 막는다 — 안 그러면 회전시키려던 게 칸 편집으로 열려버린다.
+  const onClickCapture = (e: React.MouseEvent) => {
+    if (dragStart.current.moved) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
   };
 
   return (
@@ -109,6 +125,7 @@ function Carousel({
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
           onPointerCancel={onPointerUp}
+          onClickCapture={onClickCapture}
         >
           {panels.map((p, i) => {
             const eff = normalizeDeg(i * stepDeg + rotation);
