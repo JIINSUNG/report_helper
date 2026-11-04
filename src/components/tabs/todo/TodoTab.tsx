@@ -90,6 +90,7 @@ function useSwipeRow(onLongPress: () => void) {
   };
 
   const onPointerMove = (e: React.PointerEvent) => {
+    if (e.buttons === 0) return; // 버튼을 안 누른 채 지나가는 hover 이동은 스와이프 제스처가 아니다
     const dx = e.clientX - startX.current;
     if (!swiping.current && Math.abs(dx) > SWIPE_START_THRESHOLD) {
       swiping.current = true;
