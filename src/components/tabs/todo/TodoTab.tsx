@@ -18,6 +18,7 @@ import {
   SHIFTS,
   WD,
   WHENS,
+  itemDueOn,
   secOn,
   todoBlank,
   todoSeed,
@@ -165,6 +166,7 @@ function SortableItemRow({
   onOpenDays,
   daysOpen,
   onToggleDay,
+  onSetMonthDay,
   onAddKid,
   kidOf,
   onRename,
@@ -182,6 +184,7 @@ function SortableItemRow({
   onOpenDays: () => void;
   daysOpen: boolean;
   onToggleDay: (d: number) => void;
+  onSetMonthDay: (day: number | null) => void;
   onAddKid: (text: string) => void;
   kidOf: TodoItem[];
   onRename: (text: string) => void;
@@ -205,7 +208,7 @@ function SortableItemRow({
   const [addingKid, setAddingKid] = useState(false);
   const [renaming, setRenaming] = useState(false);
   const [renameText, setRenameText] = useState(item.text);
-  const dayTxt = item.days ? item.days.map((d) => WD[d]).join("·") : "";
+  const dayTxt = item.monthDay ? `매월 ${item.monthDay}일` : item.days ? item.days.map((d) => WD[d]).join("·") : "";
   const isKid = !!item.parent;
   const swipe = useSwipeRow(onRequestEdit);
 
@@ -226,7 +229,7 @@ function SortableItemRow({
         </div>
         <div className="tact">
           <button type="button" className={"daybtn" + (daysOpen ? " on" : "")} aria-expanded={daysOpen} onClick={onOpenDays}>
-            {item.days ? dayTxt : "매일"} ▾
+            {item.monthDay || item.days ? dayTxt : "매일"} ▾
           </button>
           <button type="button" className="iconbtn" style={{ color: "var(--warn)" }} aria-label="삭제" onClick={onDelete}>
             ✕
@@ -248,16 +251,45 @@ function SortableItemRow({
         </div>
         {daysOpen && (
           <>
-            <div className="wdpick">
-              {[...WD].map((w, d) => {
-                const on = !item.days || item.days.includes(d);
-                return (
-                  <button key={d} type="button" aria-pressed={on} aria-label={w + "요일"} onClick={() => onToggleDay(d)}>
-                    {w}
-                  </button>
-                );
-              })}
+            <div className="chips" style={{ flexBasis: "100%" }}>
+              <button type="button" className="chip" aria-pressed={!item.monthDay} onClick={() => onSetMonthDay(null)}>
+                요일 반복
+              </button>
+              <button type="button" className="chip" aria-pressed={!!item.monthDay} onClick={() => onSetMonthDay(item.monthDay || new Date().getDate())}>
+                매월 특정 일
+              </button>
             </div>
+            {item.monthDay ? (
+              <div style={{ flexBasis: "100%", display: "flex", alignItems: "center", gap: 8 }}>
+                <span className="hint" style={{ margin: 0 }}>
+                  매월
+                </span>
+                <input
+                  type="number"
+                  className="inp mini"
+                  style={{ width: 60 }}
+                  min={1}
+                  max={31}
+                  value={item.monthDay}
+                  onChange={(e) => onSetMonthDay(Math.min(31, Math.max(1, Number(e.target.value) || 1)))}
+                  aria-label="매월 반복 일자"
+                />
+                <span className="hint" style={{ margin: 0 }}>
+                  일 · 31일 없는 달은 자동으로 건너뛰어요
+                </span>
+              </div>
+            ) : (
+              <div className="wdpick">
+                {[...WD].map((w, d) => {
+                  const on = !item.days || item.days.includes(d);
+                  return (
+                    <button key={d} type="button" aria-pressed={on} aria-label={w + "요일"} onClick={() => onToggleDay(d)}>
+                      {w}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
             <button type="button" className="link" style={{ flexBasis: "100%", textAlign: "left", fontSize: 12.5 }} onClick={() => setAddingKid(!addingKid)}>
               + 세부 항목 추가
             </button>
@@ -311,19 +343,21 @@ function SortableItemRow({
       </div>
       {renaming ? (
         <div className="todo" style={{ background: "var(--card,var(--bg))" }}>
-          <input
-            className="inp"
-            style={{ fontWeight: 600 }}
-            value={renameText}
-            autoFocus
-            onChange={(e) => setRenameText(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") confirmRename();
-              if (e.key === "Escape") setRenaming(false);
-            }}
-            onBlur={confirmRename}
-            aria-label="항목 이름"
-          />
+          <div className="tbody">
+            <input
+              className="inp"
+              style={{ fontWeight: 600 }}
+              value={renameText}
+              autoFocus
+              onChange={(e) => setRenameText(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") confirmRename();
+                if (e.key === "Escape") setRenaming(false);
+              }}
+              onBlur={confirmRename}
+              aria-label="항목 이름"
+            />
+          </div>
         </div>
       ) : (
         <div
@@ -425,7 +459,8 @@ export function TodoTab({ setTab }: { setTab: (id: string) => void }) {
 
   const secs = edit ? todo.sections : todo.sections.filter((s) => secOn(s.when, shift));
 
-  const itemsBySec = (sec: string) => todo.items.filter((i) => i.sec === sec && !i.parent && (edit || secOn(i.when ?? "all", shift)));
+  const itemsBySec = (sec: string) =>
+    todo.items.filter((i) => i.sec === sec && !i.parent && (edit || (secOn(i.when ?? "all", shift) && itemDueOn(i, date))));
   const extraBySec = (sec: string): TodoExtraItem[] => extra.filter((x) => x.sec === sec && (edit || secOn(x.when ?? "all", shift)));
   const kidsOf = (id: string) => todo.items.filter((i) => i.parent === id);
 
@@ -435,9 +470,12 @@ export function TodoTab({ setTab }: { setTab: (id: string) => void }) {
       const cur = item.days || [0, 1, 2, 3, 4, 5, 6];
       const next = cur.includes(d) ? cur.filter((x) => x !== d) : [...cur, d].sort();
       const days = next.length < 7 ? next : null;
-      return { ...prev, items: prev.items.map((i) => (i.id === item.id ? { ...i, days } : i)) };
+      return { ...prev, items: prev.items.map((i) => (i.id === item.id ? { ...i, days, monthDay: null } : i)) };
     });
   };
+
+  const setMonthDay = (item: TodoItem, day: number | null) =>
+    update((prev) => (prev ? { ...prev, items: prev.items.map((i) => (i.id === item.id ? { ...i, monthDay: day } : i)) } : prev));
 
   const addItem = (sec: string) => {
     const v = (draft[sec] || "").trim();
@@ -620,6 +658,7 @@ export function TodoTab({ setTab }: { setTab: (id: string) => void }) {
               onConfirmDelete={() => delSec(sc.id)}
               onCancelDelete={() => setSecDeleteId(null)}
               onToggleDay={(item, d) => toggleDay(item, d)}
+              onSetMonthDay={(item, day) => setMonthDay(item, day)}
               daysOpenFor={daysOpenFor}
               setDaysOpenFor={setDaysOpenFor}
               onAddKid={(parentId, text) => addKid(parentId, sc.id, text)}
@@ -703,6 +742,7 @@ function TodoSectionCard({
   onConfirmDelete,
   onCancelDelete,
   onToggleDay,
+  onSetMonthDay,
   daysOpenFor,
   setDaysOpenFor,
   onAddKid,
@@ -736,6 +776,7 @@ function TodoSectionCard({
   onConfirmDelete: () => void;
   onCancelDelete: () => void;
   onToggleDay: (item: TodoItem, d: number) => void;
+  onSetMonthDay: (item: TodoItem, day: number | null) => void;
   daysOpenFor: string | null;
   setDaysOpenFor: (id: string | null) => void;
   onAddKid: (parentId: string, text: string) => void;
@@ -830,6 +871,7 @@ function TodoSectionCard({
                   onOpenDays={() => setDaysOpenFor(daysOpenFor === item.id ? null : item.id)}
                   daysOpen={daysOpenFor === item.id}
                   onToggleDay={(d) => onToggleDay(item, d)}
+                  onSetMonthDay={(day) => onSetMonthDay(item, day)}
                   onAddKid={(text) => onAddKid(item.id, text)}
                   kidOf={kidsOf(item.id)}
                   onRename={(text) => onRenameItem(item.id, text)}

@@ -10,12 +10,24 @@ export interface TodoItem {
   id: string;
   sec: string;
   text: string;
+  /** 요일 반복. null이면 매일, monthDay가 있으면 무시됨. */
   days: number[] | null;
+  /** 매월 특정 일(1~31)에만 반복. 있으면 days는 무시되고 이 날에만 보여요. */
+  monthDay?: number | null;
   parent?: string;
   /** 직접 고른 탭 바로가기 (예: "products"). 안 고르면 TODO_LINKS 자동 매칭을 써요. */
   linkTab?: string | null;
   /** 묶음의 when과 별개로, 이 항목만 오픈·마감 근무로 좁힐 때. 안 정하면(undefined) "all" */
   when?: TodoWhen;
+}
+
+/** 오늘(date, YYYY-MM-DD) 이 항목이 보여야 하는지. monthDay > days(요일) > 매일 순으로 본다. */
+export function itemDueOn(item: Pick<TodoItem, "days" | "monthDay">, date: string): boolean {
+  const [y, m, d] = date.split("-").map(Number);
+  if (item.monthDay) return d === item.monthDay;
+  if (!item.days) return true;
+  const weekday = new Date(y, m - 1, d).getDay();
+  return item.days.includes(weekday);
 }
 
 export interface TodoExtraItem {
