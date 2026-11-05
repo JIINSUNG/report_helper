@@ -13,6 +13,7 @@ import {
 import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import { useDroppable } from "@dnd-kit/core";
 import { useTodo } from "@/lib/use-todo";
+import { today } from "@/lib/format";
 import {
   ITEM_WHENS,
   SHIFTS,
@@ -438,7 +439,9 @@ export function TodoTab({ setTab }: { setTab: (id: string) => void }) {
   const editSnapshot = useRef<TodoData | null>(null);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }), useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }));
 
-  const date = useMemo(() => new Date().toISOString().slice(0, 10), []);
+  // 다른 탭들의 "오늘"과 같은 기준(로컬 날짜)을 써야 한다 — UTC 기준(toISOString)으로 하면 한국
+  // 자정~오전 9시 사이에 할일 탭의 "오늘"만 어제로 계산되는 버그가 있었다.
+  const date = useMemo(() => today(), []);
   const done = todo?.done[date] || {};
   const extra = todo?.extra[date] || [];
 

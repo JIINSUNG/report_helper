@@ -19,6 +19,7 @@ export function ScheduleTab({ storeLabel }: { storeLabel: string }) {
   const [day, setDay] = useState<string | null>(null);
   const [showDoneWait, setShowDoneWait] = useState(false);
   const [waitOwner, setWaitOwner] = useState("");
+  const [q, setQ] = useState("");
   const td = today();
   const wk = shift(td, 7);
   const missed = sched.actions.filter((a) => !a.done && aEnd(a) < td);
@@ -35,9 +36,33 @@ export function ScheduleTab({ storeLabel }: { storeLabel: string }) {
     setDay(d);
   };
 
+  const ql = q.trim().toLowerCase();
+  const searchResults = ql
+    ? sched.evs.filter((e) => (e.title + " " + (e.memo || "") + " " + (e.owner || "")).toLowerCase().includes(ql))
+    : [];
+
   return (
     <>
       {sched.err && <div className="alert">{sched.err}</div>}
+
+      <input className="inp" placeholder="일정 검색 (제목·메모·담당자)" value={q} onChange={(e) => setQ(e.target.value)} />
+      {ql && (
+        <Card title={`검색 결과 ${searchResults.length}건`}>
+          {searchResults.length === 0 && <p className="hint">찾는 일정이 없어요.</p>}
+          {searchResults.map((e) => (
+            <button type="button" key={e.id} className="actbody" onClick={() => openEdit(e)} style={{ width: "100%" }}>
+              <span className="atop">
+                <i className={"ktag " + (e.kind === "promo" ? "k-promo" : e.kind === "wait" ? "k-wait" : "k-task")}>
+                  {e.kind === "promo" ? "행사" : e.kind === "wait" ? "대기" : e.kind === "delivery" ? "배송" : "할 일"}
+                </i>
+                {e.owner && <span className="owner">{e.owner}</span>}
+              </span>
+              <b>{e.title}</b>
+              <small>{[e.start && (e.start === e.end || !e.end ? e.start : `${e.start} ~ ${e.end}`), e.due && "확인일 " + e.due, e.memo].filter(Boolean).join(" · ")}</small>
+            </button>
+          ))}
+        </Card>
+      )}
 
       <Card title="다가오는 할 일" right={!sched.isGuest && <button type="button" className="btn sm pri" onClick={() => setEdit({ kind: "promo", start: td })}>+ 일정 추가</button>}>
         {missed.length > 0 && (

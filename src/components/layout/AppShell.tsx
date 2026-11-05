@@ -24,6 +24,10 @@ import { ScheduleTab } from "@/components/tabs/schedule/ScheduleTab";
 import { CommunityTab } from "@/components/tabs/community/CommunityTab";
 import { AdminTab } from "@/components/tabs/admin/AdminTab";
 import { useRequests } from "@/lib/use-requests";
+import { useTodo } from "@/lib/use-todo";
+import { useSchedule, onDay } from "@/lib/use-schedule";
+import { useCommunity } from "@/lib/use-community";
+import { splitTodayTodos } from "@/lib/briefing";
 import { TabGuide } from "@/components/ui/TabGuide";
 import { TAB_OPTIONS } from "@/data/tabs";
 
@@ -50,6 +54,65 @@ function readLastTab(): string | null {
 function AdminNavBadge() {
   const reqs = useRequests();
   const n = reqs.list.filter((r) => r.status === "open").length;
+  if (!n) return null;
+  return <i className="navbadge">{n}</i>;
+}
+
+/** 할일 탭에 오늘 안 한(체크 안 한) 항목 수를 보여준다 — 탭을 안 열어봐도 얼마나 남았는지 바로 보이게. */
+function TodoNavBadge() {
+  const [todo] = useTodo();
+  if (!todo) return null;
+  const shift = todo.lastShift || "full";
+  if (shift === "off") return null;
+  const date = todayStr();
+  const { remaining } = splitTodayTodos(todo, date, shift);
+  if (!remaining.length) return null;
+  return <i className="navbadge">{remaining.length}</i>;
+}
+
+/** 일정 탭에 오늘 할 일(acts)·진행 중인 행사(promos)가 있으면 점처럼 작게 표시 — SchedPeek과 같은 기준. */
+function ScheduleNavBadge({ storeLabel, date }: { storeLabel: string; date: string }) {
+  const { role } = useAuth();
+  const sched = useSchedule(storeLabel);
+  if (role === "guest") return null;
+  const acts = sched.actions.filter((a) => onDay(a, date));
+  const promos = sched.evs.filter((e) => e.kind === "promo" && e.start && e.start <= date && date <= (e.end || e.start));
+  const n = acts.length + promos.length;
+  if (!n) return null;
+  return <i className="navbadge">{n}</i>;
+}
+
+const COMMUNITY_SEEN_KEY = "report-helper-community-seen:v1";
+
+function readLastSeenCommunity(): string {
+  if (typeof window === "undefined") return new Date().toISOString();
+  try {
+    const v = window.localStorage.getItem(COMMUNITY_SEEN_KEY);
+    if (v) return v;
+    // 처음 켜는 기기면 이미 있던 글을 전부 "안 읽음"으로 세지 않도록, 지금 시점을 기준으로 삼는다.
+    const now = new Date().toISOString();
+    window.localStorage.setItem(COMMUNITY_SEEN_KEY, now);
+    return now;
+  } catch {
+    return new Date().toISOString();
+  }
+}
+
+function writeLastSeenCommunity(iso: string) {
+  try {
+    window.localStorage.setItem(COMMUNITY_SEEN_KEY, iso);
+  } catch {
+    /* ignore */
+  }
+}
+
+/** 공유방 탭에 마지막으로 열어본 뒤 새로 올라온 글 수를 보여준다. "본 시점"은 이 기기에만 저장. */
+function CommunityNavBadge() {
+  const { role } = useAuth();
+  const comm = useCommunity();
+  if (role === "guest") return null;
+  const lastSeen = readLastSeenCommunity();
+  const n = comm.posts.filter((p) => p.at > lastSeen).length;
   if (!n) return null;
   return <i className="navbadge">{n}</i>;
 }
@@ -82,6 +145,10 @@ export function AppShell() {
 
   useEffect(() => {
     window.scrollTo(0, 0);
+  }, [tab]);
+
+  useEffect(() => {
+    if (tab === "community") writeLastSeenCommunity(new Date().toISOString());
   }, [tab]);
 
   const activeNavBtnRef = useRef<HTMLButtonElement | null>(null);
@@ -164,6 +231,9 @@ export function AppShell() {
               >
                 {label}
                 {id === "admin" && isAdmin && <AdminNavBadge />}
+                {id === "todo" && <TodoNavBadge />}
+                {id === "schedule" && <ScheduleNavBadge storeLabel={storeLabel} date={date} />}
+                {id === "community" && <CommunityNavBadge />}
               </button>
             ))}
           </nav>
@@ -183,7 +253,7 @@ export function AppShell() {
 
         {tab === "todo" && <TodoTab setTab={setTab} />}
         {tab === "open" && <OpenTab data={data} update={update} date={date} storeLabel={storeLabel} isGuest={isGuest} goSchedule={() => setTab("schedule")} />}
-        {tab === "record" && <RecordTab data={data} update={update} date={date} />}
+        {tab === "record" && <RecordTab data={data} update={update} date={date} setDate={setDate} />}
         {tab === "close" && <CloseTab data={data} update={update} date={date} storeLabel={storeLabel} isGuest={isGuest} goSchedule={() => setTab("schedule")} />}
         {tab === "sales" && <SalesTab data={data} update={update} date={date} goRecord={() => setTab("record")} />}
         {tab === "retro" && <RetroTab data={data} update={update} date={date} setDate={setDate} />}

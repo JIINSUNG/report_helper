@@ -33,14 +33,17 @@ export function RecordTab({
   data,
   update,
   date,
+  setDate,
 }: {
   data: LocalReportData;
   update: (fn: (d: LocalReportData) => LocalReportData) => void;
   date: string;
+  setDate: (d: string) => void;
 }) {
   const [f, setF] = useState(emptyRec());
   const [more, setMore] = useState(false);
   const [err, setErr] = useState("");
+  const [q, setQ] = useState("");
   const recs = data.records[date] || [];
   const products = [...new Set(Object.values(data.records).flat().map((r) => r.product).filter(Boolean))];
   const set = (p: Partial<typeof f>) => setF({ ...f, ...p });
@@ -68,6 +71,15 @@ export function RecordTab({
 
   const starCount = recs.filter((r) => r.star).length;
   const dt = f.diff && DIFF_TYPES.find((t) => t.id === f.diff!.type);
+
+  const ql = q.trim().toLowerCase();
+  const searchResults = ql
+    ? Object.entries(data.records)
+        .flatMap(([d, list]) => list.map((r) => ({ ...r, recDate: d })))
+        .filter((r) => (r.product + " " + r.cat + " " + r.memo + " " + r.needMemo).toLowerCase().includes(ql))
+        .sort((a, b) => (a.recDate === b.recDate ? b.time.localeCompare(a.time) : b.recDate.localeCompare(a.recDate)))
+        .slice(0, 30)
+    : [];
 
   return (
     <>
@@ -190,6 +202,32 @@ export function RecordTab({
         <button type="button" className="btn pri" onClick={save}>
           기록 저장
         </button>
+      </Card>
+
+      <Card title="지난 기록 검색" right={<span className="sub">제품·카테고리·메모로 전체 날짜에서 찾기</span>}>
+        <input className="inp" placeholder="예: 공기청정기, 강아지 털" value={q} onChange={(e) => setQ(e.target.value)} />
+        {ql && searchResults.length === 0 && <p className="hint">찾는 기록이 없어요.</p>}
+        {searchResults.map((r) => (
+          <button
+            type="button"
+            key={r.recDate + r.id}
+            className="rec"
+            style={{ width: "100%", textAlign: "left", cursor: "pointer" }}
+            onClick={() => setDate(r.recDate)}
+          >
+            <div className="h">
+              <b>
+                {r.product || r.cat} {r.qty > 1 ? `×${r.qty}` : ""}
+              </b>
+              <span className="sub">{r.recDate}</span>
+            </div>
+            <p>
+              {r.time} · {r.cat} · {[r.age, r.gender].filter(Boolean).join(" ") || "고객 정보 없음"} · <b>{RESULTS[r.result]}</b>
+            </p>
+            {(r.needs.length || r.needMemo) && <p>니즈: {autoT(r)}</p>}
+            {r.memo && <p>메모: {r.memo}</p>}
+          </button>
+        ))}
       </Card>
 
       <Card

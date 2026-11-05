@@ -161,6 +161,7 @@ export function CommunityTab({ storeLabel }: { storeLabel: string }) {
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
   const [filter, setFilter] = useState<PostTag | "all">("all");
+  const [q, setQ] = useState("");
 
   const post = async () => {
     const t = text.trim();
@@ -180,7 +181,10 @@ export function CommunityTab({ storeLabel }: { storeLabel: string }) {
     } else setErr("올리지 못했어요.");
   };
 
-  const list = comm.posts.filter((p) => filter === "all" || p.tag === filter);
+  const ql = q.trim().toLowerCase();
+  const list = comm.posts
+    .filter((p) => filter === "all" || p.tag === filter)
+    .filter((p) => !ql || (p.text + " " + (p.prod || "") + " " + (p.byName || "")).toLowerCase().includes(ql));
 
   return (
     <>
@@ -204,6 +208,8 @@ export function CommunityTab({ storeLabel }: { storeLabel: string }) {
         </div>
       </section>
 
+      <input className="inp" placeholder="글 검색 (내용·제품·작성자)" value={q} onChange={(e) => setQ(e.target.value)} />
+
       <div className="chips">
         <button type="button" className="chip" aria-pressed={filter === "all"} onClick={() => setFilter("all")}>
           전체
@@ -215,7 +221,11 @@ export function CommunityTab({ storeLabel }: { storeLabel: string }) {
         ))}
       </div>
 
-      {list.length === 0 && <p className="hint" style={{ textAlign: "center", padding: "20px 0" }}>아직 글이 없어요.</p>}
+      {list.length === 0 && (
+        <p className="hint" style={{ textAlign: "center", padding: "20px 0" }}>
+          {ql || filter !== "all" ? "찾는 글이 없어요." : "아직 글이 없어요."}
+        </p>
+      )}
       {list.map((p) => (
         <PostCard key={p.id} p={p} comm={comm} />
       ))}
