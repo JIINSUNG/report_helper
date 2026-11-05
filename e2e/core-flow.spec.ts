@@ -58,6 +58,20 @@ test("직원 로그인 → 오픈 보고 로컬 입력 → 할일 탭 → 로그
   }
   await expect(page.locator(".card").first()).toBeVisible();
 
+  // 브리핑 — 항목 하나를 체크하고 브리핑을 열면 "오늘 한 일"에 그 항목이 들어가는지 확인.
+  // 공유방에 실제로 올리는 건 수동으로 지울 수 있는 관리자가 있어야 해서 여기선 테스트하지 않는다
+  // (매번 돌릴 때마다 정리 안 되는 공지가 쌓이면 안 됨).
+  const chk = page.locator("button.chk").first();
+  const checkedText = await chk.getAttribute("aria-label");
+  await chk.click();
+  await page.getByRole("button", { name: "📋 오늘 브리핑 만들기" }).click();
+  await expect(page.getByRole("heading", { name: "오늘 브리핑" })).toBeVisible();
+  await page.locator(".sheet button", { hasText: "미리보기" }).click();
+  const doneSection = (await page.locator("pre").innerText()).split("[해야 할 일]")[0];
+  expect(doneSection).toContain(checkedText);
+  await page.getByRole("button", { name: "닫기" }).first().click();
+  await chk.click(); // 테스트 흔적 남기지 않도록 다시 체크 해제
+
   // 창고 탭 — 실제 매장 데이터가 있으니 읽기만 한다(칸을 열거나 고치지 않음)
   await page.locator("nav button", { hasText: "창고" }).first().click();
   await expect(page.getByText("창고 둘러보기")).toBeVisible();

@@ -1,0 +1,41 @@
+import { itemDueOn, secOn, type TodoData } from "@/data/todo-seed";
+
+export interface BriefingSplit {
+  done: string[];
+  remaining: string[];
+}
+
+/** 오늘(date) 기준, 현재 근무(shift)로 화면에 보이는 할일 항목을 체크 여부로 나눈다 — TodoTab이 "오늘 할
+ * 일"을 걸러 보여주는 기준(묶음·항목 근무 조건 + 반복 조건)을 그대로 써서 체크리스트와 브리핑 내용이 늘 일치한다.
+ * 세부 항목(parent 있는 것)은 상위 항목에 묶여 있는 디테일이라 브리핑에서는 상위 항목만 센다. */
+export function splitTodayTodos(todo: TodoData, date: string, shift: string): BriefingSplit {
+  const doneMap = todo.done[date] || {};
+  const secIds = new Set(todo.sections.filter((s) => secOn(s.when, shift)).map((s) => s.id));
+  const items = todo.items
+    .filter((i) => !i.parent && secIds.has(i.sec) && secOn(i.when ?? "all", shift) && itemDueOn(i, date))
+    .map((i) => ({ id: i.id, text: i.text }));
+  const extras = (todo.extra[date] || [])
+    .filter((x) => secIds.has(x.sec) && secOn(x.when ?? "all", shift))
+    .map((x) => ({ id: x.id, text: x.text }));
+  const all = [...items, ...extras];
+  return {
+    done: all.filter((t) => doneMap[t.id]).map((t) => t.text),
+    remaining: all.filter((t) => !doneMap[t.id]).map((t) => t.text),
+  };
+}
+
+/** 동료에게 보내는 간단한 인수인계용 텍스트. 매출 보고서(closeText 등)와 달리 숫자 없이
+ * 오늘 한 일 · 해야 할 일 · 특이사항만 다룬다. */
+export function briefingText(storeLabel: string, date: string, done: string[], remaining: string[], note: string): string {
+  const [y, m, d] = date.split("-").map(Number);
+  return [
+    `[${y}년 ${m}월 ${d}일] ${storeLabel} 브리핑`,
+    "",
+    "[오늘 한 일]",
+    ...(done.length ? done.map((t) => `- ${t}`) : ["- (없음)"]),
+    "",
+    "[해야 할 일]",
+    ...(remaining.length ? remaining.map((t) => `- ${t}`) : ["- 없음"]),
+    ...(note.trim() ? ["", "[특이사항]", ...note.trim().split("\n").map((x) => `- ${x.replace(/^-\s*/, "")}`)] : []),
+  ].join("\n");
+}

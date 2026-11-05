@@ -30,6 +30,7 @@ import {
 } from "@/data/todo-seed";
 import { TODO_LINKS } from "@/data/retro-hints";
 import { TAB_OPTIONS } from "@/data/tabs";
+import { BriefingSheet } from "./BriefingSheet";
 
 function uid(prefix: string) {
   return `${prefix}${Math.random().toString(36).slice(2, 9)}`;
@@ -433,6 +434,7 @@ export function TodoTab({ setTab }: { setTab: (id: string) => void }) {
   const [newSecName, setNewSecName] = useState("");
   const [newSecWhen, setNewSecWhen] = useState<TodoWhen>("all");
   const [secDeleteId, setSecDeleteId] = useState<string | null>(null);
+  const [briefingOpen, setBriefingOpen] = useState(false);
   const editSnapshot = useRef<TodoData | null>(null);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }), useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }));
 
@@ -666,6 +668,9 @@ export function TodoTab({ setTab }: { setTab: (id: string) => void }) {
             <p className="hint" style={{ margin: 0 }}>
               항목을 꾹 누르면 편집 모드로 바로 이동해요.
             </p>
+            <button type="button" className="btn" onClick={() => setBriefingOpen(true)}>
+              📋 오늘 브리핑 만들기
+            </button>
           </>
         )}
         {edit && (
@@ -774,6 +779,8 @@ export function TodoTab({ setTab }: { setTab: (id: string) => void }) {
           </div>
         </div>
       )}
+
+      {briefingOpen && <BriefingSheet todo={todo} date={date} shift={shift} onClose={() => setBriefingOpen(false)} />}
     </>
   );
 }
