@@ -109,10 +109,14 @@ export interface WarehouseZone {
   label: string;
   /** area 전용 — "선반 2개 크기" 같은 설명. */
   sub?: string;
-  /** shelf 전용 — 단 개수(1~8). */
+  /** 행(앞에서 봤을 때 가로줄) 개수(1~8). 선반이면 "단", 공간이면 "줄". 기본 1(area)/4(shelf). */
   tiers?: number;
+  /** 한 행을 몇 열로 나눌지(1~6). 기본 1(안 나눔). */
+  cols?: number;
   /** shelf 전용 — 맨 위 평평한 면도 칸으로 쓸지. */
   hasTop?: boolean;
+  /** 행 번호(1부터, 맨 위는 0)별 커스텀 이름. 없으면 기본 이름("1단" 등)을 쓴다. */
+  rowLabels?: Record<number, string>;
 }
 
 export interface WarehouseLayoutDoc {

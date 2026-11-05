@@ -431,6 +431,9 @@ details summary{cursor:pointer;font-size:14px;font-weight:600;margin-bottom:8px}
 .wh-panel-label{font-size:13.5px;font-weight:700;text-align:center;color:var(--fg);display:flex;flex-direction:column;gap:2px;flex-shrink:0}
 .wh-panel-label small{font-weight:400;color:var(--muted);font-size:11px}
 .wh-panel-cells{display:flex;flex-direction:column;gap:8px;width:100%}
+.wh-cell-row{display:grid;gap:6px;width:100%}
+.wh-cell-row .wh-cell{min-height:56px;padding:8px 9px}
+.wh-cell-row .wh-cell-text{-webkit-line-clamp:2}
 .wh-cell{display:flex;flex-direction:column;gap:3px;align-items:flex-start;text-align:left;padding:10px 12px;border-radius:12px;background:var(--field);box-shadow:inset 0 0 0 1px var(--line);width:100%;min-height:64px;flex-shrink:0}
 .wh-cell.filled{background:var(--card);box-shadow:inset 0 0 0 1.5px var(--accent)}
 .wh-cell-label{font-size:11px;font-weight:700;color:var(--muted)}

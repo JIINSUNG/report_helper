@@ -12,27 +12,56 @@ export const DEFAULT_WAREHOUSE_ZONES: WarehouseZone[] = [
   { id: "right-floor", kind: "area", label: "오른쪽 바닥", sub: "선반 3개 크기" },
 ];
 
-export function shelfCellId(zoneId: string, tier: number) {
-  return `${zoneId}-${tier}`;
+export function zoneTiers(zone: WarehouseZone): number {
+  return zone.tiers ?? (zone.kind === "shelf" ? 4 : 1);
 }
 
-export function shelfCellLabel(zone: WarehouseZone, tier: number) {
-  return `${zone.label} ${tier}단`;
+export function zoneCols(zone: WarehouseZone): number {
+  return zone.cols ?? 1;
+}
+
+/** 열로 안 나뉜(cols<=1) 공간(area)이면서 줄도 1개뿐이면, 지금까지 써온 "구역 id 그대로"가 그 하나뿐인 칸의 id다.
+ * 기존에 저장된 칸 데이터를 그대로 가리키기 위해 이 조건일 때만 특별 취급한다. */
+function isUnsplitArea(zone: WarehouseZone): boolean {
+  return zone.kind === "area" && zoneTiers(zone) <= 1 && zoneCols(zone) <= 1;
 }
 
 export function shelfTopCellId(zoneId: string) {
   return `${zoneId}-top`;
 }
 
-export function shelfTopCellLabel(zone: WarehouseZone) {
-  return `${zone.label} 맨 위`;
+/** row(1부터), col(1부터)에 대응하는 칸 id. cols<=1이면 기존 "zoneId-row" 스킴을 그대로 쓴다
+ * (선반은 원래부터 이 스킴이었고, 공간도 처음 나눌 때는 이 스킴으로 시작해 기존 데이터와 어긋나지 않는다). */
+export function cellIdAt(zone: WarehouseZone, row: number, col: number): string {
+  if (isUnsplitArea(zone)) return zone.id;
+  const cols = zoneCols(zone);
+  return cols > 1 ? `${zone.id}-${row}-${col}` : `${zone.id}-${row}`;
 }
 
-/** 구역 하나가 가진 칸 id 전부(선반이면 맨 위+각 단, 넓은 공간이면 구역 id 자체 하나). */
+/** row=0은 선반 맨 위 칸을 가리키는 특수 키. */
+export function rowName(zone: WarehouseZone, row: number): string {
+  const custom = zone.rowLabels?.[row];
+  if (custom) return custom;
+  if (row === 0) return "맨 위";
+  return zone.kind === "shelf" ? `${row}단` : `${row}줄`;
+}
+
+export function cellLabelAt(zone: WarehouseZone, row: number, col: number): string {
+  if (isUnsplitArea(zone)) return "";
+  const cols = zoneCols(zone);
+  const rn = rowName(zone, row);
+  return cols > 1 ? `${zone.label} ${rn} ${col}열` : `${zone.label} ${rn}`;
+}
+
+/** 구역 하나가 가진 칸 id 전부(순서대로: 맨 위 → 1행 1~N열 → 2행 1~N열 → ...). */
 export function zoneCellIds(zone: WarehouseZone): string[] {
-  if (zone.kind === "area") return [zone.id];
-  const tiers = zone.tiers ?? 4;
-  return [...(zone.hasTop ? [shelfTopCellId(zone.id)] : []), ...Array.from({ length: tiers }, (_, i) => shelfCellId(zone.id, i + 1))];
+  if (isUnsplitArea(zone)) return [zone.id];
+  const tiers = zoneTiers(zone);
+  const cols = zoneCols(zone);
+  const ids: string[] = [];
+  if (zone.kind === "shelf" && zone.hasTop) ids.push(shelfTopCellId(zone.id));
+  for (let r = 1; r <= tiers; r++) for (let c = 1; c <= cols; c++) ids.push(cellIdAt(zone, r, c));
+  return ids;
 }
 
 export function allCellIds(zones: WarehouseZone[]): string[] {

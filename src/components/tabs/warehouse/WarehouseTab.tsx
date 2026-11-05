@@ -1,32 +1,40 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Card } from "@/components/ui/Card";
 import { useWarehouse } from "@/lib/use-warehouse";
-import { shelfCellId, shelfCellLabel, shelfTopCellId, shelfTopCellLabel, allCellIds } from "@/data/warehouse-layout";
+import { allCellIds, cellIdAt, cellLabelAt, rowName, shelfTopCellId, zoneCols, zoneTiers } from "@/data/warehouse-layout";
 import type { WarehouseZone } from "@/types/shared";
 
 const PANEL_WIDTH = 176;
 const SENS = 0.6; // 드래그 1px당 회전 각도
 
+interface PanelCell {
+  id: string;
+  label: string;
+}
+
 interface Panel {
   id: string;
   label: string;
   sub?: string;
-  cells: { id: string; label: string }[];
+  rows: PanelCell[][];
+}
+
+function isUnsplitArea(zone: WarehouseZone) {
+  return zone.kind === "area" && zoneTiers(zone) <= 1 && zoneCols(zone) <= 1;
 }
 
 function zonePanel(zone: WarehouseZone): Panel {
-  if (zone.kind === "area") return { id: zone.id, label: zone.label, sub: zone.sub, cells: [{ id: zone.id, label: "" }] };
-  const tiers = zone.tiers ?? 4;
-  return {
-    id: zone.id,
-    label: zone.label,
-    cells: [
-      ...(zone.hasTop ? [{ id: shelfTopCellId(zone.id), label: shelfTopCellLabel(zone) }] : []),
-      ...Array.from({ length: tiers }, (_, i) => ({ id: shelfCellId(zone.id, i + 1), label: shelfCellLabel(zone, i + 1) })),
-    ],
-  };
+  if (isUnsplitArea(zone)) return { id: zone.id, label: zone.label, sub: zone.sub, rows: [[{ id: zone.id, label: "" }]] };
+  const tiers = zoneTiers(zone);
+  const cols = zoneCols(zone);
+  const rows: PanelCell[][] = [];
+  if (zone.kind === "shelf" && zone.hasTop) rows.push([{ id: shelfTopCellId(zone.id), label: `${zone.label} ${rowName(zone, 0)}` }]);
+  for (let r = 1; r <= tiers; r++) {
+    rows.push(Array.from({ length: cols }, (_, ci) => ({ id: cellIdAt(zone, r, ci + 1), label: cellLabelAt(zone, r, ci + 1) })));
+  }
+  return { id: zone.id, label: zone.label, sub: zone.sub, rows };
 }
 
 function CellBox({ label, text, onOpen }: { label: string; text: string; onOpen: () => void }) {
@@ -73,7 +81,60 @@ function Carousel({
     setActive(clamped);
   };
 
+  // --- 자이로("VR"처럼 폰을 직접 돌려서 둘러보기) — 실험적 기능. 기기마다 나침반 센서 품질이
+  // 달라서 완벽하진 않을 수 있다. 꺼져 있으면(기본) 지금처럼 드래그로만 돌린다. ---
+  const [gyroOn, setGyroOn] = useState(false);
+  const gyroSupported = typeof window !== "undefined" && "DeviceOrientationEvent" in window;
+  const gyroBase = useRef<{ heading: number; rotation: number } | null>(null);
+  const handlerRef = useRef<(e: DeviceOrientationEvent) => void>(() => {});
+
+  useEffect(() => {
+    handlerRef.current = (e: DeviceOrientationEvent) => {
+      const webkitHeading = (e as DeviceOrientationEvent & { webkitCompassHeading?: number }).webkitCompassHeading;
+      const heading = webkitHeading ?? (e.alpha != null ? 360 - e.alpha : null);
+      if (heading == null) return;
+      if (!gyroBase.current) {
+        gyroBase.current = { heading, rotation: rotationRef.current };
+        return;
+      }
+      let delta = heading - gyroBase.current.heading;
+      delta = (((delta + 180) % 360) + 360) % 360 - 180;
+      rotationRef.current = gyroBase.current.rotation + delta;
+      setRotation(rotationRef.current);
+      setActive(((Math.round(-rotationRef.current / stepDeg) % n) + n) % n);
+    };
+  }, [stepDeg, n]);
+
+  useEffect(() => {
+    if (!gyroOn) return;
+    const stable = (e: DeviceOrientationEvent) => handlerRef.current(e);
+    window.addEventListener("deviceorientation", stable);
+    return () => window.removeEventListener("deviceorientation", stable);
+  }, [gyroOn]);
+
+  const toggleGyro = async () => {
+    if (gyroOn) {
+      setGyroOn(false);
+      gyroBase.current = null;
+      const nearest = Math.round(-rotationRef.current / stepDeg);
+      goTo(nearest);
+      return;
+    }
+    const DOE = window.DeviceOrientationEvent as unknown as { requestPermission?: () => Promise<string> };
+    if (typeof DOE.requestPermission === "function") {
+      try {
+        const res = await DOE.requestPermission();
+        if (res !== "granted") return;
+      } catch {
+        return;
+      }
+    }
+    gyroBase.current = null;
+    setGyroOn(true);
+  };
+
   const onPointerDown = (e: React.PointerEvent) => {
+    if (gyroOn) return;
     dragStart.current = { x: e.clientX, rotation: rotationRef.current, moved: false };
     draggingRef.current = true;
     setDragging(true);
@@ -116,7 +177,17 @@ function Carousel({
         <button type="button" className="iconbtn" aria-label="다음 구역" onClick={() => goTo(active + 1)}>
           ›
         </button>
+        {gyroSupported && (
+          <button type="button" className="chip sm" aria-pressed={gyroOn} onClick={toggleGyro}>
+            {gyroOn ? "자이로 끄기" : "📱 폰 돌려서 보기"}
+          </button>
+        )}
       </div>
+      {gyroOn && (
+        <p className="hint" style={{ margin: 0, textAlign: "center" }}>
+          폰을 좌우로 돌려보세요(실험적 기능 — 기기에 따라 정확도가 다를 수 있어요).
+        </p>
+      )}
       <div className="wh-stage">
         <div
           className="wh-ring"
@@ -148,8 +219,12 @@ function Carousel({
                   {p.sub && <small>{p.sub}</small>}
                 </div>
                 <div className="wh-panel-cells">
-                  {p.cells.map((c) => (
-                    <CellBox key={c.id} label={c.label} text={cells[c.id]?.text || ""} onOpen={() => onOpenCell(c.id, c.label || p.label)} />
+                  {p.rows.map((row, ri) => (
+                    <div className="wh-cell-row" key={ri} style={{ gridTemplateColumns: `repeat(${row.length},1fr)` }}>
+                      {row.map((c) => (
+                        <CellBox key={c.id} label={c.label} text={cells[c.id]?.text || ""} onOpen={() => onOpenCell(c.id, c.label || p.label)} />
+                      ))}
+                    </div>
                   ))}
                 </div>
               </div>
@@ -171,7 +246,7 @@ function ListView({
   onOpenCell: (id: string, label: string) => void;
 }) {
   const [q, setQ] = useState("");
-  const rows = panels.flatMap((p) => p.cells.map((c) => ({ zone: p.label, label: c.label || p.label, id: c.id, text: cells[c.id]?.text || "" })));
+  const rows = panels.flatMap((p) => p.rows.flat().map((c) => ({ label: c.label || p.label, id: c.id, text: cells[c.id]?.text || "" })));
   const ql = q.trim().toLowerCase();
   const filtered = ql ? rows.filter((r) => r.label.toLowerCase().includes(ql) || r.text.toLowerCase().includes(ql)) : rows;
 
@@ -194,7 +269,9 @@ function ZoneEditor({
   canRemove,
   onRename,
   onSetTiers,
+  onSetCols,
   onSetHasTop,
+  onSetRowLabel,
   onMoveUp,
   onMoveDown,
   onRemove,
@@ -203,12 +280,18 @@ function ZoneEditor({
   canRemove: boolean;
   onRename: (label: string) => void;
   onSetTiers: (tiers: number) => void;
+  onSetCols: (cols: number) => void;
   onSetHasTop: (v: boolean) => void;
+  onSetRowLabel: (row: number, label: string) => void;
   onMoveUp: () => void;
   onMoveDown: () => void;
   onRemove: () => void;
 }) {
   const [label, setLabel] = useState(zone.label);
+  const [rowsOpen, setRowsOpen] = useState(false);
+  const tiers = zoneTiers(zone);
+  const rowNumbers = [...(zone.kind === "shelf" && zone.hasTop ? [0] : []), ...Array.from({ length: tiers }, (_, i) => i + 1)];
+
   return (
     <div className="wh-zone-edit">
       <div className="row2">
@@ -225,8 +308,8 @@ function ZoneEditor({
           </button>
         </div>
       </div>
-      {zone.kind === "shelf" && (
-        <div className="row2" style={{ alignItems: "center" }}>
+      <div className="row2" style={{ alignItems: "center" }}>
+        {zone.kind === "shelf" && (
           <label className="field" style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
             <span className="hint" style={{ margin: 0 }}>
               단 개수
@@ -242,17 +325,74 @@ function ZoneEditor({
               aria-label={`${zone.label} 단 개수`}
             />
           </label>
+        )}
+        {zone.kind === "area" && (
+          <label className="field" style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+            <span className="hint" style={{ margin: 0 }}>
+              줄 개수
+            </span>
+            <input
+              type="number"
+              className="inp mini"
+              style={{ width: 50 }}
+              min={1}
+              max={8}
+              value={zone.tiers ?? 1}
+              onChange={(e) => onSetTiers(Number(e.target.value) || 1)}
+              aria-label={`${zone.label} 줄 개수`}
+            />
+          </label>
+        )}
+        <label className="field" style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+          <span className="hint" style={{ margin: 0 }}>
+            열 개수
+          </span>
+          <input
+            type="number"
+            className="inp mini"
+            style={{ width: 50 }}
+            min={1}
+            max={6}
+            value={zone.cols ?? 1}
+            onChange={(e) => onSetCols(Number(e.target.value) || 1)}
+            aria-label={`${zone.label} 열 개수`}
+          />
+        </label>
+        {zone.kind === "shelf" && (
           <button type="button" className="chip sm" aria-pressed={!!zone.hasTop} onClick={() => onSetHasTop(!zone.hasTop)}>
             맨 위 칸 {zone.hasTop ? "있음" : "없음"}
           </button>
+        )}
+      </div>
+      <button type="button" className="link" style={{ alignSelf: "flex-start", fontSize: 12 }} onClick={() => setRowsOpen(!rowsOpen)}>
+        {rowsOpen ? "행 이름 닫기" : "행 이름 편집"}
+      </button>
+      {rowsOpen && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          {rowNumbers.map((r) => (
+            <RowNameInput key={r} zone={zone} row={r} onChange={(v) => onSetRowLabel(r, v)} />
+          ))}
         </div>
       )}
     </div>
   );
 }
 
+function RowNameInput({ zone, row, onChange }: { zone: WarehouseZone; row: number; onChange: (v: string) => void }) {
+  const [v, setV] = useState(rowName(zone, row));
+  return (
+    <div className="row" style={{ gap: 6, alignItems: "center" }}>
+      <span className="hint" style={{ margin: 0, width: 50, flexShrink: 0 }}>
+        {row === 0 ? "맨 위" : `${row}행`}
+      </span>
+      <input className="inp mini" value={v} onChange={(e) => setV(e.target.value)} onBlur={() => onChange(v)} aria-label={`${zone.label} ${row}행 이름`} />
+    </div>
+  );
+}
+
 export function WarehouseTab() {
-  const { cells, zones, canWrite, checkShare, setCell, renameZone, setZoneTiers, setZoneHasTop, moveZone, addZone, removeZone } = useWarehouse();
+  const { cells, zones, canWrite, checkShare, setCell, renameZone, setZoneTiers, setZoneCols, setZoneHasTop, setRowLabel, moveZone, addZone, removeZone } =
+    useWarehouse();
   const [editing, setEditing] = useState<{ id: string; label: string } | null>(null);
   const [draft, setDraft] = useState("");
   const [err, setErr] = useState("");
@@ -319,7 +459,9 @@ export function WarehouseTab() {
                 canRemove={zones.length > 1}
                 onRename={(label) => renameZone(z.id, label)}
                 onSetTiers={(t) => setZoneTiers(z.id, t)}
+                onSetCols={(c) => setZoneCols(z.id, c)}
                 onSetHasTop={(v) => setZoneHasTop(z.id, v)}
+                onSetRowLabel={(row, v) => setRowLabel(z.id, row, v)}
                 onMoveUp={() => moveZone(z.id, -1)}
                 onMoveDown={() => moveZone(z.id, 1)}
                 onRemove={() => removeZone(z.id)}
