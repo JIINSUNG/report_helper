@@ -77,6 +77,20 @@ npm run dev
   못 쓴다). 배포 후 `npx next start`로 띄우고 Playwright `context.setOffline(true)`로 오프라인 재접속을
   확인하는 걸 권장한다(dev 서버의 HMR 웹소켓 재연결 때문에 `next dev`에서는 오프라인 동작이 제대로 안 보일 수 있다).
 
+## 테스트
+
+```bash
+npm run e2e
+```
+
+Playwright E2E 테스트(`e2e/core-flow.spec.ts`)가 실제 운영 Firebase 프로젝트에 붙어서 직원·게스트·관리자
+로그인과 로컬 전용 탭(오픈 코멘트 입력·할일 예시 목록)을 확인한다. **공유 컬렉션(일정·제품·공유방·창고)은 절대
+쓰지 않고 읽기만 한다** — 실사용 데이터가 들어있는 환경이라 새 테스트를 추가할 때도 이 원칙을 지켜야 한다. 로컬
+전용 탭(localStorage)만 값을 직접 써보고 확인해도 안전하다. 테스트는 `npm run build && npm run start`로
+띄운 프로덕션 빌드를 대상으로 돈다(`playwright.config.ts`의 `webServer`) — `next dev`는 HMR 때문에 오프라인
+관련 동작이 왜곡될 수 있어서 피한다. 로그인 API의 5회 실패 잠금(위 "로그인 구조" 참고) 때문에 관리자 로그인
+실패 테스트를 10분 안에 5번 넘게 돌리면 일시적으로 실패할 수 있다 — 레이트리밋이 의도대로 동작하는 것.
+
 ## 제품 데이터 갱신하기
 
 `src/data/groups.ts`, `metrics.ts`, `official.ts`, `phrases.ts`, `guides.ts`는 `login-demo.html` 원본에서 **타이핑 없이 스크립트로 추출**해 생성했습니다. 원본 아티팩트(`login-demo.html`)를 새 버전으로 교체한 뒤:
