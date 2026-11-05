@@ -4,6 +4,7 @@ import { useState, type CSSProperties } from "react";
 import { Card } from "@/components/ui/Card";
 import { SERVICE_COMMON_MISTAKES, SERVICE_STAGES } from "@/data/service-standard";
 import { CallLogSection } from "./CallLogSection";
+import { GreetingPractice } from "./GreetingPractice";
 import type { LocalReportData } from "@/types/report";
 
 const listStyle: CSSProperties = { margin: "6px 0 0", paddingLeft: 18, display: "flex", flexDirection: "column", gap: 4, fontSize: 13.5 };
@@ -22,6 +23,8 @@ export function ServiceTab({
   return (
     <>
       <CallLogSection data={data} update={update} date={date} />
+
+      <GreetingPractice />
 
       <Card title="구매자와 신뢰를 쌓는 응대 5단계">
         <p className="hint" style={{ margin: 0 }}>
