@@ -3,6 +3,7 @@
 import { AuthProvider, useAuth } from "@/context/auth-context";
 import { LoginScreen } from "@/components/login/LoginScreen";
 import { AppShell } from "@/components/layout/AppShell";
+import { RegisterSW } from "@/components/RegisterSW";
 
 function Gate() {
   const { status } = useAuth();
@@ -21,6 +22,7 @@ function Gate() {
 export default function Home() {
   return (
     <AuthProvider>
+      <RegisterSW />
       <Gate />
     </AuthProvider>
   );

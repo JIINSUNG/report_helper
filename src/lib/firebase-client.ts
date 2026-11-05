@@ -2,7 +2,7 @@
 
 import { initializeApp, getApps, type FirebaseApp } from "firebase/app";
 import { getAuth, type Auth } from "firebase/auth";
-import { getFirestore, type Firestore } from "firebase/firestore";
+import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, type Firestore } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -31,7 +31,14 @@ export function getFirebaseAuth(): Auth {
   return authInstance;
 }
 
+/** 오프라인에서도 전에 받아온 공유 데이터(일정·제품·공유방 등)를 볼 수 있도록 로컬 캐시(IndexedDB)를 켠다.
+ * 매출·고객정보 같은 민감한 건 여기로 절대 안 오고(오픈/기록/마감/세일즈/회고/할일은 localStorage 전용),
+ * 이미 공유 컬렉션이라 Firestore에 있는 것만 로컬에도 복사해 두는 거라 추가 위험은 없다. */
 export function getFirebaseDb(): Firestore {
-  if (!dbInstance) dbInstance = getFirestore(getFirebaseApp());
+  if (!dbInstance) {
+    dbInstance = initializeFirestore(getFirebaseApp(), {
+      localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
+    });
+  }
   return dbInstance;
 }

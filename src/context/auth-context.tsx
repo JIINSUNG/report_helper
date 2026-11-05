@@ -61,11 +61,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const auth = getFirebaseAuth();
     let unsubProfile: (() => void) | null = null;
+    let profileTimeout: ReturnType<typeof setTimeout> | null = null;
 
     const unsub = onIdTokenChanged(auth, async (user: User | null) => {
       if (unsubProfile) {
         unsubProfile();
         unsubProfile = null;
+      }
+      if (profileTimeout) {
+        clearTimeout(profileTimeout);
+        profileTimeout = null;
       }
       if (!user) {
         try {
@@ -82,7 +87,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setState({ status: "needs-role", uid: user.uid, role: null, store: null, name: "" });
         return;
       }
+      // 오프라인이고 이 기기에 이 프로필 문서가 한 번도 캐시된 적 없으면 onSnapshot이 영영 안 올 수 있다
+      // (이미 캐시된 적 있으면 persistentLocalCache 덕분에 오프라인에서도 바로 온다) — 몇 초 기다려도
+      // 응답이 없으면 이름 없이라도 일단 들여보낸다("나" 탭에서 다시 설정할 수 있음, 로그인 자체는 막지 않음).
+      profileTimeout = setTimeout(() => {
+        setState((s) => (s.status === "loading" ? { status: "ready", uid: user.uid, role, store, name: "" } : s));
+      }, 4000);
       unsubProfile = onSnapshot(doc(getFirebaseDb(), "users", user.uid), (snap) => {
+        if (profileTimeout) {
+          clearTimeout(profileTimeout);
+          profileTimeout = null;
+        }
         const name = (snap.data()?.name as string | undefined) ?? "";
         setState({ status: "ready", uid: user.uid, role, store, name });
       });
@@ -90,6 +105,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     return () => {
       unsub();
+      if (profileTimeout) clearTimeout(profileTimeout);
       if (unsubProfile) unsubProfile();
     };
   }, []);

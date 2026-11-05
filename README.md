@@ -56,6 +56,27 @@ npm run dev
 2. Vercel 프로젝트 설정 → Environment Variables에 `.env.local`의 모든 값을 그대로 등록 (Production/Preview 둘 다).
 3. Deploy.
 
+## PWA (홈 화면 설치·오프라인)
+
+매장에서 매일 쓰는 앱이라 휴대폰에 "홈 화면에 추가"로 설치해서 쓸 수 있고, 한 번 접속한 뒤에는 오프라인에서도
+앱 셸(페이지·JS·CSS·아이콘)이 뜬다(`public/sw.js`, `src/components/RegisterSW.tsx`가 등록).
+
+- **전략**: 항상 네트워크를 먼저 시도하고(온라인이면 늘 최신), 실패했을 때만(오프라인) 캐시로 대체한다. 쓸수록
+  캐시가 채워진다. `/api/*`(로그인)와 동일 출처가 아닌 요청(Firebase/Firestore)은 캐시하지 않는다 — 로그인·
+  실시간 공유 데이터는 항상 네트워크가 있어야 의미가 있다.
+- **로그인 유지**: Firestore 클라이언트에 `persistentLocalCache`를 켜서(`src/lib/firebase-client.ts`) 사용자
+  프로필 문서를 기기에 캐시해 둔다 — 오프라인에서도 로그인 상태(역할·지점)가 바로 복원된다. 한 번도 이 기기에서
+  로그인한 적 없는 상태로 오프라인이면(캐시된 프로필이 없음) 최대 4초까지 기다렸다가 이름 없이라도 들여보낸다
+  (`src/context/auth-context.tsx`).
+- **오픈·기록·마감·세일즈·회고·할일**(로컬 전용 탭)은 애초에 localStorage만 쓰므로 오프라인에서도 완전히
+  동작한다. 공유 데이터(일정·제품·공유방)는 마지막으로 온라인일 때 받아온 내용까지만 보인다.
+- 아이콘은 `public/icon.svg` 하나가 원본이고, `npm run gen-icons`로 PNG(192/512/마스커블/apple-touch-icon/
+  favicon)를 구워서 `public/`에 커밋해 둔다. 아이콘을 바꾸면 `icon.svg`를 고치고 스크립트를 다시 돌리면 된다.
+- 서비스 워커는 같은 출처의 GET 요청만 런타임에 캐시한다(Next.js 빌드마다 바뀌는 청크 파일명을 미리 알 수 없어서
+  precache 목록 없이 요청이 성공할 때마다 캐시를 갱신하는 방식 — Turbopack이라 `next-pwa`/workbox-webpack-plugin은
+  못 쓴다). 배포 후 `npx next start`로 띄우고 Playwright `context.setOffline(true)`로 오프라인 재접속을
+  확인하는 걸 권장한다(dev 서버의 HMR 웹소켓 재연결 때문에 `next dev`에서는 오프라인 동작이 제대로 안 보일 수 있다).
+
 ## 제품 데이터 갱신하기
 
 `src/data/groups.ts`, `metrics.ts`, `official.ts`, `phrases.ts`, `guides.ts`는 `login-demo.html` 원본에서 **타이핑 없이 스크립트로 추출**해 생성했습니다. 원본 아티팩트(`login-demo.html`)를 새 버전으로 교체한 뒤:
