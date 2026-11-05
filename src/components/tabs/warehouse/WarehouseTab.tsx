@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { Card } from "@/components/ui/Card";
 import { useWarehouse } from "@/lib/use-warehouse";
 import { allCellIds, cellIdAt, cellLabelAt, rowName, shelfTopCellId, zoneCols, zoneTiers } from "@/data/warehouse-layout";
@@ -8,6 +8,9 @@ import type { WarehouseZone } from "@/types/shared";
 
 const PANEL_WIDTH = 176;
 const SENS = 0.6; // 드래그 1px당 회전 각도
+// 실제 창고는 한바퀴 도는 게 아니라 왼쪽벽→정면→오른쪽벽까지만 훑어보는 반원 구조라서,
+// 360도 캐러셀 대신 이 범위(도) 안에서만 좌우로 훑어보게 한다(끝에서 더 안 돌아감).
+const ARC_DEG = 170;
 
 interface PanelCell {
   id: string;
@@ -63,8 +66,10 @@ function Carousel({
   onOpenCell: (id: string, label: string) => void;
 }) {
   const n = panels.length || 1;
-  const stepDeg = 360 / n;
-  const radius = Math.round(PANEL_WIDTH / 2 / Math.tan(Math.PI / n) || 0);
+  const stepDeg = n > 1 ? ARC_DEG / (n - 1) : 0;
+  const stepRad = (stepDeg * Math.PI) / 180;
+  const radius = Math.round(PANEL_WIDTH / 2 / Math.tan(stepRad / 2) || 0);
+  const minRotation = -(n - 1) * stepDeg;
   const [rotation, setRotation] = useState(0);
   const [active, setActive] = useState(0);
   const [dragging, setDragging] = useState(false);
@@ -74,67 +79,16 @@ function Carousel({
   const draggingRef = useRef(false);
   const dragStart = useRef({ x: 0, rotation: 0, moved: false });
 
+  const clampRotation = (r: number) => Math.min(0, Math.max(minRotation, r));
+
   const goTo = (i: number) => {
-    const clamped = ((i % n) + n) % n;
+    const clamped = Math.min(n - 1, Math.max(0, i));
     rotationRef.current = -clamped * stepDeg;
     setRotation(rotationRef.current);
     setActive(clamped);
   };
 
-  // --- 자이로("VR"처럼 폰을 직접 돌려서 둘러보기) — 실험적 기능. 기기마다 나침반 센서 품질이
-  // 달라서 완벽하진 않을 수 있다. 꺼져 있으면(기본) 지금처럼 드래그로만 돌린다. ---
-  const [gyroOn, setGyroOn] = useState(false);
-  const gyroSupported = typeof window !== "undefined" && "DeviceOrientationEvent" in window;
-  const gyroBase = useRef<{ heading: number; rotation: number } | null>(null);
-  const handlerRef = useRef<(e: DeviceOrientationEvent) => void>(() => {});
-
-  useEffect(() => {
-    handlerRef.current = (e: DeviceOrientationEvent) => {
-      const webkitHeading = (e as DeviceOrientationEvent & { webkitCompassHeading?: number }).webkitCompassHeading;
-      const heading = webkitHeading ?? (e.alpha != null ? 360 - e.alpha : null);
-      if (heading == null) return;
-      if (!gyroBase.current) {
-        gyroBase.current = { heading, rotation: rotationRef.current };
-        return;
-      }
-      let delta = heading - gyroBase.current.heading;
-      delta = (((delta + 180) % 360) + 360) % 360 - 180;
-      rotationRef.current = gyroBase.current.rotation + delta;
-      setRotation(rotationRef.current);
-      setActive(((Math.round(-rotationRef.current / stepDeg) % n) + n) % n);
-    };
-  }, [stepDeg, n]);
-
-  useEffect(() => {
-    if (!gyroOn) return;
-    const stable = (e: DeviceOrientationEvent) => handlerRef.current(e);
-    window.addEventListener("deviceorientation", stable);
-    return () => window.removeEventListener("deviceorientation", stable);
-  }, [gyroOn]);
-
-  const toggleGyro = async () => {
-    if (gyroOn) {
-      setGyroOn(false);
-      gyroBase.current = null;
-      const nearest = Math.round(-rotationRef.current / stepDeg);
-      goTo(nearest);
-      return;
-    }
-    const DOE = window.DeviceOrientationEvent as unknown as { requestPermission?: () => Promise<string> };
-    if (typeof DOE.requestPermission === "function") {
-      try {
-        const res = await DOE.requestPermission();
-        if (res !== "granted") return;
-      } catch {
-        return;
-      }
-    }
-    gyroBase.current = null;
-    setGyroOn(true);
-  };
-
   const onPointerDown = (e: React.PointerEvent) => {
-    if (gyroOn) return;
     dragStart.current = { x: e.clientX, rotation: rotationRef.current, moved: false };
     draggingRef.current = true;
     setDragging(true);
@@ -144,7 +98,7 @@ function Carousel({
     if (!draggingRef.current) return;
     const dx = e.clientX - dragStart.current.x;
     if (Math.abs(dx) > 4) dragStart.current.moved = true;
-    rotationRef.current = dragStart.current.rotation + dx * SENS;
+    rotationRef.current = clampRotation(dragStart.current.rotation + dx * SENS);
     setRotation(rotationRef.current);
   };
   const onPointerUp = () => {
@@ -177,17 +131,7 @@ function Carousel({
         <button type="button" className="iconbtn" aria-label="다음 구역" onClick={() => goTo(active + 1)}>
           ›
         </button>
-        {gyroSupported && (
-          <button type="button" className="chip sm" aria-pressed={gyroOn} onClick={toggleGyro}>
-            {gyroOn ? "자이로 끄기" : "📱 폰 돌려서 보기"}
-          </button>
-        )}
       </div>
-      {gyroOn && (
-        <p className="hint" style={{ margin: 0, textAlign: "center" }}>
-          폰을 좌우로 돌려보세요(실험적 기능 — 기기에 따라 정확도가 다를 수 있어요).
-        </p>
-      )}
       <div className="wh-stage">
         <div
           className="wh-ring"
