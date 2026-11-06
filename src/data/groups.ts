@@ -793,8 +793,8 @@ export const GROUPS: ProductGroup[] = [
         "comps": [
           {
             "n": "JBL 차지 6",
-            "p": null,
-            "note": "미국 정가 $199 · 국내가 확인 필요"
+            "p": 216660,
+            "note": "국내 정가(11번가) · 실구매가는 더 낮을 수 있음"
           }
         ]
       },
@@ -815,8 +815,8 @@ export const GROUPS: ProductGroup[] = [
         "comps": [
           {
             "n": "JBL 플립 7",
-            "p": null,
-            "note": "미국 정가 $149 · 국내가 확인 필요"
+            "p": 179000,
+            "note": "국내 출시가 · 실구매가는 더 낮을 수 있음"
           }
         ]
       },
@@ -836,8 +836,8 @@ export const GROUPS: ProductGroup[] = [
         "comps": [
           {
             "n": "소니 ULT 필드 1",
-            "p": null,
-            "note": "미국 정가 $129~139 · 국내가 확인 필요"
+            "p": 149000,
+            "note": "국내 정가(소니스토어)"
           }
         ]
       },
@@ -872,8 +872,8 @@ export const GROUPS: ProductGroup[] = [
         "comps": [
           {
             "n": "JBL 고 4",
-            "p": null,
-            "note": "미국 정가 $49 · 국내가 확인 필요"
+            "p": 49900,
+            "note": "국내 최저가대(다나와)"
           }
         ]
       },
@@ -1495,8 +1495,8 @@ export const GROUPS: ProductGroup[] = [
         "comps": [
           {
             "n": "앵커 맥고 1만 Qi2",
-            "p": null,
-            "note": "국내 정식가 확인 필요"
+            "p": 109000,
+            "note": "국내 정가 · 할인가 6~9만원대도 흔함"
           }
         ]
       },
@@ -1509,7 +1509,8 @@ export const GROUPS: ProductGroup[] = [
         "for": "출퇴근 비상용, 가볍게",
         "pitch": "달걀 두 개 무게라 주머니에 쏙 들어가요.",
         "points": [
-          "93g 초경량"
+          "93g 초경량",
+          "20W로 폰 한 번은 넉넉히 충전"
         ],
         "weak": "",
         "comps": []
@@ -1544,7 +1545,8 @@ export const GROUPS: ProductGroup[] = [
         "for": "장기 여행, 캠핑",
         "pitch": "폰 서너 번 충전돼요. 비행기 탈 때는 항공사 승인이 필요해요.",
         "points": [
-          "30,000mAh 대용량"
+          "30,000mAh 대용량",
+          "폰 서너 번 충전 가능"
         ],
         "weak": "기내 반입은 항공사 승인 필요",
         "comps": []
@@ -2547,8 +2549,8 @@ export const GROUPS: ProductGroup[] = [
           },
           {
             "n": "다이슨 V12 디텍트 슬림",
-            "p": null,
-            "note": "모델별 상이 · 가격 확인 필요"
+            "p": 890000,
+            "note": "공식 기본형가(다이슨) · 컴플리트/앱솔루트는 더 비쌈"
           }
         ],
         "link": "https://www.mi.com/kr/product/xiaomi-vacuum-cleaner-g20-max/"
@@ -2826,8 +2828,8 @@ export const GROUPS: ProductGroup[] = [
         "comps": [
           {
             "n": "오랄비 iO 시리즈",
-            "p": null,
-            "note": "가격 확인 필요 · 압력 센서·앱"
+            "p": 241000,
+            "note": "iO6 기준(다나와) · 압력 센서·앱, 상위 모델은 더 비쌈"
           }
         ],
         "link": "https://www.mi.com/kr/product/mijia-smart-servo-oscillation-electric-toothbrush-pro/"
@@ -2956,8 +2958,8 @@ export const GROUPS: ProductGroup[] = [
         "comps": [
           {
             "n": "필립스 원블레이드",
-            "p": null,
-            "note": "국내가 확인 필요"
+            "p": 74000,
+            "note": "기본형 기준(모델별 5만~12만원대)"
           }
         ],
         "link": "https://www.mi.com/kr/product/xiaomi-uniblade-trimmer/"
@@ -3512,13 +3514,13 @@ export const GROUPS: ProductGroup[] = [
         "comps": [
           {
             "n": "ipTIME AX3000 계열",
-            "p": null,
-            "note": "국내가 확인 필요"
+            "p": 54900,
+            "note": "모델별 5만~6만원대(다나와)"
           },
           {
             "n": "TP-Link Archer AX3000",
-            "p": null,
-            "note": "국내가 확인 필요"
+            "p": 77570,
+            "note": "국내 최저가대(다나와)"
           }
         ],
         "link": "https://www.mi.com/kr/product/xiaomi-router-ax3000t/"
