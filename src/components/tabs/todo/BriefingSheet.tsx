@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useAuth } from "@/context/auth-context";
 import { useCommunity } from "@/lib/use-community";
-import { CopyBlock } from "@/components/ui/CopyBlock";
+import { copyText } from "@/lib/format";
 import { briefingEligibleSections, briefingText, splitTodayTodos } from "@/lib/briefing";
 import type { TodoData } from "@/data/todo-seed";
 
@@ -16,6 +16,11 @@ function checkShare(t: string): string {
   if (PHONE_RE.test(t)) return "전화번호처럼 보이는 내용이 있어요. 고객 연락처는 공유방에 적을 수 없어요.";
   if (MONEY_RE.test(t)) return "매출·실적 금액처럼 보이는 내용이 있어요. 회사 기밀이라 공유방에는 적지 말아주세요.";
   return "";
+}
+
+function dateLabel(date: string): string {
+  const [, m, d] = date.split("-").map(Number);
+  return `${m}월 ${d}일`;
 }
 
 export function BriefingSheet({
@@ -36,7 +41,8 @@ export function BriefingSheet({
   const [note, setNote] = useState("");
   const [err, setErr] = useState("");
   const [posted, setPosted] = useState(false);
-  const [pickerOpen, setPickerOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [remainingOpen, setRemainingOpen] = useState(false);
   const isGuest = role === "guest";
 
   const eligible = briefingEligibleSections(todo, shift);
@@ -49,6 +55,12 @@ export function BriefingSheet({
   const toggleSection = (id: string) => {
     const next = picked.includes(id) ? picked.filter((x) => x !== id) : [...picked, id];
     onUpdateTodo((prev) => (prev ? { ...prev, briefingSections: next } : prev));
+  };
+
+  const copy = async () => {
+    await copyText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
   };
 
   const post = async () => {
@@ -67,38 +79,79 @@ export function BriefingSheet({
     <div className="sheet" onClick={onClose}>
       <div onClick={(e) => e.stopPropagation()}>
         <div className="cardhead">
-          <h2 style={{ fontSize: 16, margin: 0 }}>오늘 브리핑</h2>
+          <h2 style={{ fontSize: 16, margin: 0 }}>
+            오늘 브리핑 <span style={{ color: "var(--muted)", fontWeight: 400, fontSize: 13 }}>· {dateLabel(date)} {storeLabel}</span>
+          </h2>
           <button type="button" className="link" onClick={onClose}>
             닫기
           </button>
         </div>
-        <p className="hint" style={{ margin: 0 }}>
-          오늘 할일 체크리스트에서 한 일·해야 할 일을 자동으로 채웠어요. 특이사항만 적으면 돼요.
-        </p>
 
-        {eligible.length > 0 && (
-          <div style={{ border: "1px solid var(--line)", borderRadius: 10, padding: "8px 10px" }}>
-            <button
-              type="button"
-              className="link"
-              style={{ display: "flex", justifyContent: "space-between", width: "100%", fontSize: 13 }}
-              onClick={() => setPickerOpen((v) => !v)}
-            >
-              <span>어느 묶음을 포함할지 고르기 ({picked.length}/{eligible.length})</span>
-              <span>{pickerOpen ? "▲" : "▼"}</span>
-            </button>
-            {pickerOpen && (
-              <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 8 }}>
-                {eligible.map((s) => (
-                  <label key={s.id} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13.5 }}>
-                    <input type="checkbox" checked={picked.includes(s.id)} onChange={() => toggleSection(s.id)} />
-                    {s.name}
-                  </label>
-                ))}
-              </div>
-            )}
+        {eligible.length > 1 && (
+          <div>
+            <p className="hint" style={{ margin: "0 0 6px" }}>
+              포함할 묶음
+            </p>
+            <div className="chips">
+              {eligible.map((s) => (
+                <button key={s.id} type="button" className="chip sm" aria-pressed={picked.includes(s.id)} onClick={() => toggleSection(s.id)}>
+                  {picked.includes(s.id) ? "✓ " : ""}
+                  {s.name}
+                </button>
+              ))}
+            </div>
           </div>
         )}
+
+        <div style={{ display: "flex", flexDirection: "column", gap: 10, border: "1px solid var(--line)", borderRadius: 12, padding: 12 }}>
+          <div>
+            <p style={{ margin: "0 0 4px", fontSize: 12.5, fontWeight: 600, color: "var(--fg2)" }}>✅ 오늘 한 일 ({done.length})</p>
+            {done.length === 0 ? (
+              <p className="hint" style={{ margin: 0 }}>
+                아직 체크한 항목이 없어요.
+              </p>
+            ) : (
+              <ul style={{ margin: 0, paddingLeft: 18, display: "flex", flexDirection: "column", gap: 2 }}>
+                {done.map((t, i) => (
+                  <li key={i} style={{ fontSize: 13.5 }}>
+                    {t}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+          <div>
+            {remaining.length === 0 ? (
+              <>
+                <p style={{ margin: "0 0 4px", fontSize: 12.5, fontWeight: 600, color: "var(--fg2)" }}>⬜ 해야 할 일 (0)</p>
+                <p className="hint" style={{ margin: 0 }}>
+                  남은 항목이 없어요.
+                </p>
+              </>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  className="link"
+                  style={{ display: "flex", justifyContent: "space-between", width: "100%", fontSize: 12.5, fontWeight: 600, color: "var(--fg2)" }}
+                  onClick={() => setRemainingOpen((v) => !v)}
+                >
+                  <span>⬜ 해야 할 일 ({remaining.length})</span>
+                  <span>{remainingOpen ? "접기 ▲" : "펼치기 ▼"}</span>
+                </button>
+                {remainingOpen && (
+                  <ul style={{ margin: "6px 0 0", paddingLeft: 18, display: "flex", flexDirection: "column", gap: 2 }}>
+                    {remaining.map((t, i) => (
+                      <li key={i} style={{ fontSize: 13.5 }}>
+                        {t}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </>
+            )}
+          </div>
+        </div>
 
         <label className="lbl" htmlFor="briefing-note">
           특이사항 <small>선택 · 없으면 비워두세요</small>
@@ -119,9 +172,12 @@ export function BriefingSheet({
             {err}
           </p>
         )}
-        <CopyBlock text={text} label="복사하기" empty="할일이 없어도 브리핑은 만들어져요." />
+
+        <button type="button" className="btn pri wide" onClick={copy}>
+          {copied ? "복사했어요 ✓" : "브리핑 복사하기"}
+        </button>
         {!isGuest && (
-          <button type="button" className="btn pri wide" onClick={post} disabled={posted}>
+          <button type="button" className="btn wide" onClick={post} disabled={posted}>
             {posted ? "공유방에 올렸어요 ✓" : "공유방에 공지로 올리기"}
           </button>
         )}
