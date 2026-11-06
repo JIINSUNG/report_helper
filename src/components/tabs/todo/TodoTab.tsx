@@ -412,6 +412,93 @@ function SortableItemRow({
   );
 }
 
+function ExtraItemRow({
+  item,
+  done,
+  onToggle,
+  onDelete,
+  onRename,
+}: {
+  item: TodoExtraItem;
+  done: boolean;
+  onToggle: () => void;
+  onDelete: () => void;
+  onRename: (text: string) => void;
+}) {
+  const [renaming, setRenaming] = useState(false);
+  const [renameText, setRenameText] = useState(item.text);
+  const swipe = useSwipeRow(() => {});
+
+  const confirmRename = () => {
+    const v = renameText.trim();
+    if (v) onRename(v);
+    setRenaming(false);
+  };
+
+  return (
+    <div className="todo-swipe">
+      <div className="todo-swipe-actions">
+        <button
+          type="button"
+          className="todo-swipe-edit"
+          aria-label={item.text + " 이름 수정"}
+          onClick={() => {
+            swipe.close();
+            setRenameText(item.text);
+            setRenaming(true);
+          }}
+        >
+          수정
+        </button>
+        <button
+          type="button"
+          className="todo-swipe-del"
+          aria-label={item.text + " 삭제"}
+          onClick={() => {
+            swipe.close();
+            onDelete();
+          }}
+        >
+          삭제
+        </button>
+      </div>
+      {renaming ? (
+        <div className="todo" style={{ background: "var(--card,var(--bg))", position: "relative", zIndex: 1 }}>
+          <div className="tbody">
+            <input
+              className="inp"
+              style={{ fontWeight: 600 }}
+              value={renameText}
+              autoFocus
+              onChange={(e) => setRenameText(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") confirmRename();
+                if (e.key === "Escape") setRenaming(false);
+              }}
+              onBlur={confirmRename}
+              aria-label="항목 이름"
+            />
+          </div>
+        </div>
+      ) : (
+        <div
+          className="todo"
+          style={{ transform: `translateX(${swipe.swipeX}px)`, transition: swipe.swipeX === 0 || swipe.swipeX === -SWIPE_OPEN ? "transform .15s" : "none" }}
+          {...swipe.handlers}
+        >
+          <button type="button" className="chk" aria-pressed={done} aria-label={item.text} onClick={onToggle}>
+            {done ? "✓" : ""}
+          </button>
+          <div className="tbody" style={{ cursor: "pointer" }} onClick={onToggle}>
+            <span>{item.text}</span>
+            <small>오늘만{itemWhenLabel(item.when) ? ` · ${itemWhenLabel(item.when)}` : ""}</small>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function SectionDrop({ id, children }: { id: string; children: React.ReactNode }) {
   const { setNodeRef } = useDroppable({ id: `section:${id}`, data: { sec: id } });
   return (
@@ -551,6 +638,11 @@ export function TodoTab({ setTab }: { setTab: (id: string) => void }) {
 
   const delExtra = (id: string) =>
     update((prev) => (prev ? { ...prev, extra: { ...prev.extra, [date]: (prev.extra[date] || []).filter((x) => x.id !== id) } } : prev));
+
+  const renameExtra = (id: string, text: string) =>
+    update((prev) =>
+      prev ? { ...prev, extra: { ...prev.extra, [date]: (prev.extra[date] || []).map((x) => (x.id === id ? { ...x, text: text.slice(0, 80) } : x)) } } : prev
+    );
 
   const addKid = (parentId: string, sec: string, text: string) => {
     const v = text.trim();
@@ -733,6 +825,7 @@ export function TodoTab({ setTab }: { setTab: (id: string) => void }) {
               repeatPickerOpen={repeatPickerFor === sc.id}
               onToggleRepeatPicker={() => setRepeatPickerFor(repeatPickerFor === sc.id ? null : sc.id)}
               onDeleteExtra={delExtra}
+              onRenameExtra={renameExtra}
               onRequestEdit={enterEdit}
               onToggleAll={() => {
                 const ids = [...itemsBySec(sc.id).map((i) => i.id), ...extraBySec(sc.id).map((x) => x.id)];
@@ -825,6 +918,7 @@ function TodoSectionCard({
   repeatPickerOpen,
   onToggleRepeatPicker,
   onDeleteExtra,
+  onRenameExtra,
   onRequestEdit,
   onToggleAll,
   onAddBulk,
@@ -865,6 +959,7 @@ function TodoSectionCard({
   repeatPickerOpen: boolean;
   onToggleRepeatPicker: () => void;
   onDeleteExtra: (id: string) => void;
+  onRenameExtra: (id: string, text: string) => void;
   onRequestEdit: () => void;
   onToggleAll: () => void;
   onAddBulk: (lines: string[]) => void;
@@ -958,18 +1053,14 @@ function TodoSectionCard({
             })}
             {!edit &&
               extra.map((x) => (
-                <div className="todo" key={x.id}>
-                  <button type="button" className="chk" aria-pressed={!!done[x.id]} onClick={() => onToggle(x.id)}>
-                    {done[x.id] ? "✓" : ""}
-                  </button>
-                  <div className="tbody" style={{ cursor: "pointer" }} onClick={() => onToggle(x.id)}>
-                    <span>{x.text}</span>
-                    <small>오늘만{itemWhenLabel(x.when) ? ` · ${itemWhenLabel(x.when)}` : ""}</small>
-                  </div>
-                  <button type="button" className="iconbtn" aria-label={x.text + " 삭제"} onClick={() => onDeleteExtra(x.id)}>
-                    ✕
-                  </button>
-                </div>
+                <ExtraItemRow
+                  key={x.id}
+                  item={x}
+                  done={!!done[x.id]}
+                  onToggle={() => onToggle(x.id)}
+                  onDelete={() => onDeleteExtra(x.id)}
+                  onRename={(text) => onRenameExtra(x.id, text)}
+                />
               ))}
           </SectionDrop>
         </SortableContext>
