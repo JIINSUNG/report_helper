@@ -370,7 +370,7 @@ function SortableItemRow({
         </button>
       </div>
       {renaming ? (
-        <div className="todo" style={{ background: "var(--card,var(--bg))" }}>
+        <div className="todo" style={{ background: "var(--card,var(--bg))", position: "relative", zIndex: 1 }}>
           <div className="tbody">
             <input
               className="inp"
@@ -783,7 +783,7 @@ export function TodoTab({ setTab }: { setTab: (id: string) => void }) {
         </div>
       )}
 
-      {briefingOpen && <BriefingSheet todo={todo} date={date} shift={shift} onClose={() => setBriefingOpen(false)} />}
+      {briefingOpen && <BriefingSheet todo={todo} date={date} shift={shift} onClose={() => setBriefingOpen(false)} onUpdateTodo={update} />}
     </>
   );
 }

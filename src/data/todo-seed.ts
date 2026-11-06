@@ -45,6 +45,8 @@ export interface TodoData {
   done: Record<string, Record<string, boolean>>;
   shift: Record<string, string>;
   lastShift: string;
+  /** 브리핑에 포함할 묶음 id. undefined면 "오늘 보이는 묶음 전부"(기존 동작, 하위호환). */
+  briefingSections?: string[];
 }
 
 let uidCounter = 0;

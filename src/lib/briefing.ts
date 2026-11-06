@@ -5,12 +5,24 @@ export interface BriefingSplit {
   remaining: string[];
 }
 
+/** 오늘(date) 기준, 현재 근무(shift)에 보이는 묶음 중에서 브리핑에 실제로 넣을 수 있는 것들.
+ * todo.briefingSections가 없으면(아직 한 번도 안 골랐으면) 전부, 있으면 그중 오늘 보이는 것만. */
+export function briefingEligibleSections(todo: TodoData, shift: string): { id: string; name: string }[] {
+  const visible = todo.sections.filter((s) => secOn(s.when, shift));
+  return visible.map((s) => ({ id: s.id, name: s.name }));
+}
+
 /** 오늘(date) 기준, 현재 근무(shift)로 화면에 보이는 할일 항목을 체크 여부로 나눈다 — TodoTab이 "오늘 할
  * 일"을 걸러 보여주는 기준(묶음·항목 근무 조건 + 반복 조건)을 그대로 써서 체크리스트와 브리핑 내용이 늘 일치한다.
+ * todo.briefingSections에 고른 묶음 id가 있으면 그 묶음들만 센다(없으면 기존처럼 전부).
  * 세부 항목(parent 있는 것)은 상위 항목에 묶여 있는 디테일이라 브리핑에서는 상위 항목만 센다. */
 export function splitTodayTodos(todo: TodoData, date: string, shift: string): BriefingSplit {
   const doneMap = todo.done[date] || {};
-  const secIds = new Set(todo.sections.filter((s) => secOn(s.when, shift)).map((s) => s.id));
+  let secIds = new Set(todo.sections.filter((s) => secOn(s.when, shift)).map((s) => s.id));
+  if (todo.briefingSections) {
+    const picked = new Set(todo.briefingSections);
+    secIds = new Set([...secIds].filter((id) => picked.has(id)));
+  }
   const items = todo.items
     .filter((i) => !i.parent && secIds.has(i.sec) && secOn(i.when ?? "all", shift) && itemDueOn(i, date))
     .map((i) => ({ id: i.id, text: i.text }));

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useAuth } from "@/context/auth-context";
 import { useCommunity } from "@/lib/use-community";
 import { CopyBlock } from "@/components/ui/CopyBlock";
-import { briefingText, splitTodayTodos } from "@/lib/briefing";
+import { briefingEligibleSections, briefingText, splitTodayTodos } from "@/lib/briefing";
 import type { TodoData } from "@/data/todo-seed";
 
 // CommunityTab·use-warehouse.ts의 checkShare와 같은 패턴 — 공유방에 올리는 글은 전화번호·매출
@@ -18,17 +18,38 @@ function checkShare(t: string): string {
   return "";
 }
 
-export function BriefingSheet({ todo, date, shift, onClose }: { todo: TodoData; date: string; shift: string; onClose: () => void }) {
+export function BriefingSheet({
+  todo,
+  date,
+  shift,
+  onClose,
+  onUpdateTodo,
+}: {
+  todo: TodoData;
+  date: string;
+  shift: string;
+  onClose: () => void;
+  onUpdateTodo: (fn: (prev: TodoData | null) => TodoData | null) => void;
+}) {
   const { store, role } = useAuth();
   const comm = useCommunity();
   const [note, setNote] = useState("");
   const [err, setErr] = useState("");
   const [posted, setPosted] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
   const isGuest = role === "guest";
+
+  const eligible = briefingEligibleSections(todo, shift);
+  const picked = todo.briefingSections ?? eligible.map((s) => s.id);
 
   const { done, remaining } = splitTodayTodos(todo, date, shift);
   const storeLabel = store || "매장";
   const text = briefingText(storeLabel, date, done, remaining, note);
+
+  const toggleSection = (id: string) => {
+    const next = picked.includes(id) ? picked.filter((x) => x !== id) : [...picked, id];
+    onUpdateTodo((prev) => (prev ? { ...prev, briefingSections: next } : prev));
+  };
 
   const post = async () => {
     const e = checkShare(note);
@@ -54,6 +75,31 @@ export function BriefingSheet({ todo, date, shift, onClose }: { todo: TodoData; 
         <p className="hint" style={{ margin: 0 }}>
           오늘 할일 체크리스트에서 한 일·해야 할 일을 자동으로 채웠어요. 특이사항만 적으면 돼요.
         </p>
+
+        {eligible.length > 0 && (
+          <div style={{ border: "1px solid var(--line)", borderRadius: 10, padding: "8px 10px" }}>
+            <button
+              type="button"
+              className="link"
+              style={{ display: "flex", justifyContent: "space-between", width: "100%", fontSize: 13 }}
+              onClick={() => setPickerOpen((v) => !v)}
+            >
+              <span>어느 묶음을 포함할지 고르기 ({picked.length}/{eligible.length})</span>
+              <span>{pickerOpen ? "▲" : "▼"}</span>
+            </button>
+            {pickerOpen && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 8 }}>
+                {eligible.map((s) => (
+                  <label key={s.id} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13.5 }}>
+                    <input type="checkbox" checked={picked.includes(s.id)} onChange={() => toggleSection(s.id)} />
+                    {s.name}
+                  </label>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
         <label className="lbl" htmlFor="briefing-note">
           특이사항 <small>선택 · 없으면 비워두세요</small>
         </label>
