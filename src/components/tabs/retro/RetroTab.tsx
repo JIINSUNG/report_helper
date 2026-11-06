@@ -90,15 +90,32 @@ export function RetroTab({
   const off = r.dayType === "off";
   const H = off ? RETRO_HINTS_OFF : RETRO_HINTS;
   const [todo] = useTodo();
-  const todoDid = (() => {
-    if (!todo || date !== today()) return "";
+  const todoDoneGroups = (() => {
+    if (!todo || date !== today()) return [];
     const doneMap = todo.done[date] || {};
     const items = [...todo.items.filter((i) => !i.parent), ...(todo.extra[date] || [])];
-    return items
-      .filter((i) => doneMap[i.id])
-      .map((i) => "- " + i.text)
-      .join("\n");
+    const bySec = new Map<string, { name: string; texts: string[] }>();
+    for (const s of todo.sections) bySec.set(s.id, { name: s.name, texts: [] });
+    for (const i of items) {
+      if (!doneMap[i.id]) continue;
+      const g = bySec.get(i.sec);
+      if (g) g.texts.push(i.text);
+    }
+    return [...bySec.entries()].map(([id, v]) => ({ id, name: v.name, texts: v.texts })).filter((g) => g.texts.length > 0);
   })();
+  const [pickedTodoSections, setPickedTodoSections] = useState<Set<string> | null>(null);
+  const pickedIds = pickedTodoSections ?? new Set(todoDoneGroups.map((g) => g.id));
+  const togglePickedSection = (id: string) => {
+    const next = new Set(pickedIds);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    setPickedTodoSections(next);
+  };
+  const todoDid = todoDoneGroups
+    .filter((g) => pickedIds.has(g.id))
+    .flatMap((g) => g.texts)
+    .map((t) => "- " + t)
+    .join("\n");
   const addAct = (a: string) => set({ did: r.did.trim() ? r.did.trim() + "\n- " + a : "- " + a });
   const [showHist, setShowHist] = useState(false);
   const hist = Object.keys(data.retros || {})
@@ -162,6 +179,22 @@ export function RetroTab({
               </button>
             )}
           </span>
+          {todoDoneGroups.length > 1 && (
+            <div className="chips">
+              {todoDoneGroups.map((g) => (
+                <button
+                  key={g.id}
+                  type="button"
+                  className="chip sm"
+                  aria-pressed={pickedIds.has(g.id)}
+                  onClick={() => togglePickedSection(g.id)}
+                >
+                  {pickedIds.has(g.id) ? "✓ " : ""}
+                  {g.name} ({g.texts.length})
+                </button>
+              ))}
+            </div>
+          )}
           {off && (
             <div className="chips">
               {OFF_ACTS.map((a) => (
