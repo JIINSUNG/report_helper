@@ -1,8 +1,15 @@
 import { itemDueOn, secOn, type TodoData } from "@/data/todo-seed";
+import { aEnd, type ScheduleAction } from "@/lib/use-schedule";
+import { shift as shiftDate } from "@/lib/format";
+
+export interface BriefingItem {
+  id: string;
+  text: string;
+}
 
 export interface BriefingSplit {
-  done: string[];
-  remaining: string[];
+  done: BriefingItem[];
+  remaining: BriefingItem[];
 }
 
 /** 오늘(date) 기준, 현재 근무(shift)에 보이는 묶음 중에서 브리핑에 실제로 넣을 수 있는 것들.
@@ -31,9 +38,17 @@ export function splitTodayTodos(todo: TodoData, date: string, shift: string): Br
     .map((x) => ({ id: x.id, text: x.text }));
   const all = [...items, ...extras];
   return {
-    done: all.filter((t) => doneMap[t.id]).map((t) => t.text),
-    remaining: all.filter((t) => !doneMap[t.id]).map((t) => t.text),
+    done: all.filter((t) => doneMap[t.id]),
+    remaining: all.filter((t) => !doneMap[t.id]),
   };
+}
+
+/** 일정 탭의 액션 중, 오늘(date) 기준 앞으로 withinDays일 안에 마감(aEnd)이 걸리는 것들 — 아직 안
+ * 끝난 행사/배송/대기/할 일을 D-7 정도부터 미리 보여준다. ScheduleTab의 "다가오는 할 일" 필터와 같은 기준.
+ * 카테고리 선택은 호출하는 쪽에서 kind로 한 번 더 걸러서 쓴다. */
+export function upcomingScheduleActions(actions: ScheduleAction[], date: string, withinDays = 7): ScheduleAction[] {
+  const until = shiftDate(date, withinDays);
+  return actions.filter((a) => !a.done && aEnd(a) >= date && a.date <= until);
 }
 
 /** 동료에게 보내는 간단한 인수인계용 텍스트. 매출 보고서(closeText 등)와 달리 숫자 없이

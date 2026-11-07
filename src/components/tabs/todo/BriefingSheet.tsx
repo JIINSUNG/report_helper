@@ -3,9 +3,13 @@
 import { useState } from "react";
 import { useAuth } from "@/context/auth-context";
 import { useCommunity } from "@/lib/use-community";
+import { useSchedule } from "@/lib/use-schedule";
 import { copyText } from "@/lib/format";
-import { briefingEligibleSections, briefingText, splitTodayTodos } from "@/lib/briefing";
+import { briefingEligibleSections, briefingText, splitTodayTodos, upcomingScheduleActions } from "@/lib/briefing";
 import type { TodoData } from "@/data/todo-seed";
+import type { EventKind } from "@/types/shared";
+
+const KIND_LABEL: Record<EventKind, string> = { promo: "행사", delivery: "배송", wait: "대기", task: "할 일" };
 
 // CommunityTab·use-warehouse.ts의 checkShare와 같은 패턴 — 공유방에 올리는 글은 전화번호·매출
 // 금액이 섞여 들어가지 않게 막는다.
@@ -37,24 +41,48 @@ export function BriefingSheet({
   onUpdateTodo: (fn: (prev: TodoData | null) => TodoData | null) => void;
 }) {
   const { store, role } = useAuth();
+  const storeLabel = store || "매장";
   const comm = useCommunity();
+  const sched = useSchedule(storeLabel);
   const [note, setNote] = useState("");
   const [err, setErr] = useState("");
   const [posted, setPosted] = useState(false);
   const [copied, setCopied] = useState(false);
   const [remainingOpen, setRemainingOpen] = useState(false);
+  const [excludedIds, setExcludedIds] = useState<Set<string>>(() => new Set());
   const isGuest = role === "guest";
 
   const eligible = briefingEligibleSections(todo, shift);
   const picked = todo.briefingSections ?? eligible.map((s) => s.id);
 
-  const { done, remaining } = splitTodayTodos(todo, date, shift);
-  const storeLabel = store || "매장";
-  const text = briefingText(storeLabel, date, done, remaining, note);
+  const { done, remaining: remainingTodos } = splitTodayTodos(todo, date, shift);
+
+  const upcomingActs = upcomingScheduleActions(sched.actions, date);
+  const schedKinds = [...new Set(upcomingActs.map((a) => a.kind))];
+  const pickedKinds = todo.briefingScheduleKinds ?? schedKinds;
+  const schedTasks = upcomingActs.filter((a) => pickedKinds.includes(a.kind)).map((a) => ({ id: a.id, text: a.label }));
+
+  const remaining = [...remainingTodos, ...schedTasks];
+  const includedRemaining = remaining.filter((t) => !excludedIds.has(t.id));
+  const text = briefingText(storeLabel, date, done.map((t) => t.text), includedRemaining.map((t) => t.text), note);
 
   const toggleSection = (id: string) => {
     const next = picked.includes(id) ? picked.filter((x) => x !== id) : [...picked, id];
     onUpdateTodo((prev) => (prev ? { ...prev, briefingSections: next } : prev));
+  };
+
+  const toggleKind = (k: EventKind) => {
+    const next = pickedKinds.includes(k) ? pickedKinds.filter((x) => x !== k) : [...pickedKinds, k];
+    onUpdateTodo((prev) => (prev ? { ...prev, briefingScheduleKinds: next } : prev));
+  };
+
+  const toggleItem = (id: string) => {
+    setExcludedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
   };
 
   const copy = async () => {
@@ -90,13 +118,29 @@ export function BriefingSheet({
         {eligible.length > 1 && (
           <div>
             <p className="hint" style={{ margin: "0 0 6px" }}>
-              포함할 묶음
+              할 일 묶음 (할 일 탭)
             </p>
             <div className="chips">
               {eligible.map((s) => (
                 <button key={s.id} type="button" className="chip sm" aria-pressed={picked.includes(s.id)} onClick={() => toggleSection(s.id)}>
                   {picked.includes(s.id) ? "✓ " : ""}
                   {s.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {schedKinds.length > 1 && (
+          <div>
+            <p className="hint" style={{ margin: "0 0 6px" }}>
+              일정 카테고리 (일정 탭 · D-7)
+            </p>
+            <div className="chips">
+              {schedKinds.map((k) => (
+                <button key={k} type="button" className="chip sm" aria-pressed={pickedKinds.includes(k)} onClick={() => toggleKind(k)}>
+                  {pickedKinds.includes(k) ? "✓ " : ""}
+                  {KIND_LABEL[k]}
                 </button>
               ))}
             </div>
@@ -112,9 +156,9 @@ export function BriefingSheet({
               </p>
             ) : (
               <ul style={{ margin: 0, paddingLeft: 18, display: "flex", flexDirection: "column", gap: 2 }}>
-                {done.map((t, i) => (
-                  <li key={i} style={{ fontSize: 13.5 }}>
-                    {t}
+                {done.map((t) => (
+                  <li key={t.id} style={{ fontSize: 13.5 }}>
+                    {t.text}
                   </li>
                 ))}
               </ul>
@@ -136,14 +180,21 @@ export function BriefingSheet({
                   style={{ display: "flex", justifyContent: "space-between", width: "100%", fontSize: 12.5, fontWeight: 600, color: "var(--fg2)" }}
                   onClick={() => setRemainingOpen((v) => !v)}
                 >
-                  <span>⬜ 해야 할 일 ({remaining.length})</span>
+                  <span>
+                    ⬜ 해야 할 일 ({includedRemaining.length}/{remaining.length})
+                  </span>
                   <span>{remainingOpen ? "접기 ▲" : "펼치기 ▼"}</span>
                 </button>
                 {remainingOpen && (
-                  <ul style={{ margin: "6px 0 0", paddingLeft: 18, display: "flex", flexDirection: "column", gap: 2 }}>
-                    {remaining.map((t, i) => (
-                      <li key={i} style={{ fontSize: 13.5 }}>
-                        {t}
+                  <ul style={{ margin: "6px 0 0", paddingLeft: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 4 }}>
+                    {remaining.map((t) => (
+                      <li key={t.id} style={{ fontSize: 13.5 }}>
+                        <label style={{ display: "flex", alignItems: "flex-start", gap: 6 }}>
+                          <input type="checkbox" checked={!excludedIds.has(t.id)} onChange={() => toggleItem(t.id)} style={{ marginTop: 2 }} />
+                          <span style={{ textDecoration: excludedIds.has(t.id) ? "line-through" : "none", color: excludedIds.has(t.id) ? "var(--muted)" : "inherit" }}>
+                            {t.text}
+                          </span>
+                        </label>
                       </li>
                     ))}
                   </ul>

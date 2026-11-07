@@ -1,3 +1,5 @@
+import type { EventKind } from "@/types/shared";
+
 export type TodoWhen = "all" | "open" | "close";
 
 export interface TodoSection {
@@ -47,6 +49,8 @@ export interface TodoData {
   lastShift: string;
   /** 브리핑에 포함할 묶음 id. undefined면 "오늘 보이는 묶음 전부"(기존 동작, 하위호환). */
   briefingSections?: string[];
+  /** 브리핑 "해야 할 일"에 포함할 일정 카테고리(행사/배송/대기/할 일). undefined면 전부. */
+  briefingScheduleKinds?: EventKind[];
 }
 
 let uidCounter = 0;
