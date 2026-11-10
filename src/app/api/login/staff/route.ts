@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
-import { getClientIp, verifyIdTokenFromBody, defaultStaffName } from "@/lib/login-helpers";
+import { getClientIp, verifyIdTokenFromBody, defaultStaffName, personalTodoKey } from "@/lib/login-helpers";
 import { checkLocked, rateLimitKey, recordFailure, recordSuccess } from "@/lib/rate-limit";
 
 function storeCodes(): Record<string, string> {
@@ -63,7 +63,8 @@ export async function POST(req: NextRequest) {
     recordSuccess(key);
     const name = (typeof body.name === "string" ? body.name.trim() : "").slice(0, 20) || defaultStaffName(store);
 
-    await getAdminAuth().setCustomUserClaims(uid, { role: "staff", store });
+    const todoKey = personalTodoKey(store, name);
+    await getAdminAuth().setCustomUserClaims(uid, { role: "staff", store, todoKey });
 
     await getAdminDb().doc(`users/${uid}`).set({
       name,

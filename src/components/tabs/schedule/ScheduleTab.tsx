@@ -3,16 +3,18 @@
 import { useState } from "react";
 import { Card } from "@/components/ui/Card";
 import { useSchedule, aEnd, onDay, type ScheduleAction } from "@/lib/use-schedule";
-import { today, shift, dayLabel } from "@/lib/format";
+import { today, shift, dayLabel, weekKey, monthKey } from "@/lib/format";
 import { holidayName } from "@/data/holidays";
 import { EventEditor } from "./EventEditor";
 import { MonthCal } from "./MonthCal";
 import { DaySheet } from "./DaySheet";
 import { ActList } from "./ActList";
+import { useTodo } from "@/lib/use-todo";
 import type { ScheduleEvent, EventKind } from "@/types/shared";
 
 export function ScheduleTab({ storeLabel }: { storeLabel: string }) {
   const sched = useSchedule(storeLabel);
+  const [todo] = useTodo();
   const [date, setDate] = useState(today());
   const [month, setMonth] = useState(date.slice(0, 7));
   const [edit, setEdit] = useState<(Partial<ScheduleEvent> & { start?: string }) | null>(null);
@@ -30,6 +32,15 @@ export function ScheduleTab({ storeLabel }: { storeLabel: string }) {
   const dayActs = sched.actions.filter((a: ScheduleAction) => onDay(a, date));
   const ongoing = sched.evs.filter((e) => e.kind === "promo" && e.start && e.start <= date && date <= (e.end || e.start));
 
+  // 할일 탭에서 정한 주간·월간 목표 — 이 탭은 읽기 전용으로만 보여주고, 수정은 할일 탭에서 한다.
+  const weeklyGoalText = todo?.weeklyGoal?.key === weekKey(td) ? todo.weeklyGoal.text : "";
+  const monthlyGoalText = todo?.monthlyGoal?.key === monthKey(td) ? todo.monthlyGoal.text : "";
+
+  // 할일 탭에서 기간(startDate~endDate)을 정해둔 개인 할 일 — 아직 끝나지 않은 것만, 시작일 순.
+  const rangedTodos = (todo?.items ?? [])
+    .filter((i) => !i.parent && (i.startDate || i.endDate) && (!i.endDate || i.endDate >= td))
+    .sort((a, b) => (a.startDate || "").localeCompare(b.startDate || ""));
+
   const openEdit = (ev: ScheduleEvent) => setEdit({ ...ev });
   const pick = (d: string) => {
     setDate(d);
@@ -44,6 +55,48 @@ export function ScheduleTab({ storeLabel }: { storeLabel: string }) {
   return (
     <>
       {sched.err && <div className="alert">{sched.err}</div>}
+
+      {(weeklyGoalText || monthlyGoalText) && (
+        <Card title="목표">
+          {weeklyGoalText && (
+            <p style={{ margin: "0 0 4px" }}>
+              <b>이번 주</b> {weeklyGoalText}
+            </p>
+          )}
+          {monthlyGoalText && (
+            <p style={{ margin: 0 }}>
+              <b>이번 달</b> {monthlyGoalText}
+            </p>
+          )}
+          <p className="hint" style={{ margin: "6px 0 0" }}>
+            할일 탭에서 바꿀 수 있어요.
+          </p>
+        </Card>
+      )}
+
+      {rangedTodos.length > 0 && (
+        <Card title="기간이 있는 개인 할 일">
+          <div className="acts">
+            {rangedTodos.map((i) => {
+              const active = (!i.startDate || i.startDate <= td) && (!i.endDate || i.endDate >= td);
+              return (
+                <div key={i.id} className="actbody" style={{ width: "100%" }}>
+                  <span className="atop">
+                    <i className={"ktag " + (active ? "k-task" : "k-wait")}>{active ? "진행 중" : "예정"}</i>
+                  </span>
+                  <b>{i.text}</b>
+                  <small>
+                    {i.startDate || "처음"} ~ {i.endDate || "끝"}
+                  </small>
+                </div>
+              );
+            })}
+          </div>
+          <p className="hint" style={{ margin: "6px 0 0" }}>
+            할일 탭에서 반복 기간을 바꿀 수 있어요.
+          </p>
+        </Card>
+      )}
 
       <input className="inp" placeholder="일정 검색 (제목·메모·담당자)" value={q} onChange={(e) => setQ(e.target.value)} />
       {ql && (

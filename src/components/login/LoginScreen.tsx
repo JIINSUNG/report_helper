@@ -102,6 +102,10 @@ export function LoginScreen() {
             onChange={(e) => setName(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && submitStaff()}
           />
+          <p className="hint" style={{ margin: "-4px 0 0" }}>
+            할일 체크리스트는 이 이름 기준으로 기기끼리 동기화돼요 — 다른 기기에서도 똑같이
+            입력해야 같은 목록이 보여요.
+          </p>
           <button type="button" className="btn pri" disabled={busy} aria-busy={busy} onClick={submitStaff}>
             {busy ? <span className="spinner" aria-hidden="true" /> : "입장"}
           </button>

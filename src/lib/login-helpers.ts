@@ -35,3 +35,17 @@ export function defaultStaffName(store: string): string {
   const n = 1 + Math.floor(Math.random() * 99);
   return `김${base}${n}`;
 }
+
+/** 할일 목록 동기화용 개인 식별자. 기기마다 익명 로그인 uid가 달라서 uid로는 "같은 사람"을 못
+ * 알아보니, 매장+이름 조합으로 고정 키를 만든다 — 같은 매장에서 로그인할 때마다 이름을 똑같이
+ * 입력해야 두 기기가 같은 목록을 보게 된다. 커스텀 클레임(todoKey)에 넣어서 보안 규칙에서
+ * request.auth.token.todoKey로 바로 비교할 수 있게 한다(규칙에는 이 문자열 가공 로직을 다시
+ * 구현할 필요가 없음). */
+export function personalTodoKey(store: string, name: string): string {
+  const slug = name
+    .trim()
+    .toLowerCase()
+    .replace(/[/.\s]+/g, "_")
+    .slice(0, 40);
+  return `s_${store}_${slug || "staff"}`;
+}

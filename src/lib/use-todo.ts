@@ -36,7 +36,7 @@ function subscribe(cb: () => void) {
   return () => listeners.delete(cb);
 }
 
-function write(next: TodoData | null) {
+function writeRaw(next: TodoData | null) {
   cached = next;
   try {
     if (next) window.localStorage.setItem(KEY, JSON.stringify(next));
@@ -50,9 +50,17 @@ function write(next: TodoData | null) {
 export function useTodo() {
   const todo = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 
+  // 화면에서 하는 모든 수정은 updatedAt을 새로 찍는다 — 클라우드 동기화가 "최신본"을 판단하는 기준.
   const update = useCallback((fn: (prev: TodoData | null) => TodoData | null) => {
-    write(fn(getSnapshot()));
+    const next = fn(getSnapshot());
+    writeRaw(next ? { ...next, updatedAt: Date.now() } : null);
   }, []);
 
-  return [todo, update] as const;
+  // 클라우드에서 받아온 내용을 그대로 반영 — updatedAt을 건드리지 않아야 "방금 내가 올린 거
+  // 에코로 되돌아온 것"과 "진짜 다른 기기의 변경"을 구분할 수 있다.
+  const updateFromRemote = useCallback((next: TodoData) => {
+    writeRaw(next);
+  }, []);
+
+  return [todo, update, updateFromRemote] as const;
 }

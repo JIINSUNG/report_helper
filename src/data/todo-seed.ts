@@ -16,6 +16,10 @@ export interface TodoItem {
   days: number[] | null;
   /** 매월 특정 일(1~31)에만 반복. 있으면 days는 무시되고 이 날에만 보여요. */
   monthDay?: number | null;
+  /** 반복을 시작할 날짜("YYYY-MM-DD"). 없으면 기한 없이 처음부터. */
+  startDate?: string | null;
+  /** 반복을 끝낼 날짜("YYYY-MM-DD", 포함). 없으면 기한 없이 계속. */
+  endDate?: string | null;
   parent?: string;
   /** 직접 고른 탭 바로가기 (예: "products"). 안 고르면 TODO_LINKS 자동 매칭을 써요. */
   linkTab?: string | null;
@@ -23,8 +27,11 @@ export interface TodoItem {
   when?: TodoWhen;
 }
 
-/** 오늘(date, YYYY-MM-DD) 이 항목이 보여야 하는지. monthDay > days(요일) > 매일 순으로 본다. */
-export function itemDueOn(item: Pick<TodoItem, "days" | "monthDay">, date: string): boolean {
+/** 오늘(date, YYYY-MM-DD) 이 항목이 보여야 하는지. 기간(startDate~endDate) 밖이면 항상 제외,
+ * 기간 안이면 monthDay > days(요일) > 매일 순으로 본다. */
+export function itemDueOn(item: Pick<TodoItem, "days" | "monthDay" | "startDate" | "endDate">, date: string): boolean {
+  if (item.startDate && date < item.startDate) return false;
+  if (item.endDate && date > item.endDate) return false;
   const [y, m, d] = date.split("-").map(Number);
   if (item.monthDay) return d === item.monthDay;
   if (!item.days) return true;
@@ -55,6 +62,8 @@ export interface TodoData {
   weeklyGoal?: TodoGoal;
   /** 이번 달 목표. key는 "YYYY-MM". */
   monthlyGoal?: TodoGoal;
+  /** 마지막으로 바뀐 시각(ms) — 클라우드 동기화 시 최신본 판단용. */
+  updatedAt?: number;
 }
 
 export interface TodoGoal {

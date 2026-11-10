@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
     }
 
     recordSuccess(key);
-    await getAdminAuth().setCustomUserClaims(uid, { role: "admin" });
+    await getAdminAuth().setCustomUserClaims(uid, { role: "admin", todoKey: "admin" });
     await getAdminDb().doc(`users/${uid}`).set({
       name: "관리자",
       role: "admin",

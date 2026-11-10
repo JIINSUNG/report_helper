@@ -27,6 +27,7 @@ interface AuthState {
   role: Role | null;
   store: string | null;
   name: string;
+  todoKey: string | null;
 }
 
 interface AuthContextValue extends AuthState {
@@ -56,6 +57,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     role: null,
     store: null,
     name: "",
+    todoKey: null,
   });
 
   useEffect(() => {
@@ -83,15 +85,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const tokenResult = await user.getIdTokenResult();
       const role = tokenResult.claims.role as Role | undefined;
       const store = (tokenResult.claims.store as string | undefined) ?? null;
+      const todoKey = (tokenResult.claims.todoKey as string | undefined) ?? null;
       if (!role) {
-        setState({ status: "needs-role", uid: user.uid, role: null, store: null, name: "" });
+        setState({ status: "needs-role", uid: user.uid, role: null, store: null, name: "", todoKey: null });
         return;
       }
       // 오프라인이고 이 기기에 이 프로필 문서가 한 번도 캐시된 적 없으면 onSnapshot이 영영 안 올 수 있다
       // (이미 캐시된 적 있으면 persistentLocalCache 덕분에 오프라인에서도 바로 온다) — 몇 초 기다려도
       // 응답이 없으면 이름 없이라도 일단 들여보낸다("나" 탭에서 다시 설정할 수 있음, 로그인 자체는 막지 않음).
       profileTimeout = setTimeout(() => {
-        setState((s) => (s.status === "loading" ? { status: "ready", uid: user.uid, role, store, name: "" } : s));
+        setState((s) => (s.status === "loading" ? { status: "ready", uid: user.uid, role, store, name: "", todoKey } : s));
       }, 4000);
       unsubProfile = onSnapshot(doc(getFirebaseDb(), "users", user.uid), (snap) => {
         if (profileTimeout) {
@@ -99,7 +102,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           profileTimeout = null;
         }
         const name = (snap.data()?.name as string | undefined) ?? "";
-        setState({ status: "ready", uid: user.uid, role, store, name });
+        setState({ status: "ready", uid: user.uid, role, store, name, todoKey });
       });
     });
 

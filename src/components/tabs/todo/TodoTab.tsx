@@ -105,6 +105,57 @@ function RepeatPicker({
   );
 }
 
+/** 반복을 "언제부터 언제까지"로 좁히는 패널 — 비워두면 기한 없이 항상 반복한다. */
+function DateRangePicker({
+  startDate,
+  endDate,
+  onSetStart,
+  onSetEnd,
+}: {
+  startDate: string | null | undefined;
+  endDate: string | null | undefined;
+  onSetStart: (v: string | null) => void;
+  onSetEnd: (v: string | null) => void;
+}) {
+  return (
+    <div style={{ flexBasis: "100%", display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+      <span className="hint" style={{ margin: 0, whiteSpace: "nowrap" }}>
+        기간
+      </span>
+      <input
+        type="date"
+        className="inp mini"
+        value={startDate || ""}
+        onChange={(e) => onSetStart(e.target.value || null)}
+        aria-label="반복 시작일"
+      />
+      <span className="hint" style={{ margin: 0 }}>
+        ~
+      </span>
+      <input
+        type="date"
+        className="inp mini"
+        value={endDate || ""}
+        onChange={(e) => onSetEnd(e.target.value || null)}
+        aria-label="반복 종료일"
+      />
+      {(startDate || endDate) && (
+        <button
+          type="button"
+          className="link"
+          style={{ fontSize: 12.5 }}
+          onClick={() => {
+            onSetStart(null);
+            onSetEnd(null);
+          }}
+        >
+          기한 없음으로
+        </button>
+      )}
+    </div>
+  );
+}
+
 const LONG_PRESS_MS = 500;
 
 function useLongPress(onLongPress: () => void) {
@@ -234,6 +285,7 @@ function SortableItemRow({
   daysOpen,
   onToggleDay,
   onSetMonthDay,
+  onSetDateRange,
   onAddKid,
   kidOf,
   onRename,
@@ -252,6 +304,7 @@ function SortableItemRow({
   daysOpen: boolean;
   onToggleDay: (d: number) => void;
   onSetMonthDay: (day: number | null) => void;
+  onSetDateRange: (field: "startDate" | "endDate", value: string | null) => void;
   onAddKid: (text: string) => void;
   kidOf: TodoItem[];
   onRename: (text: string) => void;
@@ -319,6 +372,7 @@ function SortableItemRow({
         {daysOpen && (
           <>
             <RepeatPicker days={item.days} monthDay={item.monthDay} onToggleDay={onToggleDay} onSetMonthDay={onSetMonthDay} />
+            <DateRangePicker startDate={item.startDate} endDate={item.endDate} onSetStart={(v) => onSetDateRange("startDate", v)} onSetEnd={(v) => onSetDateRange("endDate", v)} />
             <button type="button" className="link" style={{ flexBasis: "100%", textAlign: "left", fontSize: 12.5 }} onClick={() => setAddingKid(!addingKid)}>
               + 세부 항목 추가
             </button>
@@ -418,6 +472,11 @@ function SortableItemRow({
           <div className="tbody" style={{ cursor: "pointer" }} onClick={onToggle}>
             <span>{item.text}</span>
             {dayTxt && <small>{dayTxt} 반복</small>}
+            {(item.startDate || item.endDate) && (
+              <small>
+                {item.startDate || "처음"} ~ {item.endDate || "끝"}
+              </small>
+            )}
             {itemWhenLabel(item.when) && <small>{itemWhenLabel(item.when)}</small>}
           </div>
           {linkTab && !done && (
@@ -536,6 +595,7 @@ export function TodoTab({ setTab }: { setTab: (id: string) => void }) {
   const [whenSel, setWhenSel] = useState<Record<string, TodoWhen>>({});
   const [daysSel, setDaysSel] = useState<Record<string, number[] | null>>({});
   const [monthDaySel, setMonthDaySel] = useState<Record<string, number | null>>({});
+  const [dateRangeSel, setDateRangeSel] = useState<Record<string, { start: string | null; end: string | null }>>({});
   const [repeatPickerFor, setRepeatPickerFor] = useState<string | null>(null);
   const [daysOpenFor, setDaysOpenFor] = useState<string | null>(null);
   const [newSecName, setNewSecName] = useState("");
@@ -651,6 +711,9 @@ export function TodoTab({ setTab }: { setTab: (id: string) => void }) {
   const setMonthDay = (item: TodoItem, day: number | null) =>
     update((prev) => (prev ? { ...prev, items: prev.items.map((i) => (i.id === item.id ? { ...i, monthDay: day } : i)) } : prev));
 
+  const setDateRange = (item: TodoItem, field: "startDate" | "endDate", value: string | null) =>
+    update((prev) => (prev ? { ...prev, items: prev.items.map((i) => (i.id === item.id ? { ...i, [field]: value } : i)) } : prev));
+
   const addItem = (sec: string) => {
     const v = (draft[sec] || "").trim();
     if (!v) return;
@@ -658,9 +721,15 @@ export function TodoTab({ setTab }: { setTab: (id: string) => void }) {
     if (rep[sec] || edit) {
       const days = daysSel[sec] ?? null;
       const monthDay = monthDaySel[sec] ?? null;
-      update((prev) => (prev ? { ...prev, items: [...prev.items, { id: uid("u"), sec, text: v.slice(0, 80), days, monthDay, when }] } : prev));
+      const range = dateRangeSel[sec];
+      update((prev) =>
+        prev
+          ? { ...prev, items: [...prev.items, { id: uid("u"), sec, text: v.slice(0, 80), days, monthDay, when, startDate: range?.start ?? null, endDate: range?.end ?? null }] }
+          : prev
+      );
       setDaysSel({ ...daysSel, [sec]: null });
       setMonthDaySel({ ...monthDaySel, [sec]: null });
+      setDateRangeSel({ ...dateRangeSel, [sec]: { start: null, end: null } });
     } else {
       update((prev) =>
         prev ? { ...prev, extra: { ...prev.extra, [date]: [...(prev.extra[date] || []), { id: uid("x"), sec, text: v.slice(0, 80), when }] } } : prev
@@ -936,6 +1005,7 @@ export function TodoTab({ setTab }: { setTab: (id: string) => void }) {
               onCancelDelete={() => setSecDeleteId(null)}
               onToggleDay={(item, d) => toggleDay(item, d)}
               onSetMonthDay={(item, day) => setMonthDay(item, day)}
+              onSetDateRange={(item, field, value) => setDateRange(item, field, value)}
               daysOpenFor={daysOpenFor}
               setDaysOpenFor={setDaysOpenFor}
               onAddKid={(parentId, text) => addKid(parentId, sc.id, text)}
@@ -950,6 +1020,10 @@ export function TodoTab({ setTab }: { setTab: (id: string) => void }) {
               onSetItemWhen={(w) => setWhenSel({ ...whenSel, [sc.id]: w })}
               draftDays={daysSel[sc.id] ?? null}
               draftMonthDay={monthDaySel[sc.id] ?? null}
+              draftRange={dateRangeSel[sc.id] ?? { start: null, end: null }}
+              onSetDraftRange={(field, value) =>
+                setDateRangeSel({ ...dateRangeSel, [sc.id]: { ...(dateRangeSel[sc.id] ?? { start: null, end: null }), [field]: value } })
+              }
               onToggleDraftDay={(d) => {
                 const cur = daysSel[sc.id] || [0, 1, 2, 3, 4, 5, 6];
                 const next = cur.includes(d) ? cur.filter((x) => x !== d) : [...cur, d].sort();
@@ -1037,6 +1111,7 @@ function TodoSectionCard({
   onCancelDelete,
   onToggleDay,
   onSetMonthDay,
+  onSetDateRange,
   daysOpenFor,
   setDaysOpenFor,
   onAddKid,
@@ -1051,6 +1126,8 @@ function TodoSectionCard({
   onSetItemWhen,
   draftDays,
   draftMonthDay,
+  draftRange,
+  onSetDraftRange,
   onToggleDraftDay,
   onSetDraftMonthDay,
   repeatPickerOpen,
@@ -1078,6 +1155,7 @@ function TodoSectionCard({
   onCancelDelete: () => void;
   onToggleDay: (item: TodoItem, d: number) => void;
   onSetMonthDay: (item: TodoItem, day: number | null) => void;
+  onSetDateRange: (item: TodoItem, field: "startDate" | "endDate", value: string | null) => void;
   daysOpenFor: string | null;
   setDaysOpenFor: (id: string | null) => void;
   onAddKid: (parentId: string, text: string) => void;
@@ -1092,6 +1170,8 @@ function TodoSectionCard({
   onSetItemWhen: (w: TodoWhen) => void;
   draftDays: number[] | null;
   draftMonthDay: number | null;
+  draftRange: { start: string | null; end: string | null };
+  onSetDraftRange: (field: "start" | "end", value: string | null) => void;
   onToggleDraftDay: (d: number) => void;
   onSetDraftMonthDay: (day: number | null) => void;
   repeatPickerOpen: boolean;
@@ -1180,6 +1260,7 @@ function TodoSectionCard({
                   daysOpen={daysOpenFor === item.id}
                   onToggleDay={(d) => onToggleDay(item, d)}
                   onSetMonthDay={(day) => onSetMonthDay(item, day)}
+                  onSetDateRange={(field, value) => onSetDateRange(item, field, value)}
                   onAddKid={(text) => onAddKid(item.id, text)}
                   kidOf={kidsOf(item.id)}
                   onRename={(text) => onRenameItem(item.id, text)}
@@ -1227,7 +1308,15 @@ function TodoSectionCard({
         </button>
       </div>
       {!edit && repeat && repeatPickerOpen && (
-        <RepeatPicker days={draftDays} monthDay={draftMonthDay} onToggleDay={onToggleDraftDay} onSetMonthDay={onSetDraftMonthDay} />
+        <>
+          <RepeatPicker days={draftDays} monthDay={draftMonthDay} onToggleDay={onToggleDraftDay} onSetMonthDay={onSetDraftMonthDay} />
+          <DateRangePicker
+            startDate={draftRange.start}
+            endDate={draftRange.end}
+            onSetStart={(v) => onSetDraftRange("start", v)}
+            onSetEnd={(v) => onSetDraftRange("end", v)}
+          />
+        </>
       )}
       {!edit && (
         <div className="chips" style={{ margin: 0 }}>

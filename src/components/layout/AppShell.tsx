@@ -25,6 +25,7 @@ import { CommunityTab } from "@/components/tabs/community/CommunityTab";
 import { AdminTab } from "@/components/tabs/admin/AdminTab";
 import { useRequests } from "@/lib/use-requests";
 import { useTodo } from "@/lib/use-todo";
+import { useTodoCloudSync } from "@/lib/use-todo-sync";
 import { useSchedule, onDay } from "@/lib/use-schedule";
 import { useCommunity } from "@/lib/use-community";
 import { splitTodayTodos } from "@/lib/briefing";
@@ -119,6 +120,7 @@ function CommunityNavBadge() {
 
 export function AppShell() {
   const { role, store, name, logout } = useAuth();
+  useTodoCloudSync();
   const initialStoreLabel = role === "guest" ? "매장" : store ?? "매장";
   const { data, update } = useLocalReports(initialStoreLabel);
   const storeLabel = role === "admin" ? data.settings.storeName : initialStoreLabel;
