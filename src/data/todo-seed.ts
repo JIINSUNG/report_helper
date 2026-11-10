@@ -1,6 +1,6 @@
 import type { EventKind } from "@/types/shared";
 
-export type TodoWhen = "all" | "open" | "close";
+export type TodoWhen = "all" | "open" | "close" | "work" | "off";
 
 export interface TodoSection {
   id: string;
@@ -172,23 +172,32 @@ export const SHIFTS: [string, string][] = [
 ];
 
 export const WHENS: [TodoWhen, string][] = [
-  ["all", "항상"],
-  ["open", "오픈 근무"],
-  ["close", "마감 근무"],
+  ["all", "항상(휴무 포함)"],
+  ["work", "오픈·마감(휴무 제외)"],
+  ["open", "오픈 근무만"],
+  ["close", "마감 근무만"],
+  ["off", "휴무일에만"],
 ];
 
-/** 항목 추가 시 쓰는 표현(묶음의 "항상/오픈 근무/마감 근무"와 구분). */
+/** 항목 추가 시 쓰는 표현(묶음의 WHENS와 같은 값, 문구만 짧게). */
 export const ITEM_WHENS: [TodoWhen, string][] = [
-  ["all", "둘다"],
+  ["all", "항상"],
+  ["work", "오픈·마감"],
   ["open", "오픈만"],
   ["close", "마감만"],
+  ["off", "휴무만"],
 ];
 
-/** 휴무일엔 "오픈 근무"/"마감 근무" 전용 항목은 당연히 의미가 없어서 숨기지만, "항상"으로
- * 표시된(근무와 무관한) 항목은 그대로 보여준다 — 쉬는 날에도 개인 할 일 체크리스트로 쓸 수 있게. */
+/** 근무(shift)에 따라 이 when이 보여야 하는지.
+ * - "all": 휴무를 포함해 언제나 보임.
+ * - "work": 오픈·마감·풀타임 등 근무 중엔 보이지만 휴무일엔 숨음.
+ * - "open"/"close": 그 근무(또는 풀타임)일 때만 보임.
+ * - "off": 휴무일에만 보임(근무 중엔 숨음) — 휴무일을 개인 할 일 체크리스트로 쓸 때 쓴다. */
 export function secOn(when: TodoWhen, shift: string) {
-  if (shift === "off") return when === "all";
-  return when === "all" || shift === "full" || when === shift;
+  if (shift === "off") return when === "all" || when === "off";
+  if (when === "off") return false;
+  if (when === "all" || when === "work") return true;
+  return shift === "full" || when === shift;
 }
 
 export const WD = "일월화수목금토";
