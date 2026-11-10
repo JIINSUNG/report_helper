@@ -32,6 +32,7 @@ import {
 import { TODO_LINKS } from "@/data/retro-hints";
 import { TAB_OPTIONS } from "@/data/tabs";
 import { BriefingSheet } from "./BriefingSheet";
+import { briefingEligibleSections, splitTodayTodos } from "@/lib/briefing";
 
 function uid(prefix: string) {
   return `${prefix}${Math.random().toString(36).slice(2, 9)}`;
@@ -261,7 +262,7 @@ function SortableItemRow({
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: item.id,
     data: { sec: item.sec },
-    disabled: !edit || !!item.parent,
+    disabled: !!item.parent,
   });
   // CSS.Transform.toString은 scaleX/scaleY도 같이 넣는데, 드래그 중 항목이 커졌다 작아졌다
   // 하는 게 보기 안 좋아서 이동(translate)만 적용한다.
@@ -343,7 +344,7 @@ function SortableItemRow({
   }
 
   return (
-    <div className="todo-swipe">
+    <div className="todo-swipe" ref={setNodeRef} style={style}>
       <div className="todo-swipe-actions">
         <button
           type="button"
@@ -393,6 +394,24 @@ function SortableItemRow({
           style={{ transform: `translateX(${swipe.swipeX}px)`, transition: swipe.swipeX === 0 || swipe.swipeX === -SWIPE_OPEN ? "transform .15s" : "none" }}
           {...swipe.handlers}
         >
+          {!isKid && (
+            <button
+              type="button"
+              className="grip sm"
+              aria-label={item.text + " 끌어서 옮기기"}
+              {...attributes}
+              {...listeners}
+              onClick={(e) => e.stopPropagation()}
+              onPointerDown={(e) => {
+                // 이 버튼의 부모 .todo에도 스와이프/길게 누르기 제스처가 붙어 있어서, 그대로 두면
+                // 포인터다운이 거기까지 번져 드래그와 스와이프가 서로 간섭한다 — 여기서 끊는다.
+                listeners?.onPointerDown?.(e);
+                e.stopPropagation();
+              }}
+            >
+              ⠿
+            </button>
+          )}
           <button type="button" className="chk" aria-pressed={done} aria-label={item.text} onClick={onToggle}>
             {done ? "✓" : ""}
           </button>
@@ -554,6 +573,18 @@ export function TodoTab({ setTab }: { setTab: (id: string) => void }) {
       return { ...prev, monthlyGoal: text ? { text, key: mKey } : undefined };
     });
     setEditingGoal(null);
+  };
+
+  // "오늘 한 일" — 브리핑에서 쓰는 것과 같은 묶음 선택(todo.briefingSections)을 그대로 써서, 체크한
+  // 항목 중 어느 묶음까지 "한 일"로 칠지 여기서도 고를 수 있게 한다(예: 매장 일과만, 또는
+  // 매장 일과+투두리스트 둘 다).
+  const doneSummaryEligible = briefingEligibleSections(todo, shift);
+  const doneSummaryPicked = todo.briefingSections ?? doneSummaryEligible.map((s) => s.id);
+  const doneSummary = splitTodayTodos(todo, date, shift).done;
+
+  const toggleDoneSummarySection = (id: string) => {
+    const next = doneSummaryPicked.includes(id) ? doneSummaryPicked.filter((x) => x !== id) : [...doneSummaryPicked, id];
+    update((prev) => (prev ? { ...prev, briefingSections: next } : prev));
   };
 
   const enterEdit = () => {
@@ -791,6 +822,42 @@ export function TodoTab({ setTab }: { setTab: (id: string) => void }) {
               </div>
             );
           })}
+        </section>
+      )}
+
+      {!edit && (
+        <section className="card" style={{ gap: 10 }}>
+          <div className="cardhead">
+            <h2>✅ 오늘 한 일 ({doneSummary.length})</h2>
+          </div>
+          {doneSummaryEligible.length > 1 && (
+            <div>
+              <p className="hint" style={{ margin: "0 0 6px" }}>
+                어느 묶음까지 &quot;한 일&quot;로 칠까요?
+              </p>
+              <div className="chips">
+                {doneSummaryEligible.map((s) => (
+                  <button key={s.id} type="button" className="chip sm" aria-pressed={doneSummaryPicked.includes(s.id)} onClick={() => toggleDoneSummarySection(s.id)}>
+                    {doneSummaryPicked.includes(s.id) ? "✓ " : ""}
+                    {s.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          {doneSummary.length === 0 ? (
+            <p className="hint" style={{ margin: 0 }}>
+              아직 체크한 항목이 없어요.
+            </p>
+          ) : (
+            <ul style={{ margin: 0, paddingLeft: 18, display: "flex", flexDirection: "column", gap: 2 }}>
+              {doneSummary.map((t) => (
+                <li key={t.id} style={{ fontSize: 13.5 }}>
+                  {t.text}
+                </li>
+              ))}
+            </ul>
+          )}
         </section>
       )}
 
@@ -1083,7 +1150,7 @@ function TodoSectionCard({
       )}
 
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
-        <SortableContext items={items.map((i) => i.id)} strategy={verticalListSortingStrategy} disabled={!edit}>
+        <SortableContext items={items.map((i) => i.id)} strategy={verticalListSortingStrategy}>
           <SectionDrop id={sc.id}>
             {items.map((item) => {
               let linkTab: [string, string] | null = null;
