@@ -745,15 +745,18 @@ export function TodoTab({ setTab }: { setTab: (id: string) => void }) {
       const fromIdx = items.findIndex((i) => i.id === activeId);
       if (fromIdx < 0) return prev;
       const moving = items[fromIdx];
-      items.splice(fromIdx, 1);
+      // 목표 위치를 "제거하기 전" 원본 배열 기준으로 먼저 찾는다. 제거부터 하고 나서 찾으면,
+      // 끌던 항목보다 뒤에 있던 대상은 인덱스가 하나 당겨진 채로 잡혀서 — 그 자리에 다시 꽂으면
+      // 원래 자리로 돌아가 버린다(위로 옮길 땐 안 겪는 문제라, 아래로만 안 움직이는 것처럼 보였다).
       let toIdx: number;
       if (overId.startsWith("section:")) {
-        const secItems = items.filter((i) => i.sec === overSec && !i.parent);
+        const secItems = items.filter((i) => i.sec === overSec && !i.parent && i.id !== activeId);
         toIdx = secItems.length ? items.indexOf(secItems[secItems.length - 1]) + 1 : items.length;
       } else {
         const overIdx = items.findIndex((i) => i.id === overId);
         toIdx = overIdx < 0 ? items.length : overIdx;
       }
+      items.splice(fromIdx, 1);
       items.splice(toIdx, 0, { ...moving, sec: overSec });
       return { ...prev, items };
     });
