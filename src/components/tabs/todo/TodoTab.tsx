@@ -13,7 +13,7 @@ import {
 import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import { useDroppable } from "@dnd-kit/core";
 import { useTodo } from "@/lib/use-todo";
-import { today } from "@/lib/format";
+import { monthKey, today, weekKey } from "@/lib/format";
 import {
   ITEM_WHENS,
   SHIFTS,
@@ -523,6 +523,8 @@ export function TodoTab({ setTab }: { setTab: (id: string) => void }) {
   const [newSecWhen, setNewSecWhen] = useState<TodoWhen>("all");
   const [secDeleteId, setSecDeleteId] = useState<string | null>(null);
   const [briefingOpen, setBriefingOpen] = useState(false);
+  const [editingGoal, setEditingGoal] = useState<"week" | "month" | null>(null);
+  const [goalDraft, setGoalDraft] = useState("");
   const editSnapshot = useRef<TodoData | null>(null);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }), useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }));
 
@@ -533,6 +535,26 @@ export function TodoTab({ setTab }: { setTab: (id: string) => void }) {
   const extra = todo?.extra[date] || [];
 
   if (!todo) return <TodoStart onPick={(d) => update(() => d)} />;
+
+  const wKey = weekKey(date);
+  const mKey = monthKey(date);
+  const weeklyGoalText = todo.weeklyGoal?.key === wKey ? todo.weeklyGoal.text : "";
+  const monthlyGoalText = todo.monthlyGoal?.key === mKey ? todo.monthlyGoal.text : "";
+
+  const startEditGoal = (kind: "week" | "month") => {
+    setGoalDraft(kind === "week" ? weeklyGoalText : monthlyGoalText);
+    setEditingGoal(kind);
+  };
+
+  const saveGoal = (kind: "week" | "month") => {
+    const text = goalDraft.trim();
+    update((prev) => {
+      if (!prev) return prev;
+      if (kind === "week") return { ...prev, weeklyGoal: text ? { text, key: wKey } : undefined };
+      return { ...prev, monthlyGoal: text ? { text, key: mKey } : undefined };
+    });
+    setEditingGoal(null);
+  };
 
   const enterEdit = () => {
     editSnapshot.current = todo;
@@ -723,6 +745,55 @@ export function TodoTab({ setTab }: { setTab: (id: string) => void }) {
 
   return (
     <>
+      {!edit && (
+        <section className="card" style={{ gap: 10 }}>
+          <div className="cardhead">
+            <h2>목표</h2>
+          </div>
+          {(["week", "month"] as const).map((kind) => {
+            const label = kind === "week" ? "이번 주 목표" : "이번 달 목표";
+            const text = kind === "week" ? weeklyGoalText : monthlyGoalText;
+            return (
+              <div key={kind} style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                {editingGoal === kind ? (
+                  <>
+                    <input
+                      className="inp"
+                      autoFocus
+                      value={goalDraft}
+                      onChange={(e) => setGoalDraft(e.target.value)}
+                      placeholder={label}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") saveGoal(kind);
+                        if (e.key === "Escape") setEditingGoal(null);
+                      }}
+                    />
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <button type="button" className="btn sm pri" onClick={() => saveGoal(kind)}>
+                        저장
+                      </button>
+                      <button type="button" className="btn sm" onClick={() => setEditingGoal(null)}>
+                        취소
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+                    <div>
+                      <span className="hint">{label}</span>
+                      <p style={{ margin: "2px 0 0" }}>{text || <span className="hint">아직 안 정했어요.</span>}</p>
+                    </div>
+                    <button type="button" className="link" onClick={() => startEditGoal(kind)}>
+                      {text ? "수정" : "정하기"}
+                    </button>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </section>
+      )}
+
       <section className="card" style={{ gap: 10 }}>
         <div className="cardhead">
           <h2>오늘 할 일</h2>
@@ -739,27 +810,24 @@ export function TodoTab({ setTab }: { setTab: (id: string) => void }) {
                 </button>
               ))}
             </div>
-            {shift !== "off" ? (
-              <>
-                <div className="tprog">
-                  <div style={{ width: (allLeaf.length ? (cnt / allLeaf.length) * 100 : 0) + "%" }} />
-                </div>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
-                  <p className="hint" style={{ margin: 0 }}>
-                    {cnt} / {allLeaf.length} 완료{cnt === allLeaf.length && allLeaf.length ? " · 오늘도 수고했어요!" : ""}
-                  </p>
-                  {allLeaf.length > 0 && (
-                    <button type="button" className="link" onClick={() => setAllDone(allLeaf.map((i) => i.id), cnt !== allLeaf.length)}>
-                      {cnt === allLeaf.length ? "전체 해제" : "전체 완료"}
-                    </button>
-                  )}
-                </div>
-              </>
-            ) : (
+            {shift === "off" && (
               <p className="hint" style={{ margin: 0 }}>
-                휴무일이에요.
+                휴무일이에요 · 근무와 상관없는 개인 할 일만 보여요.
               </p>
             )}
+            <div className="tprog">
+              <div style={{ width: (allLeaf.length ? (cnt / allLeaf.length) * 100 : 0) + "%" }} />
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+              <p className="hint" style={{ margin: 0 }}>
+                {cnt} / {allLeaf.length} 완료{cnt === allLeaf.length && allLeaf.length ? " · 오늘도 수고했어요!" : ""}
+              </p>
+              {allLeaf.length > 0 && (
+                <button type="button" className="link" onClick={() => setAllDone(allLeaf.map((i) => i.id), cnt !== allLeaf.length)}>
+                  {cnt === allLeaf.length ? "전체 해제" : "전체 완료"}
+                </button>
+              )}
+            </div>
             <p className="hint" style={{ margin: 0 }}>
               항목을 꾹 누르면 편집 모드로 바로 이동해요.
             </p>

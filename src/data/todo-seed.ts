@@ -51,6 +51,15 @@ export interface TodoData {
   briefingSections?: string[];
   /** 브리핑 "해야 할 일"에 포함할 일정 카테고리(행사/배송/대기/할 일). undefined면 전부. */
   briefingScheduleKinds?: EventKind[];
+  /** 이번 주 목표. key는 그 주 월요일("YYYY-MM-DD") — 주가 바뀌면 자동으로 지난 목표 취급. */
+  weeklyGoal?: TodoGoal;
+  /** 이번 달 목표. key는 "YYYY-MM". */
+  monthlyGoal?: TodoGoal;
+}
+
+export interface TodoGoal {
+  text: string;
+  key: string;
 }
 
 let uidCounter = 0;
@@ -175,8 +184,11 @@ export const ITEM_WHENS: [TodoWhen, string][] = [
   ["close", "마감만"],
 ];
 
+/** 휴무일엔 "오픈 근무"/"마감 근무" 전용 항목은 당연히 의미가 없어서 숨기지만, "항상"으로
+ * 표시된(근무와 무관한) 항목은 그대로 보여준다 — 쉬는 날에도 개인 할 일 체크리스트로 쓸 수 있게. */
 export function secOn(when: TodoWhen, shift: string) {
-  return shift !== "off" && (when === "all" || shift === "full" || when === shift);
+  if (shift === "off") return when === "all";
+  return when === "all" || shift === "full" || when === shift;
 }
 
 export const WD = "일월화수목금토";

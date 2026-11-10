@@ -17,6 +17,20 @@ export function shiftMonth(ym: string, n: number) {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}`;
 }
 
+/** 이 날짜가 속한 주의 월요일("YYYY-MM-DD") — 주간 목표를 "이번 주"끼리 묶는 기준. */
+export function weekKey(s: string): string {
+  const [y, m, d] = s.split("-").map(Number);
+  const dt = new Date(y, m - 1, d);
+  const dow = dt.getDay(); // 0=일 ... 6=토
+  const diffToMonday = dow === 0 ? -6 : 1 - dow;
+  return ymd(new Date(y, m - 1, d + diffToMonday));
+}
+
+/** 이 날짜가 속한 달("YYYY-MM") — 월간 목표를 "이번 달"끼리 묶는 기준. */
+export function monthKey(s: string): string {
+  return s.slice(0, 7);
+}
+
 export function md(s: string) {
   const [y, m, d] = parts(s);
   return `${m}/${d}(${"일월화수목금토"[new Date(y, m - 1, d).getDay()]})`;
