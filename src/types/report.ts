@@ -236,6 +236,37 @@ export interface ReportDefaults {
   monthTargets: Record<string, number>;
 }
 
+/** 보고서 양식 — 복사되는 보고서 텍스트의 블록 순서·켜기/끄기·제목 문구. 보고서 형식이 바뀌어도
+ * 예전 양식을 지우지 않고 여러 개 두고 골라 쓸 수 있게 한다. 제목엔 {yyyy}{yy}{m}{d}{요일}{store} 변수를 쓸 수 있다. */
+export type OpenBlockId = "header" | "prev" | "target" | "comment" | "custom" | "footer";
+export type CloseBlockId =
+  | "header"
+  | "salesHead"
+  | "day"
+  | "month"
+  | "items"
+  | "ops"
+  | "highlights"
+  | "insights"
+  | "plans"
+  | "note"
+  | "custom"
+  | "footer";
+
+export interface TemplateBlock<I extends string> {
+  id: I;
+  /** 그 블록 맨 앞에 들어가는 제목 줄. 비우면 제목 줄 없이 내용만. 줄바꿈(\n)으로 여러 줄도 가능. */
+  title: string;
+  on: boolean;
+}
+
+export interface ReportTemplate {
+  id: string;
+  name: string;
+  open: TemplateBlock<OpenBlockId>[];
+  close: TemplateBlock<CloseBlockId>[];
+}
+
 export interface ReportSettings {
   storeName: string;
   stores?: string[];
@@ -245,6 +276,10 @@ export interface ReportSettings {
   defaults?: ReportDefaults;
   customSections?: CustomSectionDef[];
   snippets?: Snippet[];
+  /** 보고서 양식들. 없으면 기본 양식 하나만 있는 것으로 본다. */
+  templates?: ReportTemplate[];
+  /** 지금 쓰는 양식 id. 없거나 못 찾으면 첫 양식. */
+  activeTemplateId?: string;
 }
 
 /** 잘 먹혔던 세일즈 멘트 — 이 기기에만 저장되는 개인 멘트 노트(응대 탭). */

@@ -89,3 +89,47 @@ test("지난 마감보고 → 오늘 마감·오픈으로 불러오기, 멘트 �
 
   expect(errors).toEqual([]);
 });
+
+test("보고서 양식 — 새 양식 만들고 이름·블록 바꿔서 마감보고 텍스트에 반영", async ({ page }) => {
+  const errors: string[] = [];
+  page.on("pageerror", (e) => errors.push(e.message));
+  page.on("dialog", (d) => d.accept());
+
+  await page.goto("/");
+  await page.getByRole("button", { name: "게스트로 둘러보기" }).click();
+  await page.getByRole("button", { name: "게스트로 입장" }).click();
+  await expect(page.getByText("로그아웃")).toBeVisible({ timeout: 10000 });
+
+  await page.locator("nav button", { hasText: "설정" }).first().click();
+  const card = page.locator("section.card", { hasText: "보고서 양식" });
+  await card.getByRole("button", { name: "+ 새 양식" }).click();
+  await card.getByLabel("양식 이름").fill("본사 새 양식");
+  await card.getByRole("button", { name: "이름 저장" }).click();
+  await expect(card.getByRole("button", { name: "본사 새 양식" })).toBeVisible();
+
+  await card.getByRole("button", { name: "마감보고" }).click();
+  await card.getByLabel("금일 스마트폰 인사이트 넣기").uncheck();
+  await card.getByLabel("익일 계획 제목").fill("[내일 할 일]");
+  await card.getByLabel("끝맺음 제목").fill("감사합니다. ({요일})");
+  await card.getByRole("button", { name: "양식 저장" }).click();
+  await card.getByRole("button", { name: "이 양식 쓰기" }).click();
+  await expect(card.getByText("사용 중", { exact: true })).toBeVisible();
+  await card.getByRole("button", { name: "오늘 보고서로 미리보기" }).click();
+  const pre = card.locator("pre");
+  await expect(pre).toContainText("[내일 할 일]");
+  await expect(pre).not.toContainText("스마트폰 인사이트");
+  await expect(pre).toContainText(/감사합니다\. \([일월화수목금토]\)/);
+  await card.screenshot({ path: test.info().outputPath("templates.png") });
+
+  // 마감 탭에 양식 전환 칩이 보이고, 1번으로 바꾸면 원래 형식으로 돌아온다
+  await page.locator("nav button", { hasText: "마감" }).first().click();
+  await expect(page.getByRole("button", { name: "본사 새 양식" })).toHaveAttribute("aria-pressed", "true");
+  await page.getByRole("button", { name: "1번 보고서 양식" }).click();
+  await page.locator("nav button", { hasText: "설정" }).first().click();
+  await card.getByRole("button", { name: /1번 보고서 양식/ }).click();
+  await card.getByRole("button", { name: "오늘 보고서로 미리보기" }).click();
+  await expect(card.locator("pre")).toContainText("[금일 스마트폰 인사이트]");
+  await expect(card.locator("pre")).toContainText("이상입니다.");
+
+  expect(errors).toEqual([]);
+});

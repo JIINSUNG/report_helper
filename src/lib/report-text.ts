@@ -1,6 +1,7 @@
-import { parts, won, comma } from "./format";
+import { won, comma } from "./format";
 import { dailyVarSnippetSections, dailyVarSnippetText } from "./snippets";
-import type { CloseReport, CustomSectionDef, ItemTarget, OpenReport, Section, Snippet } from "@/types/report";
+import { DEFAULT_TEMPLATE, fillTitle, normalizeTemplate } from "./report-templates";
+import type { CloseBlockId, CloseReport, CustomSectionDef, ItemTarget, OpenBlockId, OpenReport, ReportTemplate, Section, Snippet } from "@/types/report";
 
 export const itemsLine = (it: ItemTarget[], k: "target" | "actual") =>
   it.map((i) => `${i.name} ${i[k]}대`).join(", ");
@@ -67,29 +68,45 @@ function customSectionLines(
   return out;
 }
 
+/** 블록별 줄들을 양식 순서대로 이어 붙인다. 꺼진 블록은 빼고, 맨 앞 빈 줄은 지운다(첫 줄 블록을 아래로 옮겼을 때). */
+function assemble<I extends string>(blocks: { id: I; title: string; on: boolean }[], render: (id: I, title: string[]) => string[], date: string, store: string): string {
+  const lines: string[] = [];
+  for (const b of blocks) {
+    if (!b.on) continue;
+    const title = b.title.trim() ? fillTitle(b.title, date, store).split("\n") : [];
+    lines.push(...render(b.id, title));
+  }
+  while (lines.length && lines[0] === "") lines.shift();
+  return lines.join("\n");
+}
+
 export function openText(
   r: OpenReport,
   store: string,
   customDefs: CustomSectionDef[] = [],
   remainingFor: (defId: string) => number | null = () => null,
-  snippets: Snippet[] = []
+  snippets: Snippet[] = [],
+  template: ReportTemplate = DEFAULT_TEMPLATE
 ): string {
-  const [y, m, d] = parts(r.date);
   const comment = dailyVarSnippetText(snippets, "open-comment", r.snippetVars || {}, r.comment.trim(), r.snippetSkip || []);
-  return [
-    `[${String(y).slice(2)}년 ${m}월 ${d}일] ${store} 오픈보고`,
-    `- 전일 전환율 ${r.prevConversion}%`,
-    itemsLine(r.prevSales, "actual"),
-    "",
-    "- 금일 목표",
-    `GMV : ${won(r.targetGMV)}`,
-    `전환율 : ${r.targetConversion}%`,
-    itemsLine(r.targetItems, "target"),
-    "",
-    "- 코멘트",
-    comment,
-    ...customSectionLines(r, customDefs, "open", remainingFor),
-  ].join("\n");
+  const render = (id: OpenBlockId, title: string[]): string[] => {
+    switch (id) {
+      case "header":
+        return title;
+      case "prev":
+        // 제목이 "- 전일 전환율"이면 "- 전일 전환율 3.2%"처럼 같은 줄에 붙는다.
+        return [title.length ? `${title.join(" ")} ${r.prevConversion}%` : `${r.prevConversion}%`, itemsLine(r.prevSales, "actual")];
+      case "target":
+        return ["", ...title, `GMV : ${won(r.targetGMV)}`, `전환율 : ${r.targetConversion}%`, itemsLine(r.targetItems, "target")];
+      case "comment":
+        return ["", ...title, comment];
+      case "custom":
+        return customSectionLines(r, customDefs, "open", remainingFor);
+      case "footer":
+        return ["", ...title];
+    }
+  };
+  return assemble(normalizeTemplate(template).open, render, r.date, store);
 }
 
 export function closeText(
@@ -98,9 +115,9 @@ export function closeText(
   def?: string,
   customDefs: CustomSectionDef[] = [],
   remainingFor: (defId: string) => number | null = () => null,
-  snippets: Snippet[] = []
+  snippets: Snippet[] = [],
+  template: ReportTemplate = DEFAULT_TEMPLATE
 ): string {
-  const [y, m, d] = parts(r.date);
   const diff = diffOf(r);
   const dl =
     diff === 0
@@ -119,46 +136,46 @@ export function closeText(
   const pis = sectionsText(dailyVarSnippetSections(snippets, "close-insight", vars, r.phoneInsights || [], skip));
   const ps = sectionsText(dailyVarSnippetSections(snippets, "close-plan", vars, r.plans, skip));
   const note = dailyVarSnippetText(snippets, "close-note", vars, r.note.trim(), skip);
-  return [
-    `[${y}년 ${m}월 ${d}일]`,
-    `${store} 일일 보고서`,
-    "",
-    "[판매 데이터]",
-    "일간 누적 실적",
-    `일 목표 GMV: ${won(r.dayTargetGMV)}`,
-    `일 달성 GMV: ${won(r.dayGMV)}(${pctStr(r.dayGMV, r.dayTargetGMV)})`,
-    "",
-    "월간 누적 실적",
-    `월 목표 GMV: ${won(r.monthTargetGMV)}`,
-    `월 누적 GMV: ${won(r.monthGMV)}(${pctStr(r.monthGMV, r.monthTargetGMV)})`,
-    "",
-    "목표/달성",
-    `목표: ${itemsLine(r.items, "target")}`,
-    `달성: ${itemsLine(r.items, "actual")}`,
-    "",
-    "운영 데이터",
-    `- 트래픽: ${comma(r.traffic)}`,
-    `- 입점 고객 수: ${comma(r.visitors)}`,
-    `- 전환율: ${r.conversion}%`,
-    `- 연계율: ${r.attachRate}`,
-    `- 객단가: ${r.aov}`,
-    ...invLines({ ...r, inventoryNote }, def).map((x) => `- ${x}`),
-    `- 금일 리테일 ${won(r.retail)}, 포스기 ${won(r.pos)} 기록하였습니다.`,
-    ...dl,
-    "",
-    "[금일 핵심 내용]",
-    "",
-    ...(hs ? [hs] : []),
-    "[금일 스마트폰 인사이트]",
-    "",
-    ...(pis ? [pis] : []),
-    "[익일계획]",
-    "",
-    ...(ps ? [ps] : []),
-    ...(note ? ["[특이사항]", ...note.split("\n").map((x) => "- " + x.replace(/^-\s*/, ""))] : []),
-    ...customSectionLines(r, customDefs, "close", remainingFor),
-    "이상입니다.",
-  ].join("\n");
+  const render = (id: CloseBlockId, title: string[]): string[] => {
+    switch (id) {
+      case "header":
+        return title;
+      case "salesHead":
+        return ["", ...title];
+      case "day":
+        return [...title, `일 목표 GMV: ${won(r.dayTargetGMV)}`, `일 달성 GMV: ${won(r.dayGMV)}(${pctStr(r.dayGMV, r.dayTargetGMV)})`, ""];
+      case "month":
+        return [...title, `월 목표 GMV: ${won(r.monthTargetGMV)}`, `월 누적 GMV: ${won(r.monthGMV)}(${pctStr(r.monthGMV, r.monthTargetGMV)})`, ""];
+      case "items":
+        return [...title, `목표: ${itemsLine(r.items, "target")}`, `달성: ${itemsLine(r.items, "actual")}`, ""];
+      case "ops":
+        return [
+          ...title,
+          `- 트래픽: ${comma(r.traffic)}`,
+          `- 입점 고객 수: ${comma(r.visitors)}`,
+          `- 전환율: ${r.conversion}%`,
+          `- 연계율: ${r.attachRate}`,
+          `- 객단가: ${r.aov}`,
+          ...invLines({ ...r, inventoryNote }, def).map((x) => `- ${x}`),
+          `- 금일 리테일 ${won(r.retail)}, 포스기 ${won(r.pos)} 기록하였습니다.`,
+          ...dl,
+          "",
+        ];
+      case "highlights":
+        return [...title, "", ...(hs ? [hs] : [])];
+      case "insights":
+        return [...title, "", ...(pis ? [pis] : [])];
+      case "plans":
+        return [...title, "", ...(ps ? [ps] : [])];
+      case "note":
+        return note ? [...title, ...note.split("\n").map((x) => "- " + x.replace(/^-\s*/, ""))] : [];
+      case "custom":
+        return customSectionLines(r, customDefs, "close", remainingFor);
+      case "footer":
+        return title;
+    }
+  };
+  return assemble(normalizeTemplate(template).close, render, r.date, store);
 }
 
 function pctStr(a: number, b: number) {

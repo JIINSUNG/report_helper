@@ -14,6 +14,7 @@ import { DailySnippetVars } from "@/components/ui/DailySnippetVars";
 import { VariableFiller } from "@/components/ui/VariableFiller";
 import { InvCheck } from "./InvCheck";
 import { PastReportLoader } from "@/components/ui/PastReportLoader";
+import { TemplateSwitch } from "@/components/tabs/settings/TemplatesManager";
 import { CLOSE_PARTS, closePartCount, copyFromClose, pastDatesWith } from "@/lib/past-report";
 import { getClose, latestBefore } from "@/lib/local-reports";
 import { diffOf, reasonSum, sectionsText, signed } from "@/lib/report-text";
@@ -113,6 +114,7 @@ export function CloseTab({
 
   return (
     <>
+      <TemplateSwitch data={data} update={update} />
       {loader}
       <Card title="일간 실적">
         <div className="grid2">

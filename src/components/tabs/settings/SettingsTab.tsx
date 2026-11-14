@@ -12,6 +12,7 @@ import { useAuth } from "@/context/auth-context";
 import { StorePicker } from "./StorePicker";
 import { CustomSectionsManager } from "./CustomSectionsManager";
 import { SnippetsManager } from "./SnippetsManager";
+import { TemplatesManager } from "./TemplatesManager";
 import type { LocalReportData, ReportDefaults, ReportItemSetting } from "@/types/report";
 
 function DefaultsCard({
@@ -119,9 +120,13 @@ function DefaultsCard({
 export function SettingsTab({
   data,
   update,
+  date,
+  storeLabel,
 }: {
   data: LocalReportData;
   update: (fn: (d: LocalReportData) => LocalReportData) => void;
+  date: string;
+  storeLabel: string;
 }) {
   const { role, store, name, setName } = useAuth();
   const [confirmReset, setConfirmReset] = useState(false);
@@ -170,6 +175,8 @@ export function SettingsTab({
         </label>
         <p className="hint">2026~2027년 공휴일은 미리 넣어두었어요. 추가 휴일은 주말 기준 목표로 계산돼요.</p>
       </Card>
+
+      <TemplatesManager data={data} update={update} date={date} storeLabel={storeLabel} />
 
       <CustomSectionsManager data={data} update={update} />
 

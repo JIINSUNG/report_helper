@@ -17,6 +17,7 @@ import { amountRemaining, blankCustomAmount, isRevealed, mapsFor } from "@/lib/c
 import { isOffDay } from "@/data/holidays";
 import { SchedPeek } from "@/components/tabs/schedule/SchedPeek";
 import { PastReportLoader } from "@/components/ui/PastReportLoader";
+import { TemplateSwitch } from "@/components/tabs/settings/TemplatesManager";
 import { OPEN_PARTS, copyToOpen, openPartCount, pastDatesWith } from "@/lib/past-report";
 import { sectionsText, itemsLine } from "@/lib/report-text";
 import { won } from "@/lib/format";
@@ -74,6 +75,7 @@ export function OpenTab({
 
   return (
     <>
+      <TemplateSwitch data={data} update={update} />
       {loader}
       <Card title="전일 실적" right={pc && <span className="sub">{pc.date} 마감보고에서 가져옴</span>}>
         <Txt id="o-pc" label="전일 전환율" value={r.prevConversion} onChange={(v) => set({ prevConversion: v })} suf="%" mode="decimal" />
