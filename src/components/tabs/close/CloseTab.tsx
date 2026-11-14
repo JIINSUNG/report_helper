@@ -13,8 +13,10 @@ import { SnippetPicker } from "@/components/ui/SnippetPicker";
 import { DailySnippetVars } from "@/components/ui/DailySnippetVars";
 import { VariableFiller } from "@/components/ui/VariableFiller";
 import { InvCheck } from "./InvCheck";
+import { PastReportLoader } from "@/components/ui/PastReportLoader";
+import { CLOSE_PARTS, closePartCount, copyFromClose, pastDatesWith } from "@/lib/past-report";
 import { getClose, latestBefore } from "@/lib/local-reports";
-import { diffOf, reasonSum, signed } from "@/lib/report-text";
+import { diffOf, reasonSum, sectionsText, signed } from "@/lib/report-text";
 import { insertAtPosition, insertSectionFromSnippet } from "@/lib/snippets";
 import { autoContext, ctxManual, ctxTags, ctxVars, emptyCtx } from "@/lib/context";
 import { amountRemaining, blankCustomAmount, isRevealed, mapsFor } from "@/lib/custom-sections";
@@ -88,8 +90,30 @@ export function CloseTab({
   const toggleSnippetSkip = (id: string) =>
     set({ snippetSkip: (r.snippetSkip || []).includes(id) ? (r.snippetSkip || []).filter((x) => x !== id) : [...(r.snippetSkip || []), id] });
 
+  const pastDates = pastDatesWith(Object.keys(data.closes), date, (d) => CLOSE_PARTS.some((p) => closePartCount(data.closes[d], p.id) > 0));
+  const loader = (
+    <PastReportLoader
+      dates={pastDates}
+      parts={CLOSE_PARTS}
+      count={(d, part) => closePartCount(data.closes[d], part)}
+      preview={(d, part) => {
+        const src = data.closes[d];
+        if (!src) return "";
+        return part === "note" || part === "inventoryNote" ? src[part] : sectionsText(src[part]);
+      }}
+      apply={(d, parts, mode) => {
+        const before = getClose(data, date);
+        const src = data.closes[d];
+        if (src) set(copyFromClose(before, src, parts, mode));
+        const restore = Object.fromEntries(parts.map((p) => [p, before[p]]));
+        return () => set(restore);
+      }}
+    />
+  );
+
   return (
     <>
+      {loader}
       <Card title="일간 실적">
         <div className="grid2">
           <Num id="c-dt" label="일 목표 GMV" value={r.dayTargetGMV} onChange={(v) => set({ dayTargetGMV: v })} suf="원" />

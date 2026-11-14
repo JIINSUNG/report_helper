@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/Card";
 import { SERVICE_COMMON_MISTAKES, SERVICE_STAGES } from "@/data/service-standard";
 import { CallLogSection } from "./CallLogSection";
 import { GreetingPractice } from "./GreetingPractice";
+import { PitchNotes } from "./PitchNotes";
 import type { LocalReportData } from "@/types/report";
 
 const listStyle: CSSProperties = { margin: "6px 0 0", paddingLeft: 18, display: "flex", flexDirection: "column", gap: 4, fontSize: 13.5 };
@@ -22,6 +23,8 @@ export function ServiceTab({
 
   return (
     <>
+      <PitchNotes data={data} update={update} date={date} />
+
       <CallLogSection data={data} update={update} date={date} />
 
       <GreetingPractice />

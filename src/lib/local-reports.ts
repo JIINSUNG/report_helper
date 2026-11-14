@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { today } from "./format";
 import { isOffDay } from "@/data/holidays";
 import { dailySnippetSections, dailySnippetText } from "./snippets";
@@ -174,6 +174,21 @@ export function useLocalReports(storeName: string) {
       return next;
     });
   }, []);
+
+  // 같은 기기에서 앱을 탭 두 개(또는 홈 화면 앱 + 브라우저)로 열어두면, 각자 들고 있는 옛 상태로 저장하면서
+  // 서로의 입력을 덮어쓴다. 다른 탭이 저장하면 그 내용을 바로 받아와서 이 탭 상태도 맞춘다.
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key !== STORAGE_KEY || !e.newValue) return;
+      try {
+        setData({ ...blankReportData(storeName), ...(JSON.parse(e.newValue) as LocalReportData) });
+      } catch {
+        // 깨진 값이면 무시 — 이 탭 상태를 그대로 둔다
+      }
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, [storeName]);
 
   const reset = useCallback(() => update(() => blankReportData(storeName)), [update, storeName]);
 

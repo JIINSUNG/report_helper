@@ -247,6 +247,25 @@ export interface ReportSettings {
   snippets?: Snippet[];
 }
 
+/** 잘 먹혔던 세일즈 멘트 — 이 기기에만 저장되는 개인 멘트 노트(응대 탭). */
+export type PitchStage = "greet" | "needs" | "explain" | "compare" | "benefit" | "objection" | "close" | "upsell";
+
+export interface Pitch {
+  id: string;
+  text: string;
+  stage: PitchStage;
+  /** 어떤 제품·카테고리에서 썼는지(선택). */
+  cat?: string;
+  /** 손님 반응·쓰는 요령(선택). */
+  note?: string;
+  /** "또 먹혔어요"를 누른 횟수 — 처음 적을 때 1. */
+  wins: number;
+  /** 마지막으로 먹힌 날 "YYYY-MM-DD". */
+  lastWin: string;
+  pinned?: boolean;
+  createdAt: string;
+}
+
 export interface LocalReportData {
   example: boolean;
   settings: ReportSettings;
@@ -257,4 +276,6 @@ export interface LocalReportData {
   retros: Record<string, Retro>;
   calls: Record<string, CallLog[]>;
   favorites: string[];
+  /** 잘 먹혔던 세일즈 멘트(나중에 추가된 필드라 예전 데이터엔 없다). */
+  pitches?: Pitch[];
 }

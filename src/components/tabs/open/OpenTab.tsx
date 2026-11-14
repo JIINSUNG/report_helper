@@ -16,6 +16,10 @@ import { autoContext, ctxManual, ctxTags, ctxVars, emptyCtx } from "@/lib/contex
 import { amountRemaining, blankCustomAmount, isRevealed, mapsFor } from "@/lib/custom-sections";
 import { isOffDay } from "@/data/holidays";
 import { SchedPeek } from "@/components/tabs/schedule/SchedPeek";
+import { PastReportLoader } from "@/components/ui/PastReportLoader";
+import { OPEN_PARTS, copyToOpen, openPartCount, pastDatesWith } from "@/lib/past-report";
+import { sectionsText, itemsLine } from "@/lib/report-text";
+import { won } from "@/lib/format";
 import type { LocalReportData } from "@/types/report";
 
 export function OpenTab({
@@ -45,8 +49,32 @@ export function OpenTab({
   const offEff = tags.includes("weekend") || tags.includes("holiday");
   const customDefs = (data.settings.customSections || []).filter((d) => d.appliesTo === "open" || d.appliesTo === "both");
 
+  const pastDates = pastDatesWith([...Object.keys(data.opens), ...Object.keys(data.closes)], date, (d) =>
+    OPEN_PARTS.some((p) => openPartCount(data.opens[d], data.closes[d], p.id) > 0)
+  );
+  const loader = (
+    <PastReportLoader
+      dates={pastDates}
+      parts={OPEN_PARTS}
+      count={(d, part) => openPartCount(data.opens[d], data.closes[d], part)}
+      preview={(d, part) => {
+        const o = data.opens[d];
+        if (part === "comment") return o?.comment ?? "";
+        if (part === "targets") return o ? `목표 매출 ${won(o.targetGMV)} · 전환율 ${o.targetConversion}%\n${itemsLine(o.targetItems, "target")}` : "";
+        return sectionsText(data.closes[d]?.plans ?? []);
+      }}
+      apply={(d, parts, mode) => {
+        const before = getOpen(data, date);
+        set(copyToOpen(before, data.opens[d], data.closes[d], parts, mode));
+        const { comment, targetGMV, targetConversion, targetItems } = before;
+        return () => set({ comment, targetGMV, targetConversion, targetItems });
+      }}
+    />
+  );
+
   return (
     <>
+      {loader}
       <Card title="전일 실적" right={pc && <span className="sub">{pc.date} 마감보고에서 가져옴</span>}>
         <Txt id="o-pc" label="전일 전환율" value={r.prevConversion} onChange={(v) => set({ prevConversion: v })} suf="%" mode="decimal" />
         <Items items={r.prevSales} cols={["actual"]} onChange={(v) => set({ prevSales: v })} />
