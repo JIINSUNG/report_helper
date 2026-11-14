@@ -32,7 +32,9 @@ import {
 import { TODO_LINKS } from "@/data/retro-hints";
 import { TAB_OPTIONS } from "@/data/tabs";
 import { BriefingSheet } from "./BriefingSheet";
-import { briefingEligibleSections, splitTodayTodos } from "@/lib/briefing";
+import { briefingEligibleSections, EVENT_KIND_LABEL, splitTodayTodos, upcomingScheduleActions } from "@/lib/briefing";
+import { useSchedule } from "@/lib/use-schedule";
+import { ActList } from "../schedule/ActList";
 
 function uid(prefix: string) {
   return `${prefix}${Math.random().toString(36).slice(2, 9)}`;
@@ -586,7 +588,7 @@ function SectionDrop({ id, children }: { id: string; children: React.ReactNode }
   );
 }
 
-export function TodoTab({ setTab }: { setTab: (id: string) => void }) {
+export function TodoTab({ setTab, storeLabel }: { setTab: (id: string) => void; storeLabel: string }) {
   const [todo, update] = useTodo();
   const [edit, setEdit] = useState(false);
   const [shift, setShiftState] = useState(() => todo?.lastShift ?? "full");
@@ -604,8 +606,10 @@ export function TodoTab({ setTab }: { setTab: (id: string) => void }) {
   const [briefingOpen, setBriefingOpen] = useState(false);
   const [editingGoal, setEditingGoal] = useState<"week" | "month" | null>(null);
   const [goalDraft, setGoalDraft] = useState("");
+  const [doneSummaryDraft, setDoneSummaryDraft] = useState("");
   const editSnapshot = useRef<TodoData | null>(null);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }), useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }));
+  const sched = useSchedule(storeLabel);
 
   // 다른 탭들의 "오늘"과 같은 기준(로컬 날짜)을 써야 한다 — UTC 기준(toISOString)으로 하면 한국
   // 자정~오전 9시 사이에 할일 탭의 "오늘"만 어제로 계산되는 버그가 있었다.
@@ -645,6 +649,43 @@ export function TodoTab({ setTab }: { setTab: (id: string) => void }) {
   const toggleDoneSummarySection = (id: string) => {
     const next = doneSummaryPicked.includes(id) ? doneSummaryPicked.filter((x) => x !== id) : [...doneSummaryPicked, id];
     update((prev) => (prev ? { ...prev, briefingSections: next } : prev));
+  };
+
+  // "오늘 한 일" 줄에서 ✕를 누르면: 자동으로 걸린 항목(체크된 할일)이면 체크는 그대로 두고 그날만
+  // 목록에서 빼고(briefingExcluded), 직접 적어 넣은 항목이면 그냥 지운다.
+  const removeDoneSummaryItem = (item: { id: string; manual?: boolean }) => {
+    update((prev) => {
+      if (!prev) return prev;
+      if (item.manual) {
+        const list = (prev.briefingExtra?.[date] || []).filter((m) => m.id !== item.id);
+        return { ...prev, briefingExtra: { ...prev.briefingExtra, [date]: list } };
+      }
+      const list = [...new Set([...(prev.briefingExcluded?.[date] || []), item.id])];
+      return { ...prev, briefingExcluded: { ...prev.briefingExcluded, [date]: list } };
+    });
+  };
+
+  // 일정 탭의 행사(할인)·배송·대기 등도 할일 탭에서 바로 체크할 수 있게 — 일정 탭/브리핑과 같은
+  // 데이터(sched.actions)를 그대로 쓰니, 여기서 체크하면 일정 탭에도 그대로 반영된다.
+  const upcomingActs = upcomingScheduleActions(sched.actions, date);
+  const schedKinds = [...new Set(upcomingActs.map((a) => a.kind))];
+  const pickedSchedKinds = todo.briefingScheduleKinds ?? schedKinds;
+  const schedTasks = upcomingActs.filter((a) => pickedSchedKinds.includes(a.kind));
+
+  const toggleSchedKind = (k: (typeof schedKinds)[number]) => {
+    const next = pickedSchedKinds.includes(k) ? pickedSchedKinds.filter((x) => x !== k) : [...pickedSchedKinds, k];
+    update((prev) => (prev ? { ...prev, briefingScheduleKinds: next } : prev));
+  };
+
+  const addDoneSummaryItem = () => {
+    const text = doneSummaryDraft.trim();
+    if (!text) return;
+    update((prev) => {
+      if (!prev) return prev;
+      const list = [...(prev.briefingExtra?.[date] || []), { id: uid("be"), text: text.slice(0, 80) }];
+      return { ...prev, briefingExtra: { ...prev.briefingExtra, [date]: list } };
+    });
+    setDoneSummaryDraft("");
   };
 
   const enterEdit = () => {
@@ -922,14 +963,63 @@ export function TodoTab({ setTab }: { setTab: (id: string) => void }) {
               아직 체크한 항목이 없어요.
             </p>
           ) : (
-            <ul style={{ margin: 0, paddingLeft: 18, display: "flex", flexDirection: "column", gap: 2 }}>
+            <ul style={{ margin: 0, paddingLeft: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 4 }}>
               {doneSummary.map((t) => (
-                <li key={t.id} style={{ fontSize: 13.5 }}>
-                  {t.text}
+                <li key={t.id} style={{ fontSize: 13.5, display: "flex", alignItems: "center", gap: 6 }}>
+                  <span aria-hidden="true">·</span>
+                  <span style={{ flex: 1 }}>
+                    {t.text}
+                    {t.manual && <span className="hint"> (직접 추가)</span>}
+                  </span>
+                  <button type="button" className="iconbtn" aria-label={`${t.text} 오늘 한 일에서 빼기`} onClick={() => removeDoneSummaryItem(t)}>
+                    ✕
+                  </button>
                 </li>
               ))}
             </ul>
           )}
+          <div style={{ display: "flex", gap: 8 }}>
+            <input
+              className="inp"
+              placeholder="오늘 한 일에 직접 추가"
+              value={doneSummaryDraft}
+              onChange={(e) => setDoneSummaryDraft(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && addDoneSummaryItem()}
+            />
+            <button type="button" className="btn sm" onClick={addDoneSummaryItem} disabled={!doneSummaryDraft.trim()}>
+              추가
+            </button>
+          </div>
+        </section>
+      )}
+
+      {upcomingActs.length > 0 && (
+        <section className="card" style={{ gap: 10 }}>
+          <div className="cardhead">
+            <h2>📅 일정에서 확인할 일 ({schedTasks.filter((a) => !a.done).length})</h2>
+          </div>
+          {schedKinds.length > 1 && (
+            <div>
+              <p className="hint" style={{ margin: "0 0 6px" }}>
+                어느 카테고리를 볼까요?
+              </p>
+              <div className="chips">
+                {schedKinds.map((k) => (
+                  <button key={k} type="button" className="chip sm" aria-pressed={pickedSchedKinds.includes(k)} onClick={() => toggleSchedKind(k)}>
+                    {pickedSchedKinds.includes(k) ? "✓ " : ""}
+                    {EVENT_KIND_LABEL[k]}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          <ActList
+            acts={schedTasks}
+            onToggle={(a) => sched.toggle(a)}
+            onOpen={() => setTab("schedule")}
+            showDate
+            empty="선택한 카테고리엔 확인할 일정이 없어요."
+          />
         </section>
       )}
 

@@ -1,10 +1,15 @@
 import { itemDueOn, secOn, type TodoData } from "@/data/todo-seed";
 import { aEnd, type ScheduleAction } from "@/lib/use-schedule";
 import { shift as shiftDate } from "@/lib/format";
+import type { EventKind } from "@/types/shared";
+
+export const EVENT_KIND_LABEL: Record<EventKind, string> = { promo: "행사", delivery: "배송", wait: "대기", task: "할 일" };
 
 export interface BriefingItem {
   id: string;
   text: string;
+  /** 체크된 할일에서 자동으로 걸린 게 아니라, "오늘 한 일"에 직접 적어 넣은 항목이면 true. */
+  manual?: boolean;
 }
 
 export interface BriefingSplit {
@@ -37,8 +42,10 @@ export function splitTodayTodos(todo: TodoData, date: string, shift: string): Br
     .filter((x) => secIds.has(x.sec) && secOn(x.when ?? "all", shift))
     .map((x) => ({ id: x.id, text: x.text }));
   const all = [...items, ...extras];
+  const excluded = new Set(todo.briefingExcluded?.[date] ?? []);
+  const manualDone = (todo.briefingExtra?.[date] ?? []).map((m) => ({ ...m, manual: true as const }));
   return {
-    done: all.filter((t) => doneMap[t.id]),
+    done: [...all.filter((t) => doneMap[t.id] && !excluded.has(t.id)), ...manualDone],
     remaining: all.filter((t) => !doneMap[t.id]),
   };
 }

@@ -5,11 +5,9 @@ import { useAuth } from "@/context/auth-context";
 import { useCommunity } from "@/lib/use-community";
 import { useSchedule } from "@/lib/use-schedule";
 import { copyText } from "@/lib/format";
-import { briefingEligibleSections, briefingText, splitTodayTodos, upcomingScheduleActions } from "@/lib/briefing";
+import { briefingEligibleSections, briefingText, EVENT_KIND_LABEL, splitTodayTodos, upcomingScheduleActions } from "@/lib/briefing";
 import type { TodoData } from "@/data/todo-seed";
 import type { EventKind } from "@/types/shared";
-
-const KIND_LABEL: Record<EventKind, string> = { promo: "행사", delivery: "배송", wait: "대기", task: "할 일" };
 
 // CommunityTab·use-warehouse.ts의 checkShare와 같은 패턴 — 공유방에 올리는 글은 전화번호·매출
 // 금액이 섞여 들어가지 않게 막는다.
@@ -140,7 +138,7 @@ export function BriefingSheet({
               {schedKinds.map((k) => (
                 <button key={k} type="button" className="chip sm" aria-pressed={pickedKinds.includes(k)} onClick={() => toggleKind(k)}>
                   {pickedKinds.includes(k) ? "✓ " : ""}
-                  {KIND_LABEL[k]}
+                  {EVENT_KIND_LABEL[k]}
                 </button>
               ))}
             </div>

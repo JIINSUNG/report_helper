@@ -62,6 +62,11 @@ export interface TodoData {
   weeklyGoal?: TodoGoal;
   /** 이번 달 목표. key는 "YYYY-MM". */
   monthlyGoal?: TodoGoal;
+  /** "오늘 한 일"에서 자동으로 걸린(체크된) 항목 중, 그날만 빼고 싶은 것의 id. 체크 자체는
+   * 안 풀리고 "한 일" 목록에서만 숨는다. key는 날짜. */
+  briefingExcluded?: Record<string, string[]>;
+  /** "오늘 한 일"에 체크한 할일과 별개로 직접 적어 넣은 것들. key는 날짜. */
+  briefingExtra?: Record<string, { id: string; text: string }[]>;
   /** 마지막으로 바뀐 시각(ms) — 클라우드 동기화 시 최신본 판단용. */
   updatedAt?: number;
 }

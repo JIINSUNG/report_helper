@@ -253,7 +253,7 @@ export function AppShell() {
 
         <TabGuide key={tab} tab={tab} />
 
-        {tab === "todo" && <TodoTab setTab={setTab} />}
+        {tab === "todo" && <TodoTab setTab={setTab} storeLabel={storeLabel} />}
         {tab === "open" && <OpenTab data={data} update={update} date={date} storeLabel={storeLabel} isGuest={isGuest} goSchedule={() => setTab("schedule")} />}
         {tab === "record" && <RecordTab data={data} update={update} date={date} setDate={setDate} />}
         {tab === "close" && <CloseTab data={data} update={update} date={date} storeLabel={storeLabel} isGuest={isGuest} goSchedule={() => setTab("schedule")} />}
